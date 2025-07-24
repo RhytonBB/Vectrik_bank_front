@@ -32,6 +32,10 @@ const form = ref({
 const loading = ref(false);
 
 const API = import.meta.env.VITE_API_URL;
+if (!API) {
+  console.error('VITE_API_URL is not defined!');
+  ElMessage && ElMessage.error && ElMessage.error('Ошибка конфигурации: VITE_API_URL не задана!');
+}
 
 async function onLogin() {
   if (!form.value.username || !form.value.password) {
