@@ -31,6 +31,8 @@ const form = ref({
 });
 const loading = ref(false);
 
+const API = import.meta.env.VITE_API_URL;
+
 async function onLogin() {
   if (!form.value.username || !form.value.password) {
     ElMessage.error('Заполните все поля!');
@@ -39,20 +41,21 @@ async function onLogin() {
   loading.value = true;
   try {
     const response = await axios.post(
-      '/api/login',
+      `${API}/api/login`,
       {
         login: form.value.username,
         password: form.value.password
       },
       {
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        withCredentials: true
       }
     );
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       // Получаем роль пользователя
       try {
-        const meResp = await axios.get('/api/me', { withCredentials: true });
+        const meResp = await axios.get(`${API}/api/me`, { withCredentials: true });
         if (meResp.data.is_admin) {
           router.push('/admin/dashboard');
         } else {
