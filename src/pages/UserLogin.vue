@@ -31,10 +31,10 @@ const form = ref({
 });
 const loading = ref(false);
 
-const API = import.meta.env.VITE_API_URL;
+const API = process.env.VUE_APP_API_URL;
 if (!API) {
-  console.error('VITE_API_URL is not defined!');
-  ElMessage && ElMessage.error && ElMessage.error('Ошибка конфигурации: VITE_API_URL не задана!');
+  console.error('VUE_APP_API_URL is not defined!');
+  ElMessage && ElMessage.error && ElMessage.error('Ошибка конфигурации: VUE_APP_API_URL не задана!');
 }
 
 async function onLogin() {
