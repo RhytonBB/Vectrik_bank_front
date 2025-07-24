@@ -1,0 +1,68 @@
+@import '@fontsource/inter/index.css';
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #f8f8f8;
+  margin: 0;
+  color: #115740;
+}
+
+:root {
+    --color-primary: #115740;
+    --color-secondary: #B4D8BA;
+  }
+
+.el-button--primary,
+.el-button--primary:focus,
+.el-button--primary:hover,
+.el-button--primary:active {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #fff !important;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 600px) {
+  body {
+    font-size: 15px;
+    padding: 0;
+    margin: 0;
+    overflow-x: hidden;
+  }
+  .el-card, .reward-card, .register-card {
+    max-width: 100vw !important;
+    margin: 12px 0 !important;
+    padding: 12px 4vw !important;
+    border-radius: 10px !important;
+    box-sizing: border-box;
+  }
+  h1, h2, h3, h4 {
+    font-size: 1.2rem !important;
+    margin-bottom: 12px !important;
+  }
+  .el-form, .el-form-item, .el-button {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+  }
+  .header, .el-form .el-form-item {
+    flex-direction: column !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+  }
+  .el-table {
+    font-size: 13px !important;
+    min-width: 600px !important;
+  }
+  .el-table__body-wrapper {
+    overflow-x: auto !important;
+  }
+  .el-tabs__nav {
+    flex-wrap: wrap !important;
+  }
+  .el-alert, .el-message {
+    font-size: 14px !important;
+  }
+}
