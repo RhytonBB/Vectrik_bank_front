@@ -9,14 +9,24 @@
     </el-tabs>
     <div v-if="activeTab === 'users'">
       <div class="header">
-        <h2>Пользователи</h2>
         <el-button type="primary" @click="goToRegister">➕ Зарегистрировать нового пользователя</el-button>
         <el-button type="primary" @click="sortByBalanceDesc">Сортировать по балансу ↓</el-button>
         <el-button type="primary" @click="sortByBalanceAsc">Сортировать по балансу ↑</el-button>
         <el-button type="primary" @click="sortByLastNameAZ">Фамилия А-Я</el-button>
         <el-button type="primary" @click="sortByLastNameZA">Фамилия Я-А</el-button>
       </div>
-      <el-table :data="users" style="width: 100%" @row-click="goToUser">
+      <div v-if="isMobile" class="mobile-user-list">
+        <div v-for="user in users" :key="user.id" class="user-card" @click="goToUser(user)">
+          <div class="user-row"><b>ID:</b> {{ user.id }}</div>
+          <div class="user-row"><b>ФИО:</b> {{ user.last_name }} {{ user.first_name }}</div>
+          <div class="user-row"><b>Telegram:</b> {{ user.telegram_username }}</div>
+          <div class="user-row"><b>Группа:</b> <span v-if="user.group">{{ user.group.name }}</span><span v-else style="color:#aaa">—</span></div>
+          <div class="user-row"><b>Вектриков:</b> {{ user.balance }}</div>
+          <div class="user-row"><b>Активен:</b> <el-tag :type="user.is_active ? 'success' : 'danger'">{{ user.is_active ? 'Да' : 'Нет' }}</el-tag></div>
+          <div class="user-row"><b>Админ:</b> <el-tag :type="user.is_admin ? 'success' : 'info'">{{ user.is_admin ? 'Да' : 'Нет' }}</el-tag></div>
+        </div>
+      </div>
+      <el-table v-else :data="users" style="width: 100%" @row-click="goToUser">
         <el-table-column prop="id" label="ID" width="60"/>
         <el-table-column label="Фамилия Имя">
           <template #default="scope">
@@ -62,6 +72,7 @@ import AdminGroups from './AdminGroups.vue'
 const users = ref([])
 const router = useRouter()
 const activeTab = ref('users')
+const isMobile = ref(false)
 
 const fetchUsers = async () => {
   const resp = await axios.get('/api/admin/users')
@@ -89,51 +100,68 @@ const sortByLastNameZA = () => {
   users.value = [...users.value].sort((a, b) => b.last_name.localeCompare(a.last_name, 'ru'))
 }
 
-const handleTabChange = () => {
-  // Можно добавить логику, если нужно
-}
+const handleTabChange = () => {}
 
-onMounted(fetchUsers)
+onMounted(() => {
+  fetchUsers()
+  isMobile.value = window.innerWidth < 600
+  window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth < 600
+  })
+})
 </script>
 
 <style scoped>
-:deep(.el-tabs__item.is-active) {
-  color: #17624A !important;
-  font-weight: 700;
-}
-:deep(.el-tabs__active-bar) {
-  background-color: #17624A !important;
-}
-:deep(.el-tabs__item:hover) {
-  color: #17624A !important;
-  background: transparent !important;
-}
 @media (max-width: 600px) {
-  .header {
-    flex-direction: column !important;
-    gap: 10px !important;
-    align-items: stretch !important;
-    margin-bottom: 12px !important;
-  }
-  .el-table {
-    font-size: 13px !important;
-    min-width: 600px !important;
-  }
-  .el-table__body-wrapper {
-    overflow-x: auto !important;
-  }
   .el-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
     padding: 12px 2vw !important;
     border-radius: 10px !important;
+    box-shadow: none !important;
     box-sizing: border-box;
+  }
+  .header {
+    flex-direction: column !important;
+    gap: 14px !important;
+    align-items: stretch !important;
+    margin-bottom: 16px !important;
   }
   .el-button {
     width: 100% !important;
     min-width: 0 !important;
-    font-size: 16px !important;
-    margin-bottom: 6px !important;
+    font-size: 18px !important;
+    margin-bottom: 8px !important;
+    border-radius: 8px !important;
+    height: 48px !important;
+  }
+  .mobile-user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 10px;
+  }
+  .user-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px 12px;
+    box-shadow: 0 2px 8px rgba(17,87,64,0.04);
+    font-size: 16px;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+  .user-card:active {
+    box-shadow: 0 4px 16px rgba(17,87,64,0.10);
+  }
+  .user-row {
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  h2 {
+    font-size: 1.3rem !important;
+    margin-bottom: 10px !important;
   }
 }
 </style> 

@@ -215,32 +215,45 @@ onMounted(() => {
   .el-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
-    padding: 12px 2vw !important;
+    padding: 14px 2vw !important;
     border-radius: 10px !important;
+    box-shadow: none !important;
     box-sizing: border-box;
   }
   .el-form, .el-form-item, .el-button {
     width: 100% !important;
     min-width: 0 !important;
     box-sizing: border-box;
-    font-size: 16px !important;
+    font-size: 18px !important;
+    margin-bottom: 10px !important;
   }
-  .el-descriptions {
-    font-size: 13px !important;
-    min-width: 600px !important;
-    overflow-x: auto !important;
+  .el-tabs {
+    font-size: 17px !important;
   }
   .el-tabs__nav {
     flex-wrap: wrap !important;
+    gap: 8px !important;
   }
-  .el-tabs {
-    font-size: 15px !important;
+  .el-descriptions {
+    font-size: 16px !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    margin-bottom: 12px !important;
   }
   .el-divider {
     margin: 10px 0 !important;
   }
   .el-alert {
-    font-size: 15px !important;
+    font-size: 16px !important;
+    margin-bottom: 10px !important;
+    border-radius: 8px !important;
+  }
+  .el-button[type="danger"], .el-button[type="success"] {
+    margin-top: 10px !important;
+    height: 48px !important;
+    font-size: 18px !important;
+    width: 100% !important;
+    border-radius: 8px !important;
   }
 }
 </style> 

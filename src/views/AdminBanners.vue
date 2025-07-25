@@ -4,7 +4,19 @@
       <i class="el-icon-arrow-left" style="margin-right: 6px;"></i>Назад
     </el-button>
     <h2>Баннеры</h2>
-    <el-table :data="banners" style="width: 100%">
+    <div v-if="isMobile" class="mobile-banner-list">
+      <div v-for="banner in banners" :key="banner.id" class="banner-card">
+        <div class="banner-row"><b>ID:</b> {{ banner.id }}</div>
+        <div class="banner-row"><b>Заголовок:</b> {{ banner.title }}</div>
+        <div class="banner-row"><b>Превью:</b> <img v-if="banner.image_url" :src="banner.image_url" style="max-width:100px;max-height:60px;"/></div>
+        <div class="banner-row"><b>Активен:</b> <el-switch v-model="banner.is_active" @change="() => toggleActive(banner)"/></div>
+        <div class="banner-row banner-actions">
+          <el-button size="small" @click.stop="openEdit(banner)">Редактировать</el-button>
+          <el-button type="danger" size="small" @click.stop="deleteBanner(banner)">Удалить</el-button>
+        </div>
+      </div>
+    </div>
+    <el-table v-else :data="banners" style="width: 100%">
       <el-table-column prop="id" label="ID" width="60"/>
       <el-table-column prop="title" label="Заголовок"/>
       <el-table-column prop="image_url" label="Превью" width="120">
@@ -83,6 +95,7 @@ import axios from 'axios'
 const banners = ref([])
 const newBanner = ref({ title: '', file: null })
 const error = ref('')
+const isMobile = ref(false)
 
 const fetchBanners = async () => {
   try {
@@ -131,8 +144,6 @@ const editBanner = ref({ id: null, title: '', image_url: '', is_active: true, ne
 
 const handleEditFileChange = (file) => {
   editBanner.value.newFile = file.raw
-  
-  // Создаем превью для новой фотографии
   const reader = new FileReader()
   reader.onload = (e) => {
     editBanner.value.newFilePreview = e.target.result
@@ -147,7 +158,6 @@ const openEdit = (row) => {
 
 const saveEdit = async () => {
   if (editBanner.value.newFile) {
-    // Загружаем новый файл
     const formData = new FormData()
     formData.append('file', editBanner.value.newFile)
     const uploadRes = await axios.post('/api/admin/products/upload', formData, {
@@ -155,7 +165,6 @@ const saveEdit = async () => {
     })
     editBanner.value.image_url = uploadRes.data.url
   }
-  
   await axios.put(`/api/admin/banners/${editBanner.value.id}`, {
     title: editBanner.value.title,
     image_url: editBanner.value.image_url,
@@ -174,49 +183,66 @@ const deleteBanner = async (row) => {
   }
 }
 
-onMounted(fetchBanners)
-</script> 
+onMounted(() => {
+  fetchBanners()
+  isMobile.value = window.innerWidth < 600
+  window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth < 600
+  })
+})
+</script>
 
 <style scoped>
 @media (max-width: 600px) {
   .el-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
-    padding: 12px 2vw !important;
+    padding: 14px 2vw !important;
     border-radius: 10px !important;
+    box-shadow: none !important;
     box-sizing: border-box;
   }
   h2 {
-    font-size: 1.2rem !important;
-    margin-bottom: 12px !important;
+    font-size: 1.3rem !important;
+    margin-bottom: 14px !important;
   }
   .el-form, .el-form-item, .el-button {
     width: 100% !important;
     min-width: 0 !important;
     box-sizing: border-box;
-    font-size: 16px !important;
+    font-size: 18px !important;
+    margin-bottom: 10px !important;
   }
-  .el-table {
-    font-size: 13px !important;
-    min-width: 600px !important;
+  .mobile-banner-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 10px;
   }
-  .el-table__body-wrapper {
-    overflow-x: auto !important;
+  .banner-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px 12px;
+    box-shadow: 0 2px 8px rgba(17,87,64,0.04);
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .banner-row {
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .banner-actions {
+    gap: 8px;
+    margin-top: 8px;
   }
   .el-dialog {
     width: 98vw !important;
     min-width: 0 !important;
     padding: 0 !important;
-  }
-  .el-upload {
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-  .el-upload__text {
-    font-size: 15px !important;
-  }
-  .el-upload__tip {
-    font-size: 13px !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
   }
 }
 </style> 

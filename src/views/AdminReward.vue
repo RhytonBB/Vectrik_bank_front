@@ -8,7 +8,7 @@
       <el-tab-pane label="Моя группа" name="group"></el-tab-pane>
       <el-tab-pane label="Общий список" name="all"></el-tab-pane>
     </el-tabs>
-    <el-form :inline="true" @submit.prevent="searchUsers">
+    <el-form :inline="!isMobile" @submit.prevent="searchUsers">
       <el-form-item label="Поиск пользователей:">
         <el-input v-model="query" placeholder="Имя, фамилия или логин" />
       </el-form-item>
@@ -18,15 +18,19 @@
     </el-form>
     <el-form @submit.prevent="sendReward">
       <h3>Пользователи:</h3>
-      <div v-if="users.length">
+      <div v-if="isMobile" class="mobile-user-list">
+        <div v-for="u in users" :key="u.id" class="user-card">
+          <el-checkbox :value="u.id" v-model="selectedUsers">
+            {{ u.first_name }} {{ u.last_name }} ({{ u.telegram_username }})
+          </el-checkbox>
+        </div>
+      </div>
+      <div v-else>
         <el-checkbox-group v-model="selectedUsers">
           <el-checkbox v-for="u in users" :key="u.id" :value="u.id">
             {{ u.first_name }} {{ u.last_name }} ({{ u.telegram_username }})
           </el-checkbox>
         </el-checkbox-group>
-      </div>
-      <div v-else>
-        <p>Пользователи не найдены</p>
       </div>
       <el-form-item label="Причина:">
         <el-select v-model="reason" placeholder="Выберите причину" required @change="onReasonChange">
@@ -40,7 +44,7 @@
         <el-input v-model="context" type="textarea" />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" native-type="submit">Начислить</el-button>
+        <el-button type="primary" native-type="submit" style="width:100%;font-size:18px;height:48px;">Начислить</el-button>
       </el-form-item>
     </el-form>
     <el-alert v-if="message" :title="message" type="success" show-icon closable @close="message = ''" />
@@ -61,6 +65,7 @@ const reason = ref('')
 const context = ref('')
 const message = ref('')
 const error = ref('')
+const isMobile = ref(false)
 
 const reasons = [
   { label: '+5 за активность в группе Вектора', value: '+5 за активность в группе Вектора', amount: 5 },
@@ -85,16 +90,12 @@ const fetchUsers = async () => {
     error.value = 'Ошибка поиска пользователей'
   }
 }
-
 const searchUsers = fetchUsers
-
 watch(activeTab, fetchUsers)
-
 const onReasonChange = (val) => {
   const found = reasons.find(r => r.value === val)
   if (found) amount.value = found.amount
 }
-
 const sendReward = async () => {
   try {
     await axios.post('/api/admin/reward', {
@@ -109,8 +110,13 @@ const sendReward = async () => {
     error.value = 'Ошибка начисления'
   }
 }
-
-onMounted(fetchUsers)
+onMounted(() => {
+  fetchUsers()
+  isMobile.value = window.innerWidth < 600
+  window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth < 600
+  })
+})
 </script>
 
 <style scoped>
@@ -144,31 +150,43 @@ h1 {
   .reward-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
-    padding: 12px 2vw !important;
+    padding: 16px 2vw !important;
     border-radius: 10px !important;
+    box-shadow: none !important;
     box-sizing: border-box;
   }
   h1 {
-    font-size: 1.2rem !important;
-    margin-bottom: 12px !important;
+    font-size: 1.3rem !important;
+    margin-bottom: 14px !important;
   }
   .el-form, .el-form-item, .el-button {
     width: 100% !important;
     min-width: 0 !important;
     box-sizing: border-box;
-    font-size: 16px !important;
+    font-size: 18px !important;
+    margin-bottom: 10px !important;
   }
-  .el-checkbox-group {
-    flex-direction: column !important;
-    gap: 10px !important;
+  .mobile-user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 10px;
+    margin-bottom: 10px;
   }
-  .el-select, .el-input, .el-input-number {
-    width: 100% !important;
-    min-width: 0 !important;
-    font-size: 16px !important;
+  .user-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px 10px;
+    box-shadow: 0 2px 8px rgba(17,87,64,0.04);
+    font-size: 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
   }
   .el-alert {
-    font-size: 15px !important;
+    font-size: 16px !important;
+    margin-bottom: 10px !important;
+    border-radius: 8px !important;
   }
 }
 </style> 

@@ -259,39 +259,45 @@ h1 {
   .register-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
-    padding: 12px 2vw !important;
+    padding: 14px 2vw !important;
     border-radius: 10px !important;
+    box-shadow: none !important;
     box-sizing: border-box;
   }
   h1 {
-    font-size: 1.2rem !important;
-    margin-bottom: 12px !important;
+    font-size: 1.3rem !important;
+    margin-bottom: 14px !important;
   }
   .el-form, .el-form-item, .el-button {
     width: 100% !important;
     min-width: 0 !important;
     box-sizing: border-box;
-    font-size: 16px !important;
-  }
-  .bulk-upload, .preview-section {
-    padding: 10px 0 !important;
-  }
-  .el-table {
-    font-size: 13px !important;
-    min-width: 600px !important;
-  }
-  .el-table__body-wrapper {
-    overflow-x: auto !important;
+    font-size: 18px !important;
+    margin-bottom: 10px !important;
   }
   .el-upload {
     width: 100% !important;
     min-width: 0 !important;
+    margin-bottom: 10px !important;
   }
   .el-upload__text {
-    font-size: 15px !important;
+    font-size: 16px !important;
   }
   .el-upload__tip {
-    font-size: 13px !important;
+    font-size: 14px !important;
+  }
+  .preview-section {
+    margin-top: 14px !important;
+    padding: 14px !important;
+    background: #f8f9fa !important;
+    border-radius: 8px !important;
+  }
+  .el-table {
+    font-size: 15px !important;
+    min-width: 700px !important;
+  }
+  .el-table__body-wrapper {
+    overflow-x: auto !important;
   }
 }
 </style> 

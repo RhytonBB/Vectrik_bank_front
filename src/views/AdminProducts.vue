@@ -4,10 +4,19 @@
       <i class="el-icon-arrow-left" style="margin-right: 6px;"></i>Назад
     </el-button>
     <div class="header">
-      <h2>Товары/Лоты</h2>
       <el-button type="primary" @click="goToAdd">Добавить товар</el-button>
     </div>
-    <el-table :data="products" style="width: 100%" @row-click="goToEdit">
+    <div v-if="isMobile" class="mobile-product-list">
+      <div v-for="product in products" :key="product.id" class="product-card" @click="goToEdit(product)">
+        <div class="product-row"><b>ID:</b> {{ product.id }}</div>
+        <div class="product-row"><b>Название:</b> {{ product.name }}</div>
+        <div class="product-row"><b>Тип:</b> {{ product.type }}</div>
+        <div class="product-row"><b>Цена:</b> {{ product.price }}</div>
+        <div class="product-row"><b>Остаток:</b> {{ product.stock }}</div>
+        <div class="product-row"><b>Активен:</b> <el-tag :type="product.is_active ? 'success' : 'danger'">{{ product.is_active ? 'Да' : 'Нет' }}</el-tag></div>
+      </div>
+    </div>
+    <el-table v-else :data="products" style="width: 100%" @row-click="goToEdit">
       <el-table-column prop="id" label="ID" width="60"/>
       <el-table-column prop="name" label="Название"/>
       <el-table-column prop="type" label="Тип"/>
@@ -36,6 +45,7 @@ import axios from 'axios'
 
 const products = ref([])
 const router = useRouter()
+const isMobile = ref(false)
 
 const fetchProducts = async () => {
   const resp = await axios.get('/api/admin/products')
@@ -57,36 +67,62 @@ const deleteProduct = async (row) => {
   }
 }
 
-onMounted(fetchProducts)
+onMounted(() => {
+  fetchProducts()
+  isMobile.value = window.innerWidth < 600
+  window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth < 600
+  })
+})
 </script>
 
 <style scoped>
 @media (max-width: 600px) {
-  .header {
-    flex-direction: column !important;
-    gap: 10px !important;
-    align-items: stretch !important;
-    margin-bottom: 12px !important;
-  }
-  .el-table {
-    font-size: 13px !important;
-    min-width: 600px !important;
-  }
-  .el-table__body-wrapper {
-    overflow-x: auto !important;
-  }
   .el-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
     padding: 12px 2vw !important;
     border-radius: 10px !important;
+    box-shadow: none !important;
     box-sizing: border-box;
+  }
+  .header {
+    flex-direction: column !important;
+    gap: 14px !important;
+    align-items: stretch !important;
+    margin-bottom: 16px !important;
   }
   .el-button {
     width: 100% !important;
     min-width: 0 !important;
-    font-size: 16px !important;
-    margin-bottom: 6px !important;
+    font-size: 18px !important;
+    margin-bottom: 8px !important;
+    border-radius: 8px !important;
+    height: 48px !important;
+  }
+  .mobile-product-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 10px;
+  }
+  .product-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px 12px;
+    box-shadow: 0 2px 8px rgba(17,87,64,0.04);
+    font-size: 16px;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+  .product-card:active {
+    box-shadow: 0 4px 16px rgba(17,87,64,0.10);
+  }
+  .product-row {
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 }
 </style> 

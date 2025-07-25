@@ -4,7 +4,14 @@
       <h2>Группы</h2>
       <el-button type="primary" @click="showCreate = true">➕ Создать группу</el-button>
     </div>
-    <el-table :data="groups" style="width: 100%; margin-bottom: 24px;">
+    <div v-if="isMobile" class="mobile-group-list">
+      <div v-for="group in groups" :key="group.id" class="group-card">
+        <div class="group-row"><b>ID:</b> {{ group.id }}</div>
+        <div class="group-row"><b>Название:</b> {{ group.name }}</div>
+        <div class="group-row"><b>Админы:</b> <span v-if="group.admins && group.admins.length">{{ group.admins.map(a => a.first_name + ' ' + a.last_name).join(', ') }}</span><span v-else style="color:#aaa">—</span></div>
+      </div>
+    </div>
+    <el-table v-else :data="groups" style="width: 100%; margin-bottom: 24px;">
       <el-table-column prop="id" label="ID" width="80" />
       <el-table-column prop="name" label="Название группы" />
       <el-table-column label="Админы">
@@ -48,6 +55,7 @@ const showCreate = ref(false)
 const groupName = ref('')
 const selectedAdmins = ref([])
 const error = ref('')
+const isMobile = ref(false)
 
 const fetchGroups = async () => {
   const resp = await axios.get('/api/admin/groups')
@@ -81,6 +89,10 @@ const createGroup = async () => {
 onMounted(() => {
   fetchGroups()
   fetchAdmins()
+  isMobile.value = window.innerWidth < 600
+  window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth < 600
+  })
 })
 </script>
 
@@ -95,36 +107,58 @@ onMounted(() => {
   .el-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
-    padding: 12px 2vw !important;
+    padding: 14px 2vw !important;
     border-radius: 10px !important;
+    box-shadow: none !important;
     box-sizing: border-box;
   }
   .header {
     flex-direction: column !important;
-    gap: 8px !important;
+    gap: 14px !important;
     align-items: stretch !important;
+    margin-bottom: 16px !important;
   }
-  h2 {
-    font-size: 1.2rem !important;
-    margin-bottom: 12px !important;
+  .el-button {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 18px !important;
+    margin-bottom: 8px !important;
+    border-radius: 8px !important;
+    height: 48px !important;
   }
-  .el-table {
-    font-size: 13px !important;
-    min-width: 600px !important;
+  .mobile-group-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 10px;
   }
-  .el-table__body-wrapper {
-    overflow-x: auto !important;
+  .group-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px 12px;
+    box-shadow: 0 2px 8px rgba(17,87,64,0.04);
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .group-row {
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   .el-dialog {
     width: 98vw !important;
     min-width: 0 !important;
     padding: 0 !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
   }
   .el-form, .el-form-item, .el-button {
     width: 100% !important;
     min-width: 0 !important;
     box-sizing: border-box;
-    font-size: 16px !important;
+    font-size: 18px !important;
+    margin-bottom: 10px !important;
   }
 }
 </style> 
