@@ -144,8 +144,9 @@ h1 {
   .reward-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
-    padding: 12px 4vw !important;
+    padding: 12px 2vw !important;
     border-radius: 10px !important;
+    box-sizing: border-box;
   }
   h1 {
     font-size: 1.2rem !important;
@@ -155,10 +156,19 @@ h1 {
     width: 100% !important;
     min-width: 0 !important;
     box-sizing: border-box;
+    font-size: 16px !important;
   }
   .el-checkbox-group {
     flex-direction: column !important;
-    gap: 8px !important;
+    gap: 10px !important;
+  }
+  .el-select, .el-input, .el-input-number {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 16px !important;
+  }
+  .el-alert {
+    font-size: 15px !important;
   }
 }
 </style> 

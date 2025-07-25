@@ -109,7 +109,7 @@ onMounted(fetchProduct)
   .el-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
-    padding: 12px 4vw !important;
+    padding: 12px 2vw !important;
     border-radius: 10px !important;
     box-sizing: border-box;
   }
@@ -121,6 +121,17 @@ onMounted(fetchProduct)
     width: 100% !important;
     min-width: 0 !important;
     box-sizing: border-box;
+    font-size: 16px !important;
+  }
+  .el-upload {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .el-upload__text {
+    font-size: 15px !important;
+  }
+  .el-upload__tip {
+    font-size: 13px !important;
   }
 }
 </style> 

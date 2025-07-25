@@ -95,7 +95,7 @@ onMounted(() => {
   .el-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
-    padding: 12px 4vw !important;
+    padding: 12px 2vw !important;
     border-radius: 10px !important;
     box-sizing: border-box;
   }
@@ -114,6 +114,17 @@ onMounted(() => {
   }
   .el-table__body-wrapper {
     overflow-x: auto !important;
+  }
+  .el-dialog {
+    width: 98vw !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+  }
+  .el-form, .el-form-item, .el-button {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+    font-size: 16px !important;
   }
 }
 </style> 

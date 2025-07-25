@@ -87,12 +87,26 @@ onMounted(() => {
   --el-menu-active-color: var(--color-primary);
   border-radius: 12px;
 }
-
+/* Кастомная подсветка пунктов меню */
+:deep(.el-menu-item) {
+  transition: background 0.2s, color 0.2s;
+  background: transparent !important;
+}
+:deep(.el-menu-item:hover),
+:deep(.el-menu-item:focus) {
+  background: rgba(23, 98, 74, 0.07) !important;
+  color: #17624A !important;
+}
+:deep(.el-menu-item.is-active) {
+  background: rgba(23, 98, 74, 0.13) !important;
+  color: #17624A !important;
+  font-weight: 700;
+}
 @media (max-width: 600px) {
   .dashboard-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
-    padding: 12px 4vw !important;
+    padding: 12px 2vw !important;
     border-radius: 10px !important;
     box-sizing: border-box;
   }
@@ -102,12 +116,25 @@ onMounted(() => {
     align-items: flex-start !important;
   }
   .dashboard-header h1 {
-    font-size: 1.2rem !important;
+    font-size: 1.1rem !important;
     margin-bottom: 8px !important;
   }
   .dashboard-menu {
-    font-size: 15px !important;
+    font-size: 16px !important;
     border-radius: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .el-menu-item {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 16px !important;
+    padding: 12px 0 !important;
+    text-align: left !important;
   }
   .balance {
     font-size: 1rem !important;

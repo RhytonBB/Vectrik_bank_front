@@ -64,8 +64,9 @@ onMounted(fetchProducts)
 @media (max-width: 600px) {
   .header {
     flex-direction: column !important;
-    gap: 8px !important;
+    gap: 10px !important;
     align-items: stretch !important;
+    margin-bottom: 12px !important;
   }
   .el-table {
     font-size: 13px !important;
@@ -73,6 +74,19 @@ onMounted(fetchProducts)
   }
   .el-table__body-wrapper {
     overflow-x: auto !important;
+  }
+  .el-card {
+    max-width: 100vw !important;
+    margin: 12px 0 !important;
+    padding: 12px 2vw !important;
+    border-radius: 10px !important;
+    box-sizing: border-box;
+  }
+  .el-button {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 16px !important;
+    margin-bottom: 6px !important;
   }
 }
 </style> 

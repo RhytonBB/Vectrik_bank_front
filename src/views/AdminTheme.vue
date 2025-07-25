@@ -58,13 +58,27 @@ h2 {
   .theme-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
-    padding: 12px 4vw !important;
+    padding: 12px 2vw !important;
     border-radius: 10px !important;
     box-sizing: border-box;
   }
   h2 {
     font-size: 1.2rem !important;
     margin-bottom: 12px !important;
+  }
+  .el-form, .el-form-item, .el-button, .el-radio-group, .el-radio-button {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+    font-size: 16px !important;
+  }
+  .el-radio-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  .el-alert {
+    font-size: 15px !important;
   }
 }
 </style> 

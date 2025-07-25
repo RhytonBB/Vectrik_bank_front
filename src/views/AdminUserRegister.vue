@@ -259,8 +259,9 @@ h1 {
   .register-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
-    padding: 12px 4vw !important;
+    padding: 12px 2vw !important;
     border-radius: 10px !important;
+    box-sizing: border-box;
   }
   h1 {
     font-size: 1.2rem !important;
@@ -270,6 +271,7 @@ h1 {
     width: 100% !important;
     min-width: 0 !important;
     box-sizing: border-box;
+    font-size: 16px !important;
   }
   .bulk-upload, .preview-section {
     padding: 10px 0 !important;
@@ -280,6 +282,16 @@ h1 {
   }
   .el-table__body-wrapper {
     overflow-x: auto !important;
+  }
+  .el-upload {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .el-upload__text {
+    font-size: 15px !important;
+  }
+  .el-upload__tip {
+    font-size: 13px !important;
   }
 }
 </style> 
