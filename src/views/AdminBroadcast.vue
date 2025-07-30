@@ -4,117 +4,155 @@
       <i class="el-icon-arrow-left" style="margin-right: 6px;"></i>Назад
     </el-button>
     <h2>📢 Рассылка через Telegram-бота</h2>
-    <el-form :model="messageForm" label-width="200px" style="margin-bottom: 30px;" :inline="!isMobile">
-      <el-form-item label="Текст сообщения" required>
-        <el-input
-          v-model="messageForm.text"
-          type="textarea"
-          :rows="4"
-          placeholder="Введите текст сообщения..."
-        />
-      </el-form-item>
-      <el-form-item label="Медиа">
-        <el-upload
-          :auto-upload="false"
-          :show-file-list="false"
-          :on-change="handleMediaChange"
-        >
-          <el-button>Выбрать файл</el-button>
-        </el-upload>
-        <div v-if="messageForm.mediaPreview" style="margin-top: 10px;">
-          <img v-if="messageForm.mediaType === 'image'" :src="messageForm.mediaPreview" style="max-width:200px;max-height:120px;border:1px solid #ddd;border-radius:4px;"/>
-          <video v-else-if="messageForm.mediaType === 'video'" :src="messageForm.mediaPreview" style="max-width:200px;max-height:120px;" controls/>
-          <div style="margin-top: 5px; color: #666; font-size: 12px;">{{ messageForm.mediaFile?.name }}</div>
-        </div>
-      </el-form-item>
-      <el-form-item label="Целевая аудитория" required>
-        <el-radio-group v-model="messageForm.targetType" @change="handleTargetTypeChange">
-          <el-radio label="all">Всем пользователям</el-radio>
-          <el-radio label="registered">Только зарегистрированным</el-radio>
-          <el-radio label="manual">Выбрать вручную</el-radio>
-        </el-radio-group>
-      </el-form-item>
-      <el-form-item v-if="messageForm.targetType === 'manual'" label="Выбор пользователей">
-        <el-select
-          v-model="messageForm.targetUserIDs"
-          multiple
-          filterable
-          placeholder="Выберите пользователей"
-          style="width: 100%"
-        >
-          <el-option
-            v-for="user in availableUsers"
-            :key="user.id"
-            :label="`${user.first_name} ${user.last_name} (@${user.telegram_username})`"
-            :value="user.id"
+    <div class="broadcast-form-section">
+      <h3>Отправить сообщение</h3>
+      <el-form :model="messageForm" label-width="200px" class="broadcast-form" :inline="!isMobile">
+        <el-form-item label="Текст сообщения" required class="message-text-item">
+          <el-input
+            v-model="messageForm.text"
+            type="textarea"
+            :rows="4"
+            placeholder="Введите текст сообщения..."
+            class="message-textarea"
           />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="sendMessage" :loading="sending" style="width:100%;font-size:18px;height:48px;">Отправить сообщение</el-button>
-      </el-form-item>
-    </el-form>
-    <h3>История сообщений</h3>
-    <div v-if="isMobile" class="mobile-broadcast-list">
-      <div v-for="item in broadcastHistory" :key="item.id" class="broadcast-card-mobile">
-        <div class="broadcast-row"><b>ID:</b> {{ item.id }}</div>
-        <div class="broadcast-row"><b>Текст:</b> {{ item.text }}</div>
-        <div class="broadcast-row"><b>Аудитория:</b> {{ item.target_type }}</div>
-        <div class="broadcast-row"><b>Статус:</b> {{ item.status }}</div>
-        <div class="broadcast-row"><b>Отправлено:</b> {{ item.sent_count }}</div>
-        <div class="broadcast-row"><b>Ошибок:</b> {{ item.failed_count }}</div>
-        <div class="broadcast-row"><b>Дата:</b> {{ new Date(item.created_at).toLocaleString() }}</div>
-        <el-button size="small" @click="viewHistory(item)" style="width:100%;margin-top:8px;">История</el-button>
-      </div>
-    </div>
-    <el-table v-else :data="broadcastHistory" style="width: 100%">
-      <el-table-column prop="id" label="ID" width="60"/>
-      <el-table-column prop="text" label="Текст" show-overflow-tooltip>
-        <template #default="scope">
-          <div style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            {{ scope.row.text }}
+        </el-form-item>
+        <el-form-item label="Медиа" class="media-item">
+          <el-upload
+            :auto-upload="false"
+            :show-file-list="false"
+            :on-change="handleMediaChange"
+            class="media-upload"
+          >
+            <el-button>Выбрать файл</el-button>
+          </el-upload>
+          <div v-if="messageForm.mediaPreview" class="media-preview">
+            <img v-if="messageForm.mediaType === 'image'" :src="messageForm.mediaPreview" class="preview-image"/>
+            <video v-else-if="messageForm.mediaType === 'video'" :src="messageForm.mediaPreview" class="preview-video" controls/>
+            <div class="file-info">{{ messageForm.mediaFile?.name }}</div>
           </div>
-        </template>
-      </el-table-column>
-      <el-table-column prop="target_type" label="Аудитория" width="120">
-        <template #default="scope">
-          <el-tag v-if="scope.row.target_type === 'all'" type="success">Все</el-tag>
-          <el-tag v-else-if="scope.row.target_type === 'registered'" type="warning">Зарегистрированные</el-tag>
-          <el-tag v-else type="info">Вручную</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="status" label="Статус" width="100">
-        <template #default="scope">
-          <el-tag v-if="scope.row.status === 'pending'" type="info">Ожидает</el-tag>
-          <el-tag v-else-if="scope.row.status === 'sending'" type="warning">Отправляется</el-tag>
-          <el-tag v-else-if="scope.row.status === 'completed'" type="success">Завершено</el-tag>
-          <el-tag v-else type="danger">Ошибка</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="sent_count" label="Отправлено" width="100"/>
-      <el-table-column prop="failed_count" label="Ошибок" width="100"/>
-      <el-table-column prop="created_at" label="Дата" width="150">
-        <template #default="scope">
-          {{ new Date(scope.row.created_at).toLocaleString() }}
-        </template>
-      </el-table-column>
-      <el-table-column label="" width="100">
-        <template #default="scope">
-          <el-button size="small" @click="viewHistory(scope.row)">История</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-dialog v-model="historyDialog" title="История отправки" width="800px">
+        </el-form-item>
+        <el-form-item label="Целевая аудитория" required class="target-item">
+          <el-radio-group v-model="messageForm.targetType" @change="handleTargetTypeChange" class="target-radio-group">
+            <el-radio label="all">Всем пользователям</el-radio>
+            <el-radio label="registered">Только зарегистрированным</el-radio>
+            <el-radio label="manual">Выбрать вручную</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="messageForm.targetType === 'manual'" label="Выбор пользователей" class="users-select-item">
+          <el-select
+            v-model="messageForm.targetUserIDs"
+            multiple
+            filterable
+            placeholder="Выберите пользователей"
+            class="users-select"
+          >
+            <el-option
+              v-for="user in availableUsers"
+              :key="user.id"
+              :label="`${user.first_name} ${user.last_name} (@${user.telegram_username})`"
+              :value="user.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item class="send-button-item">
+          <el-button type="primary" @click="sendMessage" :loading="sending" class="send-button">
+            Отправить сообщение
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+    
+    <div class="history-section">
+      <h3>История сообщений</h3>
+      <div v-if="isMobile" class="mobile-broadcast-list">
+        <div v-for="item in broadcastHistory" :key="item.id" class="broadcast-card-mobile">
+          <div class="broadcast-header">
+            <div class="broadcast-id">ID: {{ item.id }}</div>
+            <div class="broadcast-status" :class="item.status">
+              <el-tag :type="getStatusType(item.status)" size="small">{{ getStatusText(item.status) }}</el-tag>
+            </div>
+          </div>
+          <div class="broadcast-content">
+            <div class="broadcast-text">{{ item.text }}</div>
+            <div class="broadcast-target">
+              <span class="target-label">Аудитория:</span>
+              <el-tag :type="getTargetType(item.target_type)" size="small">{{ getTargetText(item.target_type) }}</el-tag>
+            </div>
+          </div>
+          <div class="broadcast-stats">
+            <div class="stat-item">
+              <span class="stat-label">Отправлено:</span>
+              <span class="stat-value success">{{ item.sent_count }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Ошибок:</span>
+              <span class="stat-value danger">{{ item.failed_count }}</span>
+            </div>
+          </div>
+          <div class="broadcast-footer">
+            <div class="broadcast-date">{{ formatDate(item.created_at) }}</div>
+            <el-button size="small" @click="viewHistory(item)" class="history-btn">История</el-button>
+          </div>
+        </div>
+      </div>
+      <el-table v-else :data="broadcastHistory" style="width: 100%" class="broadcast-table">
+        <el-table-column prop="id" label="ID" width="60"/>
+        <el-table-column prop="text" label="Текст" show-overflow-tooltip>
+          <template #default="scope">
+            <div class="table-text">{{ scope.row.text }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="target_type" label="Аудитория" width="120">
+          <template #default="scope">
+            <el-tag :type="getTargetType(scope.row.target_type)" size="small">
+              {{ getTargetText(scope.row.target_type) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="Статус" width="100">
+          <template #default="scope">
+            <el-tag :type="getStatusType(scope.row.status)" size="small">
+              {{ getStatusText(scope.row.status) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="sent_count" label="Отправлено" width="100"/>
+        <el-table-column prop="failed_count" label="Ошибок" width="100"/>
+        <el-table-column prop="created_at" label="Дата" width="150">
+          <template #default="scope">
+            {{ formatDate(scope.row.created_at) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="" width="100">
+          <template #default="scope">
+            <el-button size="small" @click="viewHistory(scope.row)">История</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    
+    <el-dialog v-model="historyDialog" title="История отправки" width="800px" class="history-dialog">
       <div v-if="isMobile" class="mobile-history-list">
         <div v-for="msg in messageHistory" :key="msg.id" class="history-card-mobile">
-          <div class="history-row"><b>Пользователь:</b> {{ msg.user?.first_name }} {{ msg.user?.last_name }}</div>
-          <div class="history-row"><b>Telegram:</b> @{{ msg.user?.telegram_username }}</div>
-          <div class="history-row"><b>Статус:</b> {{ msg.status === 'sent' ? 'Отправлено' : 'Ошибка' }}</div>
-          <div class="history-row"><b>Ошибка:</b> {{ msg.error_message || '-' }}</div>
-          <div class="history-row"><b>Время:</b> {{ new Date(msg.sent_at).toLocaleString() }}</div>
+          <div class="history-header">
+            <div class="user-name">{{ msg.user?.first_name }} {{ msg.user?.last_name }}</div>
+            <div class="user-status" :class="msg.status">
+              <el-tag :type="msg.status === 'sent' ? 'success' : 'danger'" size="small">
+                {{ msg.status === 'sent' ? 'Отправлено' : 'Ошибка' }}
+              </el-tag>
+            </div>
+          </div>
+          <div class="user-info">
+            <div class="telegram-username">@{{ msg.user?.telegram_username }}</div>
+            <div class="sent-time">{{ formatDate(msg.sent_at) }}</div>
+          </div>
+          <div v-if="msg.error_message" class="error-message">
+            <span class="error-label">Ошибка:</span>
+            <span class="error-text">{{ msg.error_message }}</span>
+          </div>
         </div>
       </div>
-      <el-table v-else :data="messageHistory" style="width: 100%">
+      <el-table v-else :data="messageHistory" style="width: 100%" class="history-table">
         <el-table-column prop="user.first_name" label="Пользователь">
           <template #default="scope">
             {{ scope.row.user?.first_name }} {{ scope.row.user?.last_name }}
@@ -127,8 +165,9 @@
         </el-table-column>
         <el-table-column prop="status" label="Статус" width="100">
           <template #default="scope">
-            <el-tag v-if="scope.row.status === 'sent'" type="success">Отправлено</el-tag>
-            <el-tag v-else type="danger">Ошибка</el-tag>
+            <el-tag :type="scope.row.status === 'sent' ? 'success' : 'danger'" size="small">
+              {{ scope.row.status === 'sent' ? 'Отправлено' : 'Ошибка' }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="error_message" label="Ошибка" show-overflow-tooltip>
@@ -138,7 +177,7 @@
         </el-table-column>
         <el-table-column prop="sent_at" label="Время" width="150">
           <template #default="scope">
-            {{ new Date(scope.row.sent_at).toLocaleString() }}
+            {{ formatDate(scope.row.sent_at) }}
           </template>
         </el-table-column>
       </el-table>
@@ -168,6 +207,51 @@ const sending = ref(false)
 const error = ref('')
 const success = ref('')
 const isMobile = ref(false)
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const getStatusType = (status) => {
+  switch (status) {
+    case 'pending': return 'info'
+    case 'sending': return 'warning'
+    case 'completed': return 'success'
+    default: return 'danger'
+  }
+}
+
+const getStatusText = (status) => {
+  switch (status) {
+    case 'pending': return 'Ожидает'
+    case 'sending': return 'Отправляется'
+    case 'completed': return 'Завершено'
+    default: return 'Ошибка'
+  }
+}
+
+const getTargetType = (targetType) => {
+  switch (targetType) {
+    case 'all': return 'success'
+    case 'registered': return 'warning'
+    default: return 'info'
+  }
+}
+
+const getTargetText = (targetType) => {
+  switch (targetType) {
+    case 'all': return 'Все'
+    case 'registered': return 'Зарегистрированные'
+    default: return 'Вручную'
+  }
+}
 
 const fetchBroadcastHistory = async () => {
   try {
@@ -270,72 +354,354 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.broadcast-form-section {
+  margin-bottom: 32px;
+  padding: 24px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.broadcast-form-section h3 {
+  margin-bottom: 20px;
+  color: var(--color-primary);
+}
+
+.broadcast-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.message-text-item {
+  width: 100%;
+}
+
+.message-textarea {
+  width: 100%;
+}
+
+.media-item {
+  width: 100%;
+}
+
+.media-upload {
+  margin-bottom: 12px;
+}
+
+.media-preview {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.preview-image, .preview-video {
+  max-width: 200px;
+  max-height: 120px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.file-info {
+  font-size: 12px;
+  color: #666;
+}
+
+.target-item {
+  width: 100%;
+}
+
+.target-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.users-select-item {
+  width: 100%;
+}
+
+.users-select {
+  width: 100%;
+}
+
+.send-button-item {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.send-button {
+  width: 100%;
+  height: 48px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.history-section {
+  margin-top: 32px;
+}
+
+.history-section h3 {
+  margin-bottom: 20px;
+  color: var(--color-primary);
+}
+
+.broadcast-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.broadcast-table :deep(.el-table__header) {
+  background-color: #f8f9fa;
+}
+
+.broadcast-table :deep(.el-table__row:hover) {
+  background-color: #e0f0e7 !important;
+}
+
+.table-text {
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-dialog {
+  border-radius: 12px;
+}
+
+.history-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.history-table :deep(.el-table__header) {
+  background-color: #f8f9fa;
+}
+
 @media (max-width: 600px) {
   .el-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
-    padding: 14px 2vw !important;
-    border-radius: 10px !important;
+    padding: 16px 4vw !important;
+    border-radius: 12px !important;
     box-shadow: none !important;
     box-sizing: border-box;
   }
+  
   h2, h3 {
-    font-size: 1.3rem !important;
-    margin-bottom: 14px !important;
+    font-size: 1.4rem !important;
+    margin-bottom: 16px !important;
+    color: var(--color-primary);
   }
-  .el-form, .el-form-item, .el-button {
+  
+  .broadcast-form-section {
+    margin-bottom: 24px;
+    padding: 20px;
+    border-radius: 10px;
+  }
+  
+  .broadcast-form {
+    gap: 16px;
+  }
+  
+  .el-form-item {
     width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box;
-    font-size: 18px !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 16px !important;
   }
+  
+  .el-input, .el-button, .el-select {
+    width: 100% !important;
+    font-size: 16px !important;
+  }
+  
+  .target-radio-group {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  
+  .send-button {
+    height: 52px !important;
+    font-size: 18px !important;
+    border-radius: 10px !important;
+  }
+  
   .mobile-broadcast-list {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin-top: 10px;
+    gap: 16px;
   }
+  
   .broadcast-card-mobile {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 16px 12px;
-    box-shadow: 0 2px 8px rgba(17,87,64,0.04);
-    font-size: 16px;
-    margin-bottom: 8px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(17,87,64,0.08);
+    border: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
   }
-  .broadcast-row {
-    margin-bottom: 6px;
+  
+  .broadcast-card-mobile:hover {
+    box-shadow: 0 4px 20px rgba(17,87,64,0.12);
+    transform: translateY(-2px);
+  }
+  
+  .broadcast-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .broadcast-id {
+    font-weight: 600;
+    color: #666;
+  }
+  
+  .broadcast-content {
+    margin-bottom: 16px;
+  }
+  
+  .broadcast-text {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    color: #333;
+  }
+  
+  .broadcast-target {
     display: flex;
     align-items: center;
     gap: 8px;
   }
+  
+  .target-label {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .broadcast-stats {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+  
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .stat-label {
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .stat-value {
+    font-weight: 700;
+    font-size: 18px;
+  }
+  
+  .stat-value.success {
+    color: #27ae60;
+  }
+  
+  .stat-value.danger {
+    color: #e74c3c;
+  }
+  
+  .broadcast-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .broadcast-date {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .history-btn {
+    height: 36px;
+    font-size: 14px;
+  }
+  
   .mobile-history-list {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin-top: 10px;
+    gap: 16px;
   }
+  
   .history-card-mobile {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 16px 12px;
-    box-shadow: 0 2px 8px rgba(17,87,64,0.04);
-    font-size: 16px;
-    margin-bottom: 8px;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(17,87,64,0.06);
+    border: 1px solid #f0f0f0;
   }
-  .history-row {
-    margin-bottom: 6px;
+  
+  .history-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    margin-bottom: 12px;
   }
-  .el-dialog {
-    width: 98vw !important;
-    min-width: 0 !important;
-    padding: 0 !important;
-    border-radius: 10px !important;
-    box-shadow: none !important;
+  
+  .user-name {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--color-primary);
+  }
+  
+  .user-info {
+    margin-bottom: 12px;
+  }
+  
+  .telegram-username {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 4px;
+  }
+  
+  .sent-time {
+    font-size: 12px;
+    color: #999;
+  }
+  
+  .error-message {
+    padding: 8px 12px;
+    background: #fef5f5;
+    border: 1px solid #fde8e8;
+    border-radius: 6px;
+  }
+  
+  .error-label {
+    font-size: 12px;
+    color: #e74c3c;
+    font-weight: 600;
+  }
+  
+  .error-text {
+    font-size: 14px;
+    color: #e74c3c;
+  }
+  
+  .history-dialog {
+    width: 95vw !important;
+    max-width: none !important;
+    border-radius: 12px !important;
+  }
+  
+  .el-alert {
+    font-size: 16px !important;
+    margin-top: 16px !important;
+    border-radius: 8px !important;
   }
 }
 </style> 

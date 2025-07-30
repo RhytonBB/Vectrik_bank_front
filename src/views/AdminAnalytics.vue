@@ -5,65 +5,200 @@
     </el-button>
     <h2>Аналитика</h2>
     <div v-if="isMobile">
-      <div class="kpi-mobile-list">
-        <div class="kpi-mobile-card">👤 Всего пользователей<br><b>{{ analytics.total_users }}</b></div>
-        <div class="kpi-mobile-card">🟢 Активных<br><b>{{ analytics.active_users }}</b></div>
-        <div class="kpi-mobile-card">🚫 Забанено<br><b>{{ analytics.banned_users }}</b></div>
-        <div class="kpi-mobile-card">💰 Общий баланс<br><b>{{ analytics.total_balance }}</b></div>
-        <div class="kpi-mobile-card">🆕 Новых за период<br><b>{{ analytics.new_users }}</b></div>
-        <div class="kpi-mobile-card">💸 Сумма трат<br><b>{{ analytics.total_spend }}</b></div>
-        <div class="kpi-mobile-card">💵 Сумма начислений<br><b>{{ analytics.total_reward }}</b></div>
+      <div class="kpi-mobile-grid">
+        <div class="kpi-mobile-card primary">
+          <div class="kpi-icon">👤</div>
+          <div class="kpi-content">
+            <div class="kpi-label">Всего пользователей</div>
+            <div class="kpi-value">{{ analytics.total_users }}</div>
+          </div>
+        </div>
+        <div class="kpi-mobile-card success">
+          <div class="kpi-icon">🟢</div>
+          <div class="kpi-content">
+            <div class="kpi-label">Активных</div>
+            <div class="kpi-value">{{ analytics.active_users }}</div>
+          </div>
+        </div>
+        <div class="kpi-mobile-card danger">
+          <div class="kpi-icon">🚫</div>
+          <div class="kpi-content">
+            <div class="kpi-label">Забанено</div>
+            <div class="kpi-value">{{ analytics.banned_users }}</div>
+          </div>
+        </div>
+        <div class="kpi-mobile-card warning">
+          <div class="kpi-icon">💰</div>
+          <div class="kpi-content">
+            <div class="kpi-label">Общий баланс</div>
+            <div class="kpi-value">{{ analytics.total_balance }}</div>
+          </div>
+        </div>
+        <div class="kpi-mobile-card info">
+          <div class="kpi-icon">🆕</div>
+          <div class="kpi-content">
+            <div class="kpi-label">Новых за период</div>
+            <div class="kpi-value">{{ analytics.new_users }}</div>
+          </div>
+        </div>
+        <div class="kpi-mobile-card danger">
+          <div class="kpi-icon">💸</div>
+          <div class="kpi-content">
+            <div class="kpi-label">Сумма трат</div>
+            <div class="kpi-value">{{ analytics.total_spend }}</div>
+          </div>
+        </div>
+        <div class="kpi-mobile-card success">
+          <div class="kpi-icon">💵</div>
+          <div class="kpi-content">
+            <div class="kpi-label">Сумма начислений</div>
+            <div class="kpi-value">{{ analytics.total_reward }}</div>
+          </div>
+        </div>
       </div>
-      <div style="max-width: 100vw; margin: 0 auto;">
+      <div class="chart-section">
         <h3>Динамика по дням</h3>
-        <LineChart v-if="chartData" :chart-data="chartData" :options="chartOptions" style="max-width:100vw;" />
-        <div v-else style="text-align:center; color: #888; margin-top: 40px;">Нет данных для отображения</div>
+        <div class="chart-container">
+          <LineChart v-if="chartData" :chart-data="chartData" :options="chartOptions" />
+          <div v-else class="no-data">
+            <div class="no-data-icon">📊</div>
+            <div class="no-data-text">Нет данных для отображения</div>
+          </div>
+        </div>
       </div>
       <div class="mobile-table-list">
-        <h3>Топ-10 по тратам</h3>
-        <div v-for="item in analytics.top_spenders || []" :key="item.user_id" class="table-mobile-card">
-          <div><b>Фамилия:</b> {{ item.last_name }}</div>
-          <div><b>Имя:</b> {{ item.first_name }}</div>
-          <div><b>Сумма трат:</b> {{ item.total }}</div>
+        <div class="table-section">
+          <h3>Топ-10 по тратам</h3>
+          <div v-for="(item, index) in analytics.top_spenders || []" :key="item.user_id" class="table-mobile-card">
+            <div class="rank-badge">{{ index + 1 }}</div>
+            <div class="table-content">
+              <div class="user-info">
+                <div class="user-name">{{ item.last_name }} {{ item.first_name }}</div>
+                <div class="user-detail">ID: {{ item.user_id }}</div>
+              </div>
+              <div class="amount-info">
+                <div class="amount">{{ item.total }}</div>
+                <div class="amount-label">Вектриков</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <h3>Топ-10 по начислениям</h3>
-        <div v-for="item in analytics.top_rewarded || []" :key="item.user_id" class="table-mobile-card">
-          <div><b>Фамилия:</b> {{ item.last_name }}</div>
-          <div><b>Имя:</b> {{ item.first_name }}</div>
-          <div><b>Сумма начислений:</b> {{ item.total }}</div>
+        <div class="table-section">
+          <h3>Топ-10 по начислениям</h3>
+          <div v-for="(item, index) in analytics.top_rewarded || []" :key="item.user_id" class="table-mobile-card">
+            <div class="rank-badge success">{{ index + 1 }}</div>
+            <div class="table-content">
+              <div class="user-info">
+                <div class="user-name">{{ item.last_name }} {{ item.first_name }}</div>
+                <div class="user-detail">ID: {{ item.user_id }}</div>
+              </div>
+              <div class="amount-info">
+                <div class="amount success">{{ item.total }}</div>
+                <div class="amount-label">Вектриков</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <h3>Последние транзакции</h3>
-        <div v-for="item in analytics.last_transactions || []" :key="item.id" class="table-mobile-card">
-          <div><b>Дата:</b> {{ item.created_at }}</div>
-          <div><b>Фамилия:</b> {{ item.last_name }}</div>
-          <div><b>Имя:</b> {{ item.first_name }}</div>
-          <div><b>Сумма:</b> {{ item.amount }}</div>
-          <div><b>Причина:</b> {{ item.reason }}</div>
-          <div><b>Источник:</b> {{ item.source }}</div>
+        <div class="table-section">
+          <h3>Последние транзакции</h3>
+          <div v-for="item in analytics.last_transactions || []" :key="item.id" class="table-mobile-card transaction">
+            <div class="transaction-header">
+              <div class="transaction-date">{{ formatDate(item.created_at) }}</div>
+              <div class="transaction-amount" :class="item.amount > 0 ? 'positive' : 'negative'">
+                {{ item.amount > 0 ? '+' : '' }}{{ item.amount }}
+              </div>
+            </div>
+            <div class="transaction-details">
+              <div class="user-name">{{ item.last_name }} {{ item.first_name }}</div>
+              <div class="transaction-reason">{{ item.reason }}</div>
+              <div class="transaction-source">{{ item.source }}</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
     <div v-else>
       <div class="kpi-row">
-        <el-card class="kpi-card"><div>👤 Всего пользователей<br><b>{{ analytics.total_users }}</b></div></el-card>
-        <el-card class="kpi-card"><div>🟢 Активных<br><b>{{ analytics.active_users }}</b></div></el-card>
-        <el-card class="kpi-card"><div>🚫 Забанено<br><b>{{ analytics.banned_users }}</b></div></el-card>
-        <el-card class="kpi-card"><div>💰 Общий баланс<br><b>{{ analytics.total_balance }}</b></div></el-card>
-        <el-card class="kpi-card"><div>🆕 Новых за период<br><b>{{ analytics.new_users }}</b></div></el-card>
+        <el-card class="kpi-card primary">
+          <div class="kpi-content">
+            <div class="kpi-icon">👤</div>
+            <div class="kpi-text">
+              <div class="kpi-label">Всего пользователей</div>
+              <div class="kpi-value">{{ analytics.total_users }}</div>
+            </div>
+          </div>
+        </el-card>
+        <el-card class="kpi-card success">
+          <div class="kpi-content">
+            <div class="kpi-icon">🟢</div>
+            <div class="kpi-text">
+              <div class="kpi-label">Активных</div>
+              <div class="kpi-value">{{ analytics.active_users }}</div>
+            </div>
+          </div>
+        </el-card>
+        <el-card class="kpi-card danger">
+          <div class="kpi-content">
+            <div class="kpi-icon">🚫</div>
+            <div class="kpi-text">
+              <div class="kpi-label">Забанено</div>
+              <div class="kpi-value">{{ analytics.banned_users }}</div>
+            </div>
+          </div>
+        </el-card>
+        <el-card class="kpi-card warning">
+          <div class="kpi-content">
+            <div class="kpi-icon">💰</div>
+            <div class="kpi-text">
+              <div class="kpi-label">Общий баланс</div>
+              <div class="kpi-value">{{ analytics.total_balance }}</div>
+            </div>
+          </div>
+        </el-card>
+        <el-card class="kpi-card info">
+          <div class="kpi-content">
+            <div class="kpi-icon">🆕</div>
+            <div class="kpi-text">
+              <div class="kpi-label">Новых за период</div>
+              <div class="kpi-value">{{ analytics.new_users }}</div>
+            </div>
+          </div>
+        </el-card>
       </div>
       <div class="kpi-row">
-        <el-card class="kpi-card"><div>💸 Сумма трат<br><b>{{ analytics.total_spend }}</b></div></el-card>
-        <el-card class="kpi-card"><div>💵 Сумма начислений<br><b>{{ analytics.total_reward }}</b></div></el-card>
+        <el-card class="kpi-card danger">
+          <div class="kpi-content">
+            <div class="kpi-icon">💸</div>
+            <div class="kpi-text">
+              <div class="kpi-label">Сумма трат</div>
+              <div class="kpi-value">{{ analytics.total_spend }}</div>
+            </div>
+          </div>
+        </el-card>
+        <el-card class="kpi-card success">
+          <div class="kpi-content">
+            <div class="kpi-icon">💵</div>
+            <div class="kpi-text">
+              <div class="kpi-label">Сумма начислений</div>
+              <div class="kpi-value">{{ analytics.total_reward }}</div>
+            </div>
+          </div>
+        </el-card>
       </div>
-      <div style="max-width: 800px; margin: 0 auto;">
+      <div class="chart-section">
         <h3>Динамика по дням</h3>
-        <LineChart v-if="chartData" :chart-data="chartData" :options="chartOptions" />
-        <div v-else style="text-align:center; color: #888; margin-top: 40px;">Нет данных для отображения</div>
+        <div class="chart-container">
+          <LineChart v-if="chartData" :chart-data="chartData" :options="chartOptions" />
+          <div v-else class="no-data">
+            <div class="no-data-icon">📊</div>
+            <div class="no-data-text">Нет данных для отображения</div>
+          </div>
+        </div>
       </div>
       <div class="tables-row">
         <div class="table-block">
           <h3>Топ-10 по тратам</h3>
-          <el-table :data="analytics.top_spenders || []" size="small">
+          <el-table :data="analytics.top_spenders || []" size="small" class="analytics-table">
             <el-table-column prop="last_name" label="Фамилия" />
             <el-table-column prop="first_name" label="Имя" />
             <el-table-column prop="total" label="Сумма трат" />
@@ -71,16 +206,16 @@
         </div>
         <div class="table-block">
           <h3>Топ-10 по начислениям</h3>
-          <el-table :data="analytics.top_rewarded || []" size="small">
+          <el-table :data="analytics.top_rewarded || []" size="small" class="analytics-table">
             <el-table-column prop="last_name" label="Фамилия" />
             <el-table-column prop="first_name" label="Имя" />
             <el-table-column prop="total" label="Сумма начислений" />
           </el-table>
         </div>
       </div>
-      <div style="margin-top: 32px;">
+      <div class="transactions-section">
         <h3>Последние транзакции</h3>
-        <el-table :data="analytics.last_transactions || []" size="small">
+        <el-table :data="analytics.last_transactions || []" size="small" class="analytics-table">
           <el-table-column prop="created_at" label="Дата" />
           <el-table-column prop="last_name" label="Фамилия" />
           <el-table-column prop="first_name" label="Имя" />
@@ -130,10 +265,23 @@ const chartOptions = {
     }
   }
 }
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
 const fetchAnalytics = async () => {
   const resp = await axios.get('/api/admin/analytics')
   analytics.value = resp.data
 }
+
 onMounted(() => {
   fetchAnalytics()
   isMobile.value = window.innerWidth < 600
@@ -150,6 +298,7 @@ onMounted(() => {
   margin-bottom: 18px;
   flex-wrap: wrap;
 }
+
 .kpi-card {
   min-width: 150px;
   text-align: center;
@@ -159,79 +308,339 @@ onMounted(() => {
   border: 1.5px solid var(--color-primary);
   color: var(--color-primary);
   font-weight: 700;
+  transition: all 0.3s ease;
 }
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(17,87,64,0.15);
+}
+
+.kpi-card.primary {
+  border-color: #17624A;
+  background: linear-gradient(135deg, #f0f8f5 0%, #e0f0e7 100%);
+}
+
+.kpi-card.success {
+  border-color: #27ae60;
+  background: linear-gradient(135deg, #f0f9f4 0%, #e0f5e8 100%);
+}
+
+.kpi-card.danger {
+  border-color: #e74c3c;
+  background: linear-gradient(135deg, #fef5f5 0%, #fde8e8 100%);
+}
+
+.kpi-card.warning {
+  border-color: #f39c12;
+  background: linear-gradient(135deg, #fefbf0 0%, #fdf4e0 100%);
+}
+
+.kpi-card.info {
+  border-color: #3498db;
+  background: linear-gradient(135deg, #f0f8ff 0%, #e0f0ff 100%);
+}
+
+.kpi-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+}
+
+.kpi-icon {
+  font-size: 24px;
+}
+
+.kpi-text {
+  text-align: left;
+}
+
+.kpi-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.kpi-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
 .tables-row {
   display: flex;
   gap: 32px;
   margin-top: 32px;
   flex-wrap: wrap;
 }
+
 .table-block {
   flex: 1 1 300px;
   min-width: 280px;
 }
+
+.analytics-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.analytics-table :deep(.el-table__header) {
+  background-color: #f8f9fa;
+}
+
+.analytics-table :deep(.el-table__row:hover) {
+  background-color: #e0f0e7 !important;
+}
+
+.chart-section {
+  margin: 32px 0;
+}
+
+.chart-container {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(17,87,64,0.08);
+  border: 1px solid #e0e0e0;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: #888;
+}
+
+.no-data-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.no-data-text {
+  font-size: 16px;
+  color: #666;
+}
+
+.transactions-section {
+  margin-top: 32px;
+}
+
 @media (max-width: 600px) {
-  .kpi-row, .tables-row {
-    flex-direction: column !important;
-    gap: 10px !important;
-  }
-  .kpi-card {
-    min-width: 0 !important;
-    font-size: 1rem !important;
-    padding: 10px 4vw !important;
-  }
-  .table-block {
-    min-width: 0 !important;
-    padding: 0 !important;
-  }
-  .el-table {
-    font-size: 13px !important;
-    min-width: 600px !important;
-  }
-  .el-table__body-wrapper {
-    overflow-x: auto !important;
-  }
   .el-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
-    padding: 12px 2vw !important;
-    border-radius: 10px !important;
+    padding: 16px 4vw !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
     box-sizing: border-box;
   }
+  
   h2, h3 {
-    font-size: 1.2rem !important;
-    margin-bottom: 12px !important;
+    font-size: 1.4rem !important;
+    margin-bottom: 16px !important;
+    color: var(--color-primary);
   }
-  .kpi-mobile-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 10px;
+  
+  .kpi-mobile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
   }
+  
   .kpi-mobile-card {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 14px 10px;
-    font-size: 16px;
-    margin-bottom: 8px;
-    text-align: center;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px 12px;
+    box-shadow: 0 2px 8px rgba(17,87,64,0.08);
+    border: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
+  }
+  
+  .kpi-mobile-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(17,87,64,0.12);
+  }
+  
+  .kpi-mobile-card.primary {
+    border-left: 4px solid #17624A;
+  }
+  
+  .kpi-mobile-card.success {
+    border-left: 4px solid #27ae60;
+  }
+  
+  .kpi-mobile-card.danger {
+    border-left: 4px solid #e74c3c;
+  }
+  
+  .kpi-mobile-card.warning {
+    border-left: 4px solid #f39c12;
+  }
+  
+  .kpi-mobile-card.info {
+    border-left: 4px solid #3498db;
+  }
+  
+  .kpi-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .kpi-icon {
+    font-size: 20px;
+  }
+  
+  .kpi-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 4px;
+  }
+  
+  .kpi-value {
+    font-size: 18px;
     font-weight: 700;
     color: var(--color-primary);
-    border: 1.5px solid var(--color-primary);
   }
+  
+  .chart-section {
+    margin: 24px 0;
+  }
+  
+  .chart-container {
+    padding: 16px;
+    border-radius: 10px;
+  }
+  
   .mobile-table-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-top: 10px;
+    gap: 24px;
   }
+  
+  .table-section h3 {
+    margin-bottom: 16px;
+    color: var(--color-primary);
+  }
+  
   .table-mobile-card {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 12px 10px;
-    font-size: 15px;
-    margin-bottom: 8px;
-    border: 1px solid #e0e0e0;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(17,87,64,0.06);
+    border: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+  }
+  
+  .table-mobile-card:hover {
+    box-shadow: 0 4px 12px rgba(17,87,64,0.1);
+  }
+  
+  .table-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .rank-badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #17624A;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    margin-right: 12px;
+  }
+  
+  .rank-badge.success {
+    background: #27ae60;
+  }
+  
+  .user-info {
+    flex: 1;
+  }
+  
+  .user-name {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--color-primary);
+    margin-bottom: 4px;
+  }
+  
+  .user-detail {
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .amount-info {
+    text-align: right;
+  }
+  
+  .amount {
+    font-weight: 700;
+    font-size: 18px;
+    color: #e74c3c;
+  }
+  
+  .amount.success {
+    color: #27ae60;
+  }
+  
+  .amount-label {
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .transaction {
+    padding: 20px 16px;
+  }
+  
+  .transaction-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .transaction-date {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .transaction-amount {
+    font-weight: 700;
+    font-size: 18px;
+  }
+  
+  .transaction-amount.positive {
+    color: #27ae60;
+  }
+  
+  .transaction-amount.negative {
+    color: #e74c3c;
+  }
+  
+  .transaction-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .transaction-reason {
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .transaction-source {
+    font-size: 12px;
+    color: #666;
   }
 }
 </style> 

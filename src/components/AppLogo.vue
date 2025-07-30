@@ -16,5 +16,17 @@ const logoSrc = computed(() => currentTheme.value === 'pink' ? logoPink : logoGr
   height: 48px;
   width: auto;
   display: block;
+  transition: transform 0.3s ease;
+}
+
+.app-logo:hover {
+  transform: scale(1.05);
+}
+
+@media (max-width: 600px) {
+  .app-logo {
+    height: 40px !important;
+    width: auto !important;
+  }
 }
 </style>

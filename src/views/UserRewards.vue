@@ -28,18 +28,51 @@ h2 {
   color: var(--color-primary);
   font-weight: 800;
   margin-bottom: 24px;
+  text-align: center;
 }
+
+p {
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  color: #666;
+}
+
+.el-button {
+  transition: all 0.3s ease;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.el-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(17,87,64,0.15);
+}
+
 @media (max-width: 600px) {
   .user-dashboard-card {
     max-width: 100vw !important;
     margin: 12px 0 !important;
-    padding: 12px 4vw !important;
-    border-radius: 10px !important;
+    padding: 20px 4vw !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
     box-sizing: border-box;
   }
   h2 {
-    font-size: 1.2rem !important;
-    margin-bottom: 12px !important;
+    font-size: 1.4rem !important;
+    margin-bottom: 16px !important;
+  }
+  
+  p {
+    font-size: 16px !important;
+    margin-bottom: 20px !important;
+  }
+  
+  .el-button {
+    width: 100% !important;
+    height: 48px !important;
+    font-size: 18px !important;
+    border-radius: 10px !important;
   }
 }
 </style> 
