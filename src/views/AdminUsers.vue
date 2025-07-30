@@ -218,7 +218,7 @@ onMounted(() => {
     width: 100% !important;
     max-width: none !important;
     height: 48px !important;
-    font-size: 16px !important;
+    font-size: 14px !important;
     border-radius: 10px !important;
     align-self: stretch !important;
   }
@@ -231,7 +231,7 @@ onMounted(() => {
   .sort-button {
     width: calc(50% - 4px) !important;
     min-width: 0 !important;
-    font-size: 12px !important;
+    font-size: 11px !important;
     height: 44px !important;
     border-radius: 8px !important;
     white-space: nowrap !important;

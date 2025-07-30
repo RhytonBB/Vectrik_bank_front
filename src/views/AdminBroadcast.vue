@@ -422,22 +422,29 @@ onMounted(() => {
 .target-radio-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .target-radio-group :deep(.el-radio) {
   margin-right: 0;
-  margin-bottom: 8px;
-  padding: 12px;
-  border-radius: 8px;
+  margin-bottom: 0;
+  padding: 8px 12px;
+  border-radius: 6px;
   border: 1px solid #e0e0e0;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
+  background: #fff;
 }
 
 .target-radio-group :deep(.el-radio__input) {
   margin-right: 12px;
+}
+
+.target-radio-group :deep(.el-radio__label) {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
 }
 
 .target-radio-group :deep(.el-radio:hover) {
@@ -480,6 +487,14 @@ onMounted(() => {
 .send-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(17,87,64,0.15);
+}
+
+@media (min-width: 601px) {
+  .send-button {
+    width: auto;
+    min-width: 200px;
+    max-width: 300px;
+  }
 }
 
 .history-section {
@@ -563,7 +578,7 @@ onMounted(() => {
   
   .target-radio-group {
     flex-direction: column !important;
-    gap: 12px !important;
+    gap: 8px !important;
   }
   
   .target-label {
@@ -572,12 +587,17 @@ onMounted(() => {
   }
   
   .target-radio-group :deep(.el-radio) {
-    padding: 16px !important;
+    padding: 12px 16px !important;
     font-size: 16px !important;
+    border-radius: 8px !important;
   }
   
   .target-radio-group :deep(.el-radio__input) {
     margin-right: 16px !important;
+  }
+  
+  .target-radio-group :deep(.el-radio__label) {
+    font-size: 16px !important;
   }
   
   .send-button {

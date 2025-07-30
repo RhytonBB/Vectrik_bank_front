@@ -30,6 +30,9 @@
             </div>
           </div>
         </div>
+        <div class="group-status">
+          <el-tag type="success" size="small">Активна</el-tag>
+        </div>
         <div class="group-actions">
           <el-button type="danger" size="small" @click.stop="deleteGroup(group)" class="delete-btn">
             Удалить
@@ -318,27 +321,27 @@ onMounted(() => {
   }
   
   .group-details {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    margin-bottom: 16px;
   }
   
   .group-row {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 8px 0;
   }
   
   .detail-label {
-    font-weight: 600;
-    color: #666;
     font-size: 14px;
+    color: #666;
+    font-weight: 500;
   }
   
   .detail-value {
+    font-weight: 700;
     font-size: 16px;
-    color: #333;
-    font-weight: 500;
+    color: #27ae60;
   }
   
   .admins-list {
@@ -383,6 +386,11 @@ onMounted(() => {
   .no-admins-text {
     color: #666;
     font-style: italic;
+  }
+  
+  .group-status {
+    margin-bottom: 16px;
+    text-align: center;
   }
   
   .group-actions {
