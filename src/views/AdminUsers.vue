@@ -145,15 +145,18 @@ onMounted(() => {
   gap: 8px;
 }
 
-.sort-button {
-  flex: 1;
-  min-width: 120px;
-  height: 40px;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
+  .sort-button {
+    flex: 1;
+    min-width: 140px;
+    height: 40px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
 .sort-button:hover {
   transform: translateY(-2px);
@@ -228,9 +231,12 @@ onMounted(() => {
   .sort-button {
     width: calc(50% - 4px) !important;
     min-width: 0 !important;
-    font-size: 14px !important;
+    font-size: 12px !important;
     height: 44px !important;
     border-radius: 8px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
   
   .sort-button:hover {

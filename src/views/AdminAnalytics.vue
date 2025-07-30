@@ -443,7 +443,7 @@ onMounted(() => {
   
   .kpi-mobile-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 12px;
     margin-bottom: 24px;
   }
@@ -451,13 +451,15 @@ onMounted(() => {
   .kpi-mobile-card {
     background: #ffffff;
     border-radius: 10px;
-    padding: 12px;
+    padding: 16px;
     box-shadow: 0 2px 8px rgba(17,87,64,0.08);
     border: 1px solid #e0e0e0;
     transition: all 0.3s ease;
-    min-height: 80px;
+    min-height: 90px;
     display: flex;
     align-items: center;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .kpi-mobile-card:hover {
@@ -488,8 +490,9 @@ onMounted(() => {
   .kpi-content {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
+    justify-content: space-between;
   }
   
   .kpi-icon {
@@ -498,14 +501,14 @@ onMounted(() => {
   }
   
   .kpi-label {
-    font-size: 11px;
+    font-size: 13px;
     color: #666;
-    margin-bottom: 2px;
-    line-height: 1.2;
+    margin-bottom: 4px;
+    line-height: 1.3;
   }
   
   .kpi-value {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--color-primary);
     line-height: 1.2;

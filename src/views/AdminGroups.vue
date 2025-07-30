@@ -30,6 +30,11 @@
             </div>
           </div>
         </div>
+        <div class="group-actions">
+          <el-button type="danger" size="small" @click.stop="deleteGroup(group)" class="delete-btn">
+            Удалить
+          </el-button>
+        </div>
       </div>
     </div>
     <el-table v-else :data="groups" style="width: 100%; margin-bottom: 24px;" class="desktop-table">
@@ -110,6 +115,17 @@ const createGroup = async () => {
     fetchGroups()
   } catch (e) {
     error.value = 'Ошибка создания группы'
+  }
+}
+
+const deleteGroup = async (group) => {
+  if (confirm('Удалить группу?')) {
+    try {
+      await axios.delete(`/api/admin/groups/${group.id}`)
+      fetchGroups()
+    } catch (e) {
+      error.value = 'Ошибка удаления группы'
+    }
   }
 }
 onMounted(() => {
@@ -367,6 +383,19 @@ onMounted(() => {
   .no-admins-text {
     color: #666;
     font-style: italic;
+  }
+  
+  .group-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+  }
+  
+  .delete-btn {
+    width: 100%;
+    height: 44px;
+    font-size: 16px;
+    border-radius: 8px;
   }
   
   .create-dialog {

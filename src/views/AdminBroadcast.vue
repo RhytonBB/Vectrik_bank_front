@@ -31,7 +31,8 @@
             <div class="file-info">{{ messageForm.mediaFile?.name }}</div>
           </div>
         </el-form-item>
-        <el-form-item label="Целевая аудитория" required class="target-item">
+        <el-form-item class="target-item">
+          <div class="target-label">Целевая аудитория *</div>
           <el-radio-group v-model="messageForm.targetType" @change="handleTargetTypeChange" class="target-radio-group">
             <el-radio label="all">Всем пользователям</el-radio>
             <el-radio label="registered">Только зарегистрированным</el-radio>
@@ -411,6 +412,13 @@ onMounted(() => {
   width: 100%;
 }
 
+.target-label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
 .target-radio-group {
   display: flex;
   flex-direction: column;
@@ -424,6 +432,12 @@ onMounted(() => {
   border-radius: 8px;
   border: 1px solid #e0e0e0;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+
+.target-radio-group :deep(.el-radio__input) {
+  margin-right: 12px;
 }
 
 .target-radio-group :deep(.el-radio:hover) {
@@ -550,6 +564,20 @@ onMounted(() => {
   .target-radio-group {
     flex-direction: column !important;
     gap: 12px !important;
+  }
+  
+  .target-label {
+    font-size: 16px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .target-radio-group :deep(.el-radio) {
+    padding: 16px !important;
+    font-size: 16px !important;
+  }
+  
+  .target-radio-group :deep(.el-radio__input) {
+    margin-right: 16px !important;
   }
   
   .send-button {

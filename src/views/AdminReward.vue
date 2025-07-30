@@ -58,13 +58,17 @@
         <el-form-item label="Сумма (Вектрики):" class="amount-item">
           <el-input-number v-model="amount" :min="1" required class="amount-input" />
         </el-form-item>
-        <el-form-item label="Комментарий (необязательно):" class="context-item">
-          <el-input v-model="context" type="textarea" :rows="isMobile ? 2 : 3" placeholder="Дополнительная информация..." class="context-input" />
-        </el-form-item>
         <el-form-item class="reward-button-item">
           <el-button type="primary" native-type="submit" @click="sendReward" class="reward-btn">
             Начислить Вектрики
           </el-button>
+        </el-form-item>
+      </div>
+      
+      <div class="comment-section">
+        <h3>Комментарий (необязательно)</h3>
+        <el-form-item class="context-item">
+          <el-input v-model="context" type="textarea" :rows="isMobile ? 4 : 6" placeholder="Дополнительная информация..." class="context-input" />
         </el-form-item>
       </div>
     </div>
@@ -278,18 +282,32 @@ onMounted(() => {
   width: 100%;
 }
 
-.context-input :deep(.el-textarea__inner) {
-  font-size: 16px;
-  line-height: 1.5;
-  resize: vertical;
-  min-height: 60px;
-}
+  .context-input :deep(.el-textarea__inner) {
+    font-size: 16px;
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 80px;
+    width: 100%;
+  }
 
 .reward-btn {
   width: 100%;
   height: 48px;
   font-size: 18px;
   font-weight: 600;
+}
+
+.comment-section {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e0e0e0;
+}
+
+.comment-section h3 {
+  color: var(--color-primary);
+  margin-bottom: 16px;
+  font-size: 1.1rem;
 }
 
 .success-alert, .error-alert {
@@ -374,16 +392,21 @@ onMounted(() => {
     border-radius: 10px !important;
   }
   
-  .success-alert, .error-alert {
-    font-size: 16px !important;
-    margin-top: 16px !important;
-    border-radius: 8px !important;
+  .comment-section {
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  .comment-section h3 {
+    font-size: 1.1rem !important;
+    margin-bottom: 12px !important;
   }
 
   .context-input :deep(.el-textarea__inner) {
     font-size: 16px !important;
-    min-height: 50px !important;
-    max-height: 100px !important;
+    min-height: 80px !important;
+    max-height: 200px !important;
+    width: 100% !important;
   }
 }
 </style> 
