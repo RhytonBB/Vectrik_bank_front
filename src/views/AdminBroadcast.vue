@@ -56,7 +56,7 @@
         </el-form-item>
         <el-form-item class="send-button-item">
           <el-button type="primary" @click="sendMessage" :loading="sending" class="send-button">
-            Отправить сообщение
+            Отправить
           </el-button>
         </el-form-item>
       </el-form>
@@ -417,6 +417,30 @@ onMounted(() => {
   gap: 12px;
 }
 
+.target-radio-group :deep(.el-radio) {
+  margin-right: 0;
+  margin-bottom: 8px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.target-radio-group :deep(.el-radio:hover) {
+  background: #f8f9fa;
+  border-color: var(--color-primary);
+}
+
+.target-radio-group :deep(.el-radio.is-checked) {
+  background: #e0f0e7;
+  border-color: var(--color-primary);
+}
+
+.target-radio-group :deep(.el-radio__label) {
+  font-size: 16px;
+  font-weight: 500;
+}
+
 .users-select-item {
   width: 100%;
 }
@@ -435,6 +459,13 @@ onMounted(() => {
   height: 48px;
   font-size: 18px;
   font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.send-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(17,87,64,0.15);
 }
 
 .history-section {
@@ -487,6 +518,7 @@ onMounted(() => {
     border-radius: 12px !important;
     box-shadow: none !important;
     box-sizing: border-box;
+    border: 1px solid var(--color-primary) !important;
   }
   
   h2, h3 {

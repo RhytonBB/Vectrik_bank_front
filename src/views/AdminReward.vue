@@ -59,7 +59,7 @@
           <el-input-number v-model="amount" :min="1" required class="amount-input" />
         </el-form-item>
         <el-form-item label="Комментарий (необязательно):" class="context-item">
-          <el-input v-model="context" type="textarea" :rows="3" placeholder="Дополнительная информация..." class="context-input" />
+          <el-input v-model="context" type="textarea" :rows="isMobile ? 2 : 3" placeholder="Дополнительная информация..." class="context-input" />
         </el-form-item>
         <el-form-item class="reward-button-item">
           <el-button type="primary" native-type="submit" @click="sendReward" class="reward-btn">
@@ -278,6 +278,13 @@ onMounted(() => {
   width: 100%;
 }
 
+.context-input :deep(.el-textarea__inner) {
+  font-size: 16px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 60px;
+}
+
 .reward-btn {
   width: 100%;
   height: 48px;
@@ -298,6 +305,7 @@ onMounted(() => {
     border-radius: 12px !important;
     box-shadow: none !important;
     box-sizing: border-box;
+    border: 1px solid var(--color-primary) !important;
   }
   
   .reward-header h1 {
@@ -370,6 +378,12 @@ onMounted(() => {
     font-size: 16px !important;
     margin-top: 16px !important;
     border-radius: 8px !important;
+  }
+
+  .context-input :deep(.el-textarea__inner) {
+    font-size: 16px !important;
+    min-height: 50px !important;
+    max-height: 100px !important;
   }
 }
 </style> 

@@ -10,16 +10,24 @@
           <div class="group-name">{{ group.name }}</div>
           <div class="group-id">ID: {{ group.id }}</div>
         </div>
-        <div class="group-admins">
-          <div class="admins-label">Администраторы:</div>
-          <div v-if="group.admins && group.admins.length" class="admins-list">
-            <div v-for="admin in group.admins" :key="admin.id" class="admin-item">
-              <div class="admin-name">{{ admin.first_name }} {{ admin.last_name }}</div>
-              <div class="admin-telegram">@{{ admin.telegram_username }}</div>
-            </div>
+        <div class="group-details">
+          <div class="group-row">
+            <span class="detail-label">Название:</span>
+            <span class="detail-value">{{ group.name }}</span>
           </div>
-          <div v-else class="no-admins">
-            <span class="no-admins-text">Администраторы не назначены</span>
+          <div class="group-row">
+            <span class="detail-label">Администраторы:</span>
+            <div class="admins-list">
+              <div v-if="group.admins && group.admins.length" class="admins-container">
+                <div v-for="admin in group.admins" :key="admin.id" class="admin-item">
+                  <div class="admin-name">{{ admin.first_name }} {{ admin.last_name }}</div>
+                  <div class="admin-telegram">@{{ admin.telegram_username }}</div>
+                </div>
+              </div>
+              <div v-else class="no-admins">
+                <span class="no-admins-text">Администраторы не назначены</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -228,6 +236,7 @@ onMounted(() => {
     border-radius: 12px !important;
     box-shadow: none !important;
     box-sizing: border-box;
+    border: 1px solid var(--color-primary) !important;
   }
   
   .header {
@@ -292,19 +301,37 @@ onMounted(() => {
     border-radius: 6px;
   }
   
-  .group-admins {
+  .group-details {
     display: flex;
     flex-direction: column;
     gap: 12px;
   }
   
-  .admins-label {
+  .group-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .detail-label {
     font-weight: 600;
-    color: #333;
+    color: #666;
     font-size: 14px;
   }
   
+  .detail-value {
+    font-size: 16px;
+    color: #333;
+    font-weight: 500;
+  }
+  
   .admins-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .admins-container {
     display: flex;
     flex-direction: column;
     gap: 8px;

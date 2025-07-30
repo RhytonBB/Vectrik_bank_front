@@ -432,6 +432,7 @@ onMounted(() => {
     border-radius: 12px !important;
     box-shadow: none !important;
     box-sizing: border-box;
+    border: 1px solid var(--color-primary) !important;
   }
   
   h2, h3 {
@@ -449,11 +450,14 @@ onMounted(() => {
   
   .kpi-mobile-card {
     background: #ffffff;
-    border-radius: 12px;
-    padding: 16px 12px;
+    border-radius: 10px;
+    padding: 12px;
     box-shadow: 0 2px 8px rgba(17,87,64,0.08);
     border: 1px solid #e0e0e0;
     transition: all 0.3s ease;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
   }
   
   .kpi-mobile-card:hover {
@@ -484,23 +488,27 @@ onMounted(() => {
   .kpi-content {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    width: 100%;
   }
   
   .kpi-icon {
-    font-size: 20px;
+    font-size: 18px;
+    flex-shrink: 0;
   }
   
   .kpi-label {
-    font-size: 12px;
+    font-size: 11px;
     color: #666;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
+    line-height: 1.2;
   }
   
   .kpi-value {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--color-primary);
+    line-height: 1.2;
   }
   
   .chart-section {

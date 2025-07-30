@@ -9,12 +9,12 @@
     </el-tabs>
     <div v-if="activeTab === 'users'">
       <div class="header">
-        <el-button type="primary" @click="goToRegister" class="primary-button">➕ Зарегистрировать нового пользователя</el-button>
+        <el-button type="primary" @click="goToRegister" class="register-button">➕ Зарегистрировать пользователя</el-button>
         <div class="sort-buttons">
-          <el-button type="primary" @click="sortByBalanceDesc" class="sort-button">Сортировать по балансу ↓</el-button>
-          <el-button type="primary" @click="sortByBalanceAsc" class="sort-button">Сортировать по балансу ↑</el-button>
-          <el-button type="primary" @click="sortByLastNameAZ" class="sort-button">Фамилия А-Я</el-button>
-          <el-button type="primary" @click="sortByLastNameZA" class="sort-button">Фамилия Я-А</el-button>
+          <el-button type="primary" @click="sortByBalanceDesc" class="sort-button">💰 Баланс ↓</el-button>
+          <el-button type="primary" @click="sortByBalanceAsc" class="sort-button">💰 Баланс ↑</el-button>
+          <el-button type="primary" @click="sortByLastNameAZ" class="sort-button">📝 А-Я</el-button>
+          <el-button type="primary" @click="sortByLastNameZA" class="sort-button">📝 Я-А</el-button>
         </div>
       </div>
       <div v-if="isMobile" class="mobile-user-list">
@@ -147,7 +147,33 @@ onMounted(() => {
 
 .sort-button {
   flex: 1;
-  min-width: 140px;
+  min-width: 120px;
+  height: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.sort-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(17,87,64,0.15);
+}
+
+.register-button {
+  width: auto;
+  max-width: 300px;
+  height: 44px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+}
+
+.register-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(17,87,64,0.15);
 }
 
 .primary-button {
@@ -178,23 +204,41 @@ onMounted(() => {
     border-radius: 12px !important;
     box-shadow: none !important;
     box-sizing: border-box;
+    border: 1px solid var(--color-primary) !important;
   }
   
   .header {
     margin-bottom: 20px !important;
   }
   
+  .register-button {
+    width: 100% !important;
+    max-width: none !important;
+    height: 48px !important;
+    font-size: 16px !important;
+    border-radius: 10px !important;
+    align-self: stretch !important;
+  }
+  
   .sort-buttons {
-    flex-direction: column !important;
-    gap: 10px !important;
+    flex-direction: row !important;
+    gap: 8px !important;
   }
   
   .sort-button {
-    width: 100% !important;
+    width: calc(50% - 4px) !important;
     min-width: 0 !important;
-    font-size: 16px !important;
+    font-size: 14px !important;
     height: 44px !important;
     border-radius: 8px !important;
+  }
+  
+  .sort-button:hover {
+    transform: none !important;
+  }
+  
+  .register-button:hover {
+    transform: none !important;
   }
   
   .primary-button {

@@ -204,6 +204,7 @@ onMounted(fetchProduct)
     border-radius: 12px !important;
     box-shadow: none !important;
     box-sizing: border-box;
+    border: 1px solid var(--color-primary) !important;
   }
   
   .edit-header h2 {
