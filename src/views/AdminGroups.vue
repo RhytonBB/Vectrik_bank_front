@@ -17,17 +17,14 @@
           </div>
           <div class="group-row">
             <span class="detail-label">Администраторы:</span>
-            <div class="admins-list">
-              <div v-if="group.admins && group.admins.length" class="admins-container">
+            <span class="detail-value">
+              <div v-if="group.admins && group.admins.length" class="admins-list">
                 <div v-for="admin in group.admins" :key="admin.id" class="admin-item">
-                  <div class="admin-name">{{ admin.first_name }} {{ admin.last_name }}</div>
-                  <div class="admin-telegram">@{{ admin.telegram_username }}</div>
+                  {{ admin.first_name }} {{ admin.last_name }} (@{{ admin.telegram_username }})
                 </div>
               </div>
-              <div v-else class="no-admins">
-                <span class="no-admins-text">Администраторы не назначены</span>
-              </div>
-            </div>
+              <span v-else class="no-admins-text">Не назначены</span>
+            </span>
           </div>
         </div>
         <div class="group-status">
@@ -90,6 +87,7 @@ const showCreate = ref(false)
 const groupName = ref('')
 const selectedAdmins = ref([])
 const error = ref('')
+const isMobile = ref(false)
 
 const fetchGroups = async () => {
   const resp = await axios.get('/api/admin/groups')
@@ -134,6 +132,10 @@ const deleteGroup = async (group) => {
 onMounted(() => {
   fetchGroups()
   fetchAdmins()
+  isMobile.value = window.innerWidth < 600
+  window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth < 600
+  })
 })
 </script>
 
@@ -353,40 +355,12 @@ onMounted(() => {
   .admins-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-  }
-  
-  .admins-container {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    gap: 4px;
   }
   
   .admin-item {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 12px;
-    border: 1px solid #e0e0e0;
-  }
-  
-  .admin-name {
-    font-weight: 600;
-    font-size: 16px;
-    color: var(--color-primary);
-    margin-bottom: 4px;
-  }
-  
-  .admin-telegram {
     font-size: 14px;
-    color: #666;
-  }
-  
-  .no-admins {
-    padding: 16px;
-    background: #f8f9fa;
-    border: 2px dashed #ddd;
-    border-radius: 8px;
-    text-align: center;
+    color: #333;
   }
   
   .no-admins-text {
@@ -402,7 +376,6 @@ onMounted(() => {
   .group-actions {
     display: flex;
     justify-content: center;
-    margin-top: 16px;
   }
   
   .delete-btn {

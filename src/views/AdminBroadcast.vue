@@ -593,6 +593,8 @@ onMounted(() => {
     padding: 12px 16px !important;
     font-size: 16px !important;
     border-radius: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   
   .target-radio-group :deep(.el-radio__input) {
@@ -601,6 +603,10 @@ onMounted(() => {
   
   .target-radio-group :deep(.el-radio__label) {
     font-size: 16px !important;
+  }
+  
+  .media-item :deep(.el-form-item__label) {
+    text-align: left !important;
   }
   
   .send-button {
