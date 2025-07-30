@@ -255,5 +255,4 @@ onMounted(() => {
     transform: translateX(2px) !important;
   }
 }
-</style> 
-</style> 
+</style>
