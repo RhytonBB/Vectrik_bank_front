@@ -289,12 +289,18 @@ onMounted(() => {
     padding: 20px;
     box-shadow: 0 2px 12px rgba(17,87,64,0.08);
     border: 1px solid #e0e0e0;
+    cursor: pointer;
     transition: all 0.3s ease;
   }
   
   .group-card:hover {
     box-shadow: 0 4px 20px rgba(17,87,64,0.12);
     transform: translateY(-2px);
+  }
+  
+  .group-card:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(17,87,64,0.15);
   }
   
   .group-header {

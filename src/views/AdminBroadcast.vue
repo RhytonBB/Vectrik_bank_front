@@ -31,11 +31,9 @@
             <div class="file-info">{{ messageForm.mediaFile?.name }}</div>
           </div>
         </el-form-item>
-        <el-form-item class="target-item">
-          <div class="target-label">Целевая аудитория *</div>
+        <el-form-item label="Целевая аудитория *" class="target-item">
           <el-radio-group v-model="messageForm.targetType" @change="handleTargetTypeChange" class="target-radio-group">
             <el-radio label="all">Всем пользователям</el-radio>
-            <el-radio label="registered">Только зарегистрированным</el-radio>
             <el-radio label="manual">Выбрать вручную</el-radio>
           </el-radio-group>
         </el-form-item>
@@ -412,11 +410,15 @@ onMounted(() => {
   width: 100%;
 }
 
-.target-label {
+.target-item {
+  width: 100%;
+}
+
+.target-item :deep(.el-form-item__label) {
   font-weight: 600;
   color: #333;
-  margin-bottom: 12px;
   font-size: 16px;
+  text-align: left;
 }
 
 .target-radio-group {
@@ -581,9 +583,10 @@ onMounted(() => {
     gap: 8px !important;
   }
   
-  .target-label {
+  .target-item :deep(.el-form-item__label) {
     font-size: 16px !important;
     margin-bottom: 12px !important;
+    text-align: left !important;
   }
   
   .target-radio-group :deep(.el-radio) {
