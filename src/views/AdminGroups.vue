@@ -31,8 +31,15 @@
           <el-tag type="success" size="small">Активна</el-tag>
         </div>
         <div class="group-actions">
-          <el-button type="danger" size="small" @click.stop="deleteGroup(group)" class="delete-btn">
-            Удалить
+          <el-button 
+            type="danger" 
+            size="small" 
+            @click.stop="deleteGroup(group)" 
+            class="delete-btn"
+            :loading="deletingGroupId === group.id"
+            :disabled="deletingGroupId === group.id"
+          >
+            {{ deletingGroupId === group.id ? 'Удаление...' : 'Удалить' }}
           </el-button>
         </div>
       </div>
@@ -49,6 +56,20 @@
             </div>
           </div>
           <span v-else class="no-admins-table">Администраторы не назначены</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="Действия" width="120">
+        <template #default="scope">
+          <el-button 
+            type="danger" 
+            size="small" 
+            @click="deleteGroup(scope.row)" 
+            class="delete-btn"
+            :loading="deletingGroupId === scope.row.id"
+            :disabled="deletingGroupId === scope.row.id"
+          >
+            {{ deletingGroupId === scope.row.id ? 'Удаление...' : 'Удалить' }}
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -88,6 +109,7 @@ const groupName = ref('')
 const selectedAdmins = ref([])
 const error = ref('')
 const isMobile = ref(false)
+const deletingGroupId = ref(null)
 
 const fetchGroups = async () => {
   const resp = await axios.get('/api/admin/groups')
@@ -121,11 +143,22 @@ const createGroup = async () => {
 
 const deleteGroup = async (group) => {
   if (confirm('Удалить группу?')) {
+    deletingGroupId.value = group.id
     try {
       await axios.delete(`/api/admin/groups/${group.id}`)
       fetchGroups()
     } catch (e) {
-      error.value = 'Ошибка удаления группы'
+      if (e.response?.data?.error) {
+        error.value = `Ошибка удаления группы: ${e.response.data.error}`
+      } else if (e.response?.status === 404) {
+        error.value = 'Группа не найдена'
+      } else if (e.response?.status === 403) {
+        error.value = 'Недостаточно прав для удаления группы'
+      } else {
+        error.value = 'Ошибка удаления группы'
+      }
+    } finally {
+      deletingGroupId.value = null
     }
   }
 }
@@ -195,6 +228,18 @@ onMounted(() => {
 .no-admins-table {
   color: #aaa;
   font-style: italic;
+}
+
+.delete-btn {
+  font-size: 12px;
+  padding: 4px 8px;
+  height: 28px;
+  transition: all 0.3s ease;
+}
+
+.delete-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
 }
 
 .create-dialog {
