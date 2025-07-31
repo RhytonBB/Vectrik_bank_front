@@ -9,12 +9,45 @@
         </div>
       </div>
 
-      <!-- Баннер -->
+      <!-- Баннер-слайдер -->
       <div v-if="banners.length > 0" class="banner-section">
-        <div class="banner">
-          <img :src="banners[0].image_url" :alt="banners[0].title" class="banner-image">
-          <div class="banner-content">
-            <h3 class="banner-title">{{ banners[0].title }}</h3>
+        <div class="banner-slider">
+          <div class="banner-container" :style="{ transform: `translateX(-${currentBannerIndex * 100}%)` }">
+            <div v-for="(banner, index) in banners" :key="banner.id" class="banner">
+              <img :src="banner.image_url" :alt="banner.title" class="banner-image">
+              <div class="banner-content">
+                <h3 class="banner-title">{{ banner.title }}</h3>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Кнопки навигации -->
+          <div v-if="banners.length > 1" class="banner-nav">
+            <button 
+              @click="prevBanner" 
+              class="nav-btn prev-btn"
+              :disabled="currentBannerIndex === 0"
+            >
+              ‹
+            </button>
+            <button 
+              @click="nextBanner" 
+              class="nav-btn next-btn"
+              :disabled="currentBannerIndex === banners.length - 1"
+            >
+              ›
+            </button>
+          </div>
+          
+          <!-- Индикаторы -->
+          <div v-if="banners.length > 1" class="banner-indicators">
+            <button 
+              v-for="(banner, index) in banners" 
+              :key="banner.id"
+              @click="goToBanner(index)"
+              class="indicator"
+              :class="{ active: index === currentBannerIndex }"
+            ></button>
           </div>
         </div>
       </div>
@@ -74,7 +107,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import ClientLayout from '@/components/ClientLayout.vue'
 
@@ -82,6 +115,8 @@ const banners = ref([])
 const userInfo = ref({})
 const purchases = ref([])
 const transactions = ref([])
+const currentBannerIndex = ref(0)
+let autoSlideInterval = null
 
 const fetchBanners = async () => {
   try {
@@ -130,11 +165,52 @@ const formatDate = (dateString) => {
   })
 }
 
+// Функции слайдера
+const nextBanner = () => {
+  if (currentBannerIndex.value < banners.value.length - 1) {
+    currentBannerIndex.value++
+  } else {
+    currentBannerIndex.value = 0
+  }
+}
+
+const prevBanner = () => {
+  if (currentBannerIndex.value > 0) {
+    currentBannerIndex.value--
+  } else {
+    currentBannerIndex.value = banners.value.length - 1
+  }
+}
+
+const goToBanner = (index) => {
+  currentBannerIndex.value = index
+}
+
+const startAutoSlide = () => {
+  if (banners.value.length > 1) {
+    autoSlideInterval = setInterval(() => {
+      nextBanner()
+    }, 5000) // Переключение каждые 5 секунд
+  }
+}
+
+const stopAutoSlide = () => {
+  if (autoSlideInterval) {
+    clearInterval(autoSlideInterval)
+    autoSlideInterval = null
+  }
+}
+
 onMounted(() => {
   fetchBanners()
   fetchUserInfo()
   fetchPurchases()
   fetchTransactions()
+  startAutoSlide()
+})
+
+onUnmounted(() => {
+  stopAutoSlide()
 })
 </script>
 
@@ -172,10 +248,20 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
-.banner {
-  background: #e8f5e8;
-  border-radius: 12px;
+.banner-slider {
+  position: relative;
   overflow: hidden;
+  border-radius: 12px;
+  background: #e8f5e8;
+}
+
+.banner-container {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+.banner {
+  min-width: 100%;
   position: relative;
 }
 
@@ -186,14 +272,85 @@ onMounted(() => {
 }
 
 .banner-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   padding: 12px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
 }
 
 .banner-title {
-  color: #17624A;
+  color: #fff;
   font-size: 16px;
   font-weight: 600;
   margin: 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Кнопки навигации */
+.banner-nav {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  padding: 0 8px;
+  pointer-events: none;
+}
+
+.nav-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #17624A;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  transition: all 0.3s ease;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+}
+
+.nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Индикаторы */
+.banner-indicators {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.indicator.active {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.2);
 }
 
 .account-info {
@@ -342,6 +499,17 @@ onMounted(() => {
   
   .banner-image {
     height: 100px;
+  }
+  
+  .nav-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+  
+  .indicator {
+    width: 6px;
+    height: 6px;
   }
   
   .table-header,
