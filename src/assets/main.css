@@ -8,9 +8,25 @@ body {
 }
 
 :root {
-    --color-primary: #115740;
+    --color-primary: #17624A;
     --color-secondary: #B4D8BA;
   }
+
+/* Стили для клиентской части */
+.client-layout {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Скрываем скроллбар для мобильных устройств */
+.client-content::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+.client-content {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 .el-button--primary,
 .el-button--primary:focus,

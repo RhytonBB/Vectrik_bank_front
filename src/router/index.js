@@ -17,6 +17,19 @@ import UserPurchases from '../views/UserPurchases.vue'
 import AdminTheme from '../views/AdminTheme.vue'
 import AdminGroups from '../views/AdminGroups.vue'
 
+// Новые компоненты для клиентской части
+import ClientHome from '../views/ClientHome.vue'
+import ClientStore from '../views/ClientStore.vue'
+import ClientNews from '../views/ClientNews.vue'
+import ClientAbout from '../views/ClientAbout.vue'
+import ClientProfile from '../views/ClientProfile.vue'
+
+// Функция для проверки мобильного устройства
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+         window.innerWidth <= 768;
+}
+
 const routes = [
   { path: '/', component: UserLogin },
   { path: '/dashboard', component: UserDashboard },
@@ -35,6 +48,13 @@ const routes = [
   { path: '/user/points', component: UserPoints },
   { path: '/user/rewards', component: UserRewards },
   { path: '/user/purchases', component: UserPurchases },
+  
+  // Клиентские маршруты
+  { path: '/client', component: ClientHome },
+  { path: '/client/store', component: ClientStore },
+  { path: '/client/news', component: ClientNews },
+  { path: '/client/about', component: ClientAbout },
+  { path: '/client/profile', component: ClientProfile },
 ];
 
 const router = createRouter({
@@ -45,22 +65,44 @@ const router = createRouter({
 // Глобальный guard для разграничения интерфейсов
 router.beforeEach(async (to, from, next) => {
   if (to.path === '/') return next();
+  
+  // Проверяем авторизацию
   try {
     const resp = await fetch(`${process.env.VUE_APP_API_URL}/api/me`, { credentials: 'include' });
     if (!resp.ok) throw new Error('not auth');
     const me = await resp.json();
     const isAdmin = me.is_admin;
-    if (to.path.startsWith('/admin')) {
-      if (!isAdmin) return next('/dashboard');
+    
+    // Если это клиентский маршрут
+    if (to.path.startsWith('/client')) {
+      if (isAdmin) {
+        // Админы не могут попасть в клиентскую часть
+        return next('/admin/dashboard');
+      }
+      
+      // Проверяем, что это мобильное устройство
+      if (!isMobileDevice()) {
+        alert('Клиентская часть доступна только с мобильных устройств и планшетов');
+        return next('/');
+      }
+      
       return next();
     }
+    
+    // Если это админский маршрут
+    if (to.path.startsWith('/admin')) {
+      if (!isAdmin) return next('/client');
+      return next();
+    }
+    
     if (to.path === '/dashboard') {
       if (isAdmin) return next('/admin/dashboard');
-      return next();
+      return next('/client');
     }
+    
     // Любой другой маршрут — редирект по роли
     if (isAdmin) return next('/admin/dashboard');
-    return next('/dashboard');
+    return next('/client');
   } catch {
     return next('/');
   }
