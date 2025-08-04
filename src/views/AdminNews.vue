@@ -130,12 +130,12 @@
         <el-form-item label="Содержание" prop="content">
           <div class="content-editor">
             <div class="editor-toolbar">
-              <el-button size="small" @click="insertImage">
-                <el-icon><Picture /></el-icon>
-                Вставить изображение
-              </el-button>
-              <el-button size="small" @click="showImageManager = true">
-                <el-icon><Folder /></el-icon>
+              <el-button 
+                type="primary" 
+                size="small" 
+                @click="showImageManager = true"
+                :icon="Picture"
+              >
                 Менеджер изображений
               </el-button>
             </div>
@@ -282,10 +282,6 @@ const resetForm = () => {
   editingNews.value = null
 }
 
-const insertImage = () => {
-  showImageManager.value = true
-}
-
 const handleImageSelect = (file) => {
   // Здесь должна быть логика загрузки файла на сервер
   // Пока что используем временный URL
@@ -295,6 +291,18 @@ const handleImageSelect = (file) => {
     position: newsForm.value.content.length,
     alt: file.name
   })
+}
+
+const handleImageUpload = (file) => {
+  // Здесь должна быть логика загрузки файла
+  // Пока что просто добавляем в список
+  const newImage = {
+    url: URL.createObjectURL(file),
+    position: newsForm.value.content.length,
+    alt: file.name
+  }
+  newsForm.value.images.push(newImage)
+  showImageManager.value = true
 }
 
 const removeImage = (index) => {
