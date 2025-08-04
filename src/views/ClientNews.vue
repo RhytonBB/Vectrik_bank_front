@@ -41,7 +41,7 @@
               @click="viewNews(item)"
             >
               <div class="news-image" v-if="item.images && item.images.length > 0">
-                <img :src="item.images[0]" :alt="item.title">
+                <img :src="item.images[0].url" :alt="item.images[0].alt || item.title">
                 <div class="featured-badge">Важная</div>
               </div>
               <div class="news-content">
@@ -67,7 +67,7 @@
               @click="viewNews(item)"
             >
               <div class="news-image" v-if="item.images && item.images.length > 0">
-                <img :src="item.images[0]" :alt="item.title">
+                <img :src="item.images[0].url" :alt="item.images[0].alt || item.title">
               </div>
               <div class="news-content">
                 <h4 class="news-heading">{{ item.title }}</h4>
@@ -226,11 +226,6 @@ const rateNews = async (newsId, rating) => {
   }
 }
 
-const openImageLightbox = (image) => {
-  lightboxImage.value = image
-  showImageLightbox.value = true
-}
-
 const getSummary = (content) => {
   return content.length > 150 ? content.substring(0, 150) + '...' : content
 }
@@ -267,6 +262,12 @@ const formatDate = (dateString) => {
 
 onMounted(() => {
   fetchNews()
+  
+  // Добавляем глобальную функцию для лайтбокса
+  window.openImageLightbox = (imageUrl) => {
+    lightboxImage.value = imageUrl
+    showImageLightbox.value = true
+  }
 })
 </script>
 
