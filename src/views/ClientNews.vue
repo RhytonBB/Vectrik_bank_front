@@ -105,29 +105,31 @@
           
           <!-- Система оценок -->
           <div class="news-ratings">
-            <h4>Оцените новость:</h4>
-            <div class="rating-buttons">
-              <el-button 
-                :type="userRating === 'thumbs_up' ? 'success' : 'default'"
+            <div class="rating-emoji-container">
+              <span 
+                class="rating-emoji"
+                :class="{ active: userRating === 'thumbs_up' }"
                 @click="rateNews(selectedNews.id, 'thumbs_up')"
-                :loading="ratingLoading"
+                :title="`👍 ${selectedNews.thumbs_up || 0}`"
               >
                 👍 {{ selectedNews.thumbs_up || 0 }}
-              </el-button>
-              <el-button 
-                :type="userRating === 'thumbs_down' ? 'danger' : 'default'"
+              </span>
+              <span 
+                class="rating-emoji"
+                :class="{ active: userRating === 'thumbs_down' }"
                 @click="rateNews(selectedNews.id, 'thumbs_down')"
-                :loading="ratingLoading"
+                :title="`👎 ${selectedNews.thumbs_down || 0}`"
               >
                 👎 {{ selectedNews.thumbs_down || 0 }}
-              </el-button>
-              <el-button 
-                :type="userRating === 'fire' ? 'warning' : 'default'"
+              </span>
+              <span 
+                class="rating-emoji"
+                :class="{ active: userRating === 'fire' }"
                 @click="rateNews(selectedNews.id, 'fire')"
-                :loading="ratingLoading"
+                :title="`🔥 ${selectedNews.fire_count || 0}`"
               >
                 🔥 {{ selectedNews.fire_count || 0 }}
-              </el-button>
+              </span>
             </div>
           </div>
         </div>
@@ -156,7 +158,6 @@ import axios from 'axios'
 
 const news = ref([])
 const loading = ref(true)
-const ratingLoading = ref(false)
 const showNewsDialog = ref(false)
 const showImageLightbox = ref(false)
 const selectedNews = ref(null)
@@ -196,7 +197,6 @@ const viewNews = async (item) => {
 }
 
 const rateNews = async (newsId, rating) => {
-  ratingLoading.value = true
   try {
     const response = await axios.post(`/api/news/${newsId}/rate`, 
       { rating }, 
@@ -221,8 +221,6 @@ const rateNews = async (newsId, rating) => {
   } catch (error) {
     ElMessage.error('Ошибка при оценке новости')
     console.error('Failed to rate news:', error)
-  } finally {
-    ratingLoading.value = false
   }
 }
 
@@ -549,31 +547,50 @@ onMounted(() => {
   border-top: 1px solid #e0e0e0;
   padding-top: 24px;
   margin-top: 24px;
+  position: relative;
 }
 
-.news-ratings h4 {
-  color: #17624A;
-  margin: 0 0 16px 0;
-  font-size: 18px;
-}
-
-.rating-buttons {
+.rating-emoji-container {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
 }
 
-.rating-buttons .el-button {
-  min-width: 80px;
+.rating-emoji {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 12px;
   font-size: 16px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 40px;
+  justify-content: center;
 }
 
-.rating-buttons .el-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.rating-emoji:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: scale(1.1);
+}
+
+.rating-emoji.active {
+  background: #17624A;
+  color: white;
+  box-shadow: 0 2px 8px rgba(23, 98, 74, 0.3);
+}
+
+.rating-emoji.active:hover {
+  background: #0f4a38;
+  transform: scale(1.05);
 }
 
 .news-full-images {
@@ -665,6 +682,19 @@ onMounted(() => {
   .images-gallery {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 12px;
+  }
+  
+  .rating-emoji-container {
+    bottom: 12px;
+    right: 12px;
+    padding: 6px 10px;
+    gap: 6px;
+  }
+  
+  .rating-emoji {
+    font-size: 14px;
+    padding: 3px 6px;
+    min-width: 35px;
   }
 }
 </style> 
