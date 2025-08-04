@@ -11,10 +11,7 @@ import AdminReward from '../views/AdminReward.vue'
 import AdminBroadcast from '../views/AdminBroadcast.vue'
 import AdminUserRegister from '../views/AdminUserRegister.vue'
 import AdminNews from '../views/AdminNews.vue'
-import UserDashboard from '../views/UserDashboard.vue'
-import UserPoints from '../views/UserPoints.vue'
-import UserRewards from '../views/UserRewards.vue'
-import UserPurchases from '../views/UserPurchases.vue'
+
 import AdminTheme from '../views/AdminTheme.vue'
 import AdminGroups from '../views/AdminGroups.vue'
 
@@ -33,7 +30,6 @@ function isMobileDevice() {
 
 const routes = [
   { path: '/', component: UserLogin },
-  { path: '/dashboard', component: UserDashboard },
   { path: '/admin/dashboard', component: AdminDashboard },
   { path: '/admin/reward', component: AdminReward },
   { path: '/admin/broadcast', component: AdminBroadcast },
@@ -47,9 +43,7 @@ const routes = [
   { path: '/admin/theme', component: AdminTheme },
   { path: '/admin/groups', component: AdminGroups },
   { path: '/admin/news', component: AdminNews },
-  { path: '/user/points', component: UserPoints },
-  { path: '/user/rewards', component: UserRewards },
-  { path: '/user/purchases', component: UserPurchases },
+
   
   // Клиентские маршруты
   { path: '/client', component: ClientHome },
@@ -97,10 +91,7 @@ router.beforeEach(async (to, from, next) => {
       return next();
     }
     
-    if (to.path === '/dashboard') {
-      if (isAdmin) return next('/admin/dashboard');
-      return next('/client');
-    }
+
     
     // Любой другой маршрут — редирект по роли
     if (isAdmin) return next('/admin/dashboard');

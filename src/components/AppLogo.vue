@@ -4,7 +4,9 @@
 
 <script setup>
 import { computed } from 'vue'
-import { currentTheme } from '@/composables/useUserTheme.js'
+import { useTheme } from '@/composables/useTheme'
+
+const { currentTheme } = useTheme()
 
 const logoSrc = computed(() => currentTheme.value === 'pink' ? '/logo-pink.svg' : '/logo.svg')
 </script>
