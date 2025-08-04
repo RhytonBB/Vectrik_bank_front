@@ -12,6 +12,16 @@ body {
     --color-secondary: #B4D8BA;
   }
 
+/* Розовая тема */
+body.theme-pink {
+  color: #ff4dbb;
+}
+
+body.theme-pink {
+    --color-primary: #ff4dbb;
+    --color-secondary: #ffb3e6;
+  }
+
 /* Стили для клиентской части */
 .client-layout {
   font-family: 'Inter', sans-serif;

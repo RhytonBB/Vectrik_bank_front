@@ -4,7 +4,7 @@
       <!-- Заголовок -->
       <div class="header">
         <div class="logo-section">
-          <img src="/logo.png" alt="Вектрик Банк" class="logo">
+          <img :src="getLogo()" alt="Вектрик Банк" class="logo">
           <h1 class="bank-name">Вектрик Банк</h1>
         </div>
       </div>
@@ -84,6 +84,16 @@
 
 <script setup>
 import ClientLayout from '@/components/ClientLayout.vue'
+import { useTheme } from '@/composables/useTheme'
+
+const { currentTheme } = useTheme()
+
+const getLogo = () => {
+  if (currentTheme.value === 'pink') {
+    return '/src/assets/logo-pink.svg'
+  }
+  return '/src/assets/logo.svg'
+}
 </script>
 
 <style scoped>
@@ -110,14 +120,14 @@ import ClientLayout from '@/components/ClientLayout.vue'
 }
 
 .bank-name {
-  color: #17624A;
+  color: var(--color-primary);
   font-size: 24px;
   font-weight: 800;
   margin: 0;
 }
 
 .section-title {
-  color: #17624A;
+  color: var(--color-primary);
   font-size: 18px;
   font-weight: 700;
   margin: 0 0 16px 0;
@@ -137,6 +147,12 @@ import ClientLayout from '@/components/ClientLayout.vue'
   border: 1px solid #d4edda;
 }
 
+/* Розовая тема */
+body.theme-pink .info-card {
+  background: #ffe6f7;
+  border: 1px solid #ffb3e6;
+}
+
 .contact-item,
 .address-item {
   display: flex;
@@ -151,7 +167,7 @@ import ClientLayout from '@/components/ClientLayout.vue'
 
 .contact-label,
 .address-label {
-  color: #17624A;
+  color: var(--color-primary);
   font-weight: 600;
   font-size: 14px;
   margin-bottom: 4px;
@@ -179,7 +195,7 @@ import ClientLayout from '@/components/ClientLayout.vue'
 }
 
 .privacy-content strong {
-  color: #17624A;
+  color: var(--color-primary);
   font-weight: 600;
 }
 

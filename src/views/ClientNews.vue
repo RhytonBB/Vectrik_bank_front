@@ -4,7 +4,7 @@
       <!-- Заголовок -->
       <div class="header">
         <div class="logo-section">
-          <img src="/logo.png" alt="Вектрик Банк" class="logo">
+          <img :src="getLogo()" alt="Вектрик Банк" class="logo">
           <h1 class="bank-name">Вектрик Банк</h1>
         </div>
       </div>
@@ -154,7 +154,10 @@
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import ClientLayout from '@/components/ClientLayout.vue'
+import { useTheme } from '@/composables/useTheme'
 import axios from 'axios'
+
+const { currentTheme } = useTheme()
 
 const news = ref([])
 const loading = ref(true)
@@ -171,6 +174,13 @@ const featuredNews = computed(() =>
 const regularNews = computed(() => 
   news.value.filter(item => !item.is_featured)
 )
+
+const getLogo = () => {
+  if (currentTheme.value === 'pink') {
+    return '/src/assets/logo-pink.svg'
+  }
+  return '/src/assets/logo.svg'
+}
 
 const fetchNews = async () => {
   try {
@@ -293,7 +303,7 @@ onMounted(() => {
 }
 
 .bank-name {
-  color: #17624A;
+  color: var(--color-primary);
   font-size: 24px;
   font-weight: 800;
   margin: 0;
@@ -303,9 +313,14 @@ onMounted(() => {
   text-align: center;
   margin-bottom: 32px;
   padding: 24px;
-  background: linear-gradient(135deg, #17624A 0%, #27ae60 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   border-radius: 16px;
   color: white;
+}
+
+/* Розовая тема */
+body.theme-pink .news-header {
+  background: linear-gradient(135deg, #ff4dbb 0%, #ffb3e6 100%);
 }
 
 .news-title {
@@ -333,7 +348,7 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #17624A;
+  border-top: 4px solid var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
@@ -367,7 +382,7 @@ onMounted(() => {
 }
 
 .section-title {
-  color: #17624A;
+  color: var(--color-primary);
   font-size: 20px;
   font-weight: 700;
   margin: 0 0 20px 0;
@@ -583,7 +598,7 @@ onMounted(() => {
 }
 
 .rating-emoji.active {
-  background: #17624A;
+  background: var(--color-primary);
   color: white;
   box-shadow: 0 2px 8px rgba(23, 98, 74, 0.3);
 }
@@ -591,6 +606,16 @@ onMounted(() => {
 .rating-emoji.active:hover {
   background: #0f4a38;
   transform: scale(1.05);
+}
+
+/* Розовая тема */
+body.theme-pink .rating-emoji.active {
+  background: #ff4dbb;
+  box-shadow: 0 2px 8px rgba(255, 77, 187, 0.3);
+}
+
+body.theme-pink .rating-emoji.active:hover {
+  background: #e6399b;
 }
 
 .news-full-images {

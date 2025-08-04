@@ -6,27 +6,27 @@
     
     <nav class="client-navigation">
       <router-link to="/client" class="nav-item" active-class="active">
-        <img src="/bank.png" alt="Главная" class="nav-icon">
+        <img :src="getNavIcon('bank')" alt="Главная" class="nav-icon">
         <span class="nav-text">Главная</span>
       </router-link>
       
       <router-link to="/client/store" class="nav-item" active-class="active">
-        <img src="/store.png" alt="Магазин" class="nav-icon">
+        <img :src="getNavIcon('store')" alt="Магазин" class="nav-icon">
         <span class="nav-text">Магазин</span>
       </router-link>
       
       <router-link to="/client/news" class="nav-item" active-class="active">
-        <img src="/news.png" alt="Новости" class="nav-icon">
+        <img :src="getNavIcon('news')" alt="Новости" class="nav-icon">
         <span class="nav-text">Новости</span>
       </router-link>
       
       <router-link to="/client/about" class="nav-item" active-class="active">
-        <img src="/about.png" alt="О нас" class="nav-icon">
+        <img :src="getNavIcon('about')" alt="О нас" class="nav-icon">
         <span class="nav-text">О нас</span>
       </router-link>
       
       <router-link to="/client/profile" class="nav-item" active-class="active">
-        <img src="/user.png" alt="Профиль" class="nav-icon">
+        <img :src="getNavIcon('user')" alt="Профиль" class="nav-icon">
         <span class="nav-text">Профиль</span>
       </router-link>
     </nav>
@@ -34,7 +34,17 @@
 </template>
 
 <script setup>
-// Компонент не требует дополнительной логики
+import { computed } from 'vue'
+import { useTheme } from '@/composables/useTheme'
+
+const { currentTheme } = useTheme()
+
+const getNavIcon = (iconName) => {
+  if (currentTheme.value === 'pink') {
+    return `/src/assets/pink_${iconName}.png`
+  }
+  return `/src/assets/${iconName}.png`
+}
 </script>
 
 <style scoped>
@@ -58,7 +68,7 @@
   right: 0;
   height: 80px;
   background: #fff;
-  border-top: 2px solid #17624A;
+  border-top: 2px solid var(--color-primary);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -79,13 +89,22 @@
 }
 
 .nav-item:hover {
-  color: #17624A;
+  color: var(--color-primary);
   background: rgba(23, 98, 74, 0.1);
 }
 
 .nav-item.active {
-  color: #17624A;
+  color: var(--color-primary);
   background: rgba(23, 98, 74, 0.1);
+}
+
+/* Розовая тема */
+body.theme-pink .nav-item:hover {
+  background: rgba(255, 77, 187, 0.1);
+}
+
+body.theme-pink .nav-item.active {
+  background: rgba(255, 77, 187, 0.1);
 }
 
 .nav-icon {

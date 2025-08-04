@@ -4,7 +4,7 @@
       <!-- Заголовок -->
       <div class="header">
         <div class="logo-section">
-          <img src="/logo.png" alt="Вектрик Банк" class="logo">
+          <img :src="getLogo()" alt="Вектрик Банк" class="logo">
           <h1 class="bank-name">Вектрик Банк</h1>
         </div>
       </div>
@@ -59,9 +59,18 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import ClientLayout from '@/components/ClientLayout.vue'
+import { useTheme } from '@/composables/useTheme'
 
 const router = useRouter()
+const { currentTheme } = useTheme()
 const userInfo = ref({})
+
+const getLogo = () => {
+  if (currentTheme.value === 'pink') {
+    return '/src/assets/logo-pink.svg'
+  }
+  return '/src/assets/logo.svg'
+}
 
 const fetchUserInfo = async () => {
   try {
@@ -114,14 +123,14 @@ onMounted(() => {
 }
 
 .bank-name {
-  color: #17624A;
+  color: var(--color-primary);
   font-size: 24px;
   font-weight: 800;
   margin: 0;
 }
 
 .profile-title {
-  color: #17624A;
+  color: var(--color-primary);
   font-size: 20px;
   font-weight: 700;
   margin: 0 0 20px 0;
@@ -137,6 +146,12 @@ onMounted(() => {
   border-radius: 12px;
   padding: 20px;
   border: 1px solid #d4edda;
+}
+
+/* Розовая тема */
+body.theme-pink .info-card {
+  background: #ffe6f7;
+  border: 1px solid #ffb3e6;
 }
 
 .info-item {
@@ -155,7 +170,7 @@ onMounted(() => {
 }
 
 .info-label {
-  color: #17624A;
+  color: var(--color-primary);
   font-weight: 600;
   font-size: 14px;
 }
@@ -167,7 +182,7 @@ onMounted(() => {
 }
 
 .info-value.balance {
-  color: #17624A;
+  color: var(--color-primary);
   font-weight: 700;
   font-size: 16px;
 }

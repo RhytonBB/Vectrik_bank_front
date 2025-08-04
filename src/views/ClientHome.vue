@@ -4,7 +4,7 @@
       <!-- Заголовок -->
       <div class="header">
         <div class="logo-section">
-          <img src="/logo.png" alt="Вектрик Банк" class="logo">
+          <img :src="getLogo()" alt="Вектрик Банк" class="logo">
           <h1 class="bank-name">Вектрик Банк</h1>
         </div>
       </div>
@@ -13,7 +13,7 @@
       <div v-if="banners.length > 0" class="banner-section">
         <div class="banner-slider">
           <div class="banner-container" :style="{ transform: `translateX(-${currentBannerIndex * 100}%)` }">
-            <div v-for="(banner) in banners" :key="banner.id" class="banner">
+            <div v-for="(banner, index) in banners" :key="banner.id" class="banner">
               <img :src="banner.image_url" :alt="banner.title" class="banner-image">
               <div class="banner-content">
                 <h3 class="banner-title">{{ banner.title }}</h3>
@@ -110,6 +110,9 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import ClientLayout from '@/components/ClientLayout.vue'
+import { useTheme } from '@/composables/useTheme'
+
+const { currentTheme } = useTheme()
 
 const banners = ref([])
 const userInfo = ref({})
@@ -201,6 +204,13 @@ const stopAutoSlide = () => {
   }
 }
 
+const getLogo = () => {
+  if (currentTheme.value === 'pink') {
+    return '/src/assets/logo-pink.svg'
+  }
+  return '/src/assets/logo.svg'
+}
+
 onMounted(() => {
   fetchBanners()
   fetchUserInfo()
@@ -238,7 +248,7 @@ onUnmounted(() => {
 }
 
 .bank-name {
-  color: #17624A;
+  color: var(--color-primary);
   font-size: 24px;
   font-weight: 800;
   margin: 0;
@@ -307,7 +317,7 @@ onUnmounted(() => {
   border: none;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
-  color: #17624A;
+  color: var(--color-primary);
   font-size: 18px;
   font-weight: bold;
   cursor: pointer;
@@ -378,13 +388,13 @@ onUnmounted(() => {
 }
 
 .info-value {
-  color: #17624A;
+  color: var(--color-primary);
   font-weight: 600;
   font-size: 14px;
 }
 
 .section-title {
-  color: #17624A;
+  color: var(--color-primary);
   font-size: 18px;
   font-weight: 700;
   margin: 0 0 16px 0;
@@ -408,8 +418,14 @@ onUnmounted(() => {
   border: 1px solid #d4edda;
 }
 
+/* Розовая тема */
+body.theme-pink .purchase-card {
+  background: #ffe6f7;
+  border: 1px solid #ffb3e6;
+}
+
 .purchase-name {
-  color: #17624A;
+  color: var(--color-primary);
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 8px 0;
@@ -450,7 +466,7 @@ onUnmounted(() => {
 .table-header {
   display: grid;
   grid-template-columns: 1fr 2fr 1fr;
-  background: #17624A;
+  background: var(--color-primary);
   color: #fff;
   font-weight: 600;
   font-size: 14px;

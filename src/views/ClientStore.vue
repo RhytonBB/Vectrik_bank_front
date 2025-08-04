@@ -4,7 +4,7 @@
       <!-- Заголовок -->
       <div class="header">
         <div class="logo-section">
-          <img src="/logo.png" alt="Вектрик Банк" class="logo">
+          <img :src="getLogo()" alt="Вектрик Банк" class="logo">
           <h1 class="bank-name">Вектрик Банк</h1>
         </div>
         <div class="balance-info">
@@ -68,9 +68,18 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import ClientLayout from '@/components/ClientLayout.vue'
+import { useTheme } from '@/composables/useTheme'
 
+const { currentTheme } = useTheme()
 const products = ref([])
 const userInfo = ref({})
+
+const getLogo = () => {
+  if (currentTheme.value === 'pink') {
+    return '/src/assets/logo-pink.svg'
+  }
+  return '/src/assets/logo.svg'
+}
 
 const fetchProducts = async () => {
   try {
@@ -154,7 +163,7 @@ onMounted(() => {
 }
 
 .bank-name {
-  color: #17624A;
+  color: var(--color-primary);
   font-size: 24px;
   font-weight: 800;
   margin: 0;
@@ -176,13 +185,13 @@ onMounted(() => {
 }
 
 .balance-value {
-  color: #17624A;
+  color: var(--color-primary);
   font-weight: 600;
   font-size: 14px;
 }
 
 .store-title {
-  color: #17624A;
+  color: var(--color-primary);
   font-size: 20px;
   font-weight: 700;
   margin: 0 0 20px 0;
@@ -231,7 +240,7 @@ onMounted(() => {
 }
 
 .product-name {
-  color: #17624A;
+  color: var(--color-primary);
   font-size: 18px;
   font-weight: 600;
   margin: 0 0 8px 0;
@@ -265,7 +274,7 @@ onMounted(() => {
 }
 
 .price-value {
-  color: #17624A;
+  color: var(--color-primary);
   font-weight: 600;
   font-size: 14px;
 }
@@ -278,7 +287,7 @@ onMounted(() => {
 .purchase-button {
   width: 100%;
   padding: 12px;
-  background: #17624A;
+  background: var(--color-primary);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -290,6 +299,11 @@ onMounted(() => {
 
 .purchase-button:hover:not(.disabled) {
   background: #0f4a3a;
+}
+
+/* Розовая тема */
+body.theme-pink .purchase-button:hover:not(.disabled) {
+  background: #e6399b;
 }
 
 .purchase-button.disabled {
