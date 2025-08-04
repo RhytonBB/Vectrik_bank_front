@@ -10,6 +10,7 @@ import AdminDashboard from '../views/AdminDashboard.vue'
 import AdminReward from '../views/AdminReward.vue'
 import AdminBroadcast from '../views/AdminBroadcast.vue'
 import AdminUserRegister from '../views/AdminUserRegister.vue'
+import AdminNews from '../views/AdminNews.vue'
 import UserDashboard from '../views/UserDashboard.vue'
 import UserPoints from '../views/UserPoints.vue'
 import UserRewards from '../views/UserRewards.vue'
@@ -45,6 +46,7 @@ const routes = [
   { path: '/admin/banners', component: AdminBanners },
   { path: '/admin/theme', component: AdminTheme },
   { path: '/admin/groups', component: AdminGroups },
+  { path: '/admin/news', component: AdminNews },
   { path: '/user/points', component: UserPoints },
   { path: '/user/rewards', component: UserRewards },
   { path: '/user/purchases', component: UserPurchases },
