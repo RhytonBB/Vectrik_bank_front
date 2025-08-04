@@ -94,26 +94,40 @@
           <div class="news-full-header">
             <div class="news-full-meta">
               <span class="news-full-date">{{ formatDate(selectedNews.published_at) }}</span>
-              <span class="news-full-views" v-if="selectedNews.views > 0">{{ selectedNews.views }} просмотров</span>
+              <span class="news-full-views" v-if="selectedNews.views > 0">👁️ {{ selectedNews.views }} просмотров</span>
               <el-tag v-if="selectedNews.is_featured" type="danger" size="small">Важная новость</el-tag>
             </div>
           </div>
           
           <div class="news-full-content">
-            <p class="news-full-text">{{ selectedNews.content }}</p>
+            <div class="content-with-images" v-html="renderContentWithImages(selectedNews)"></div>
           </div>
           
-          <div v-if="selectedNews.images && selectedNews.images.length > 0" class="news-full-images">
-            <h4>Изображения</h4>
-            <div class="images-gallery">
-              <div 
-                v-for="(image, index) in selectedNews.images" 
-                :key="index"
-                class="gallery-image"
-                @click="openImageLightbox(image)"
+          <!-- Система оценок -->
+          <div class="news-ratings">
+            <h4>Оцените новость:</h4>
+            <div class="rating-buttons">
+              <el-button 
+                :type="userRating === 'thumbs_up' ? 'success' : 'default'"
+                @click="rateNews(selectedNews.id, 'thumbs_up')"
+                :loading="ratingLoading"
               >
-                <img :src="image" :alt="`Изображение ${index + 1}`">
-              </div>
+                👍 {{ selectedNews.thumbs_up || 0 }}
+              </el-button>
+              <el-button 
+                :type="userRating === 'thumbs_down' ? 'danger' : 'default'"
+                @click="rateNews(selectedNews.id, 'thumbs_down')"
+                :loading="ratingLoading"
+              >
+                👎 {{ selectedNews.thumbs_down || 0 }}
+              </el-button>
+              <el-button 
+                :type="userRating === 'fire' ? 'warning' : 'default'"
+                @click="rateNews(selectedNews.id, 'fire')"
+                :loading="ratingLoading"
+              >
+                🔥 {{ selectedNews.fire_count || 0 }}
+              </el-button>
             </div>
           </div>
         </div>
@@ -136,15 +150,18 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { ElMessage } from 'element-plus'
 import ClientLayout from '@/components/ClientLayout.vue'
 import axios from 'axios'
 
 const news = ref([])
 const loading = ref(true)
+const ratingLoading = ref(false)
 const showNewsDialog = ref(false)
 const showImageLightbox = ref(false)
 const selectedNews = ref(null)
 const lightboxImage = ref('')
+const userRating = ref(null)
 
 const featuredNews = computed(() => 
   news.value.filter(item => item.is_featured)
@@ -165,9 +182,48 @@ const fetchNews = async () => {
   }
 }
 
-const viewNews = (item) => {
+const viewNews = async (item) => {
   selectedNews.value = item
   showNewsDialog.value = true
+  
+  // Получаем рейтинг пользователя для этой новости
+  try {
+    const response = await axios.get(`/api/news/${item.id}/rating`, { withCredentials: true })
+    userRating.value = response.data.rating
+  } catch (error) {
+    userRating.value = null
+  }
+}
+
+const rateNews = async (newsId, rating) => {
+  ratingLoading.value = true
+  try {
+    const response = await axios.post(`/api/news/${newsId}/rate`, 
+      { rating }, 
+      { withCredentials: true }
+    )
+    
+    // Обновляем данные новости
+    if (selectedNews.value && selectedNews.value.id === newsId) {
+      selectedNews.value.thumbs_up = response.data.news.thumbs_up
+      selectedNews.value.thumbs_down = response.data.news.thumbs_down
+      selectedNews.value.fire_count = response.data.news.fire_count
+    }
+    
+    // Обновляем рейтинг пользователя
+    if (userRating.value === rating) {
+      userRating.value = null // Убираем рейтинг при повторном клике
+    } else {
+      userRating.value = rating
+    }
+    
+    ElMessage.success('Оценка обновлена')
+  } catch (error) {
+    ElMessage.error('Ошибка при оценке новости')
+    console.error('Failed to rate news:', error)
+  } finally {
+    ratingLoading.value = false
+  }
 }
 
 const openImageLightbox = (image) => {
@@ -177,6 +233,24 @@ const openImageLightbox = (image) => {
 
 const getSummary = (content) => {
   return content.length > 150 ? content.substring(0, 150) + '...' : content
+}
+
+const renderContentWithImages = (newsItem) => {
+  if (!newsItem.images || newsItem.images.length === 0) {
+    return newsItem.content.replace(/\n/g, '<br>')
+  }
+  
+  let content = newsItem.content
+  const images = [...newsItem.images].sort((a, b) => a.position - b.position)
+  
+  // Вставляем изображения в контент
+  for (let i = images.length - 1; i >= 0; i--) {
+    const image = images[i]
+    const imgTag = `<img src="${image.url}" alt="${image.alt}" style="max-width: 100%; height: auto; margin: 10px 0; border-radius: 8px; cursor: pointer;" onclick="window.openImageLightbox('${image.url}')" />`
+    content = content.slice(0, image.position) + imgTag + content.slice(image.position)
+  }
+  
+  return content.replace(/\n/g, '<br>')
 }
 
 const formatDate = (dateString) => {
@@ -449,6 +523,56 @@ onMounted(() => {
   font-size: 16px;
   line-height: 1.7;
   margin: 0;
+}
+
+.content-with-images {
+  color: #333;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.content-with-images img {
+  max-width: 100%;
+  height: auto;
+  margin: 16px 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.content-with-images img:hover {
+  transform: scale(1.02);
+}
+
+.news-ratings {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 24px;
+  margin-top: 24px;
+}
+
+.news-ratings h4 {
+  color: #17624A;
+  margin: 0 0 16px 0;
+  font-size: 18px;
+}
+
+.rating-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.rating-buttons .el-button {
+  min-width: 80px;
+  font-size: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.rating-buttons .el-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .news-full-images {
