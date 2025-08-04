@@ -34,7 +34,6 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { useTheme } from '@/composables/useTheme'
 
 const { currentTheme } = useTheme()
