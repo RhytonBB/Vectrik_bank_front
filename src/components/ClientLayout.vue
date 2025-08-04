@@ -40,9 +40,9 @@ const { currentTheme } = useTheme()
 
 const getNavIcon = (iconName) => {
   if (currentTheme.value === 'pink') {
-    return `/src/assets/pink_${iconName}.png`
+    return `/pink_${iconName}.png`
   }
-  return `/src/assets/${iconName}.png`
+  return `/${iconName}.png`
 }
 </script>
 
