@@ -217,7 +217,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete, View, Hide, Picture, Folder, Upload } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, View, Hide, Picture, Upload } from '@element-plus/icons-vue'
 import axios from 'axios'
 
 const news = ref([])
@@ -291,18 +291,6 @@ const handleImageSelect = (file) => {
     position: newsForm.value.content.length,
     alt: file.name
   })
-}
-
-const handleImageUpload = (file) => {
-  // Здесь должна быть логика загрузки файла
-  // Пока что просто добавляем в список
-  const newImage = {
-    url: URL.createObjectURL(file),
-    position: newsForm.value.content.length,
-    alt: file.name
-  }
-  newsForm.value.images.push(newImage)
-  showImageManager.value = true
 }
 
 const removeImage = (index) => {
