@@ -177,9 +177,9 @@ const regularNews = computed(() =>
 
 const getLogo = () => {
   if (currentTheme.value === 'pink') {
-    return '/src/assets/logo-pink.svg'
-  }
-  return '/src/assets/logo.svg'
+      return '/logo-pink.svg'
+}
+return '/logo.svg'
 }
 
 const fetchNews = async () => {
