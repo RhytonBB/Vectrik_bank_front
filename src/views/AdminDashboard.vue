@@ -11,6 +11,7 @@
       <el-menu-item index="/admin/broadcast">📢 Рассылка через Telegram-бота</el-menu-item>
       <el-menu-item index="/admin/products">🛍️ Управление лотами и товарами</el-menu-item>
       <el-menu-item index="/admin/banners">🖼️ Баннеры и медиа</el-menu-item>
+      <el-menu-item index="/admin/news">📰 Управление новостями</el-menu-item>
       <el-menu-item index="/admin/analytics">📈 Аналитика</el-menu-item>
       <el-menu-item index="/admin/theme">🎨 Тема для пользователей</el-menu-item>
       <el-menu-item @click="logout" index="logout">🚪 Выйти</el-menu-item>
