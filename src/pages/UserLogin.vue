@@ -31,12 +31,6 @@ const form = ref({
 });
 const loading = ref(false);
 
-const API = process.env.VUE_APP_API_URL;
-if (!API) {
-  console.error('VUE_APP_API_URL is not defined!');
-  ElMessage && ElMessage.error && ElMessage.error('Ошибка конфигурации: VUE_APP_API_URL не задана!');
-}
-
 async function onLogin() {
   if (!form.value.username || !form.value.password) {
     ElMessage.error('Заполните все поля!');
@@ -45,7 +39,7 @@ async function onLogin() {
   loading.value = true;
   try {
     const response = await axios.post(
-      `${API}/api/login`,
+      '/login',
       {
         login: form.value.username,
         password: form.value.password
@@ -59,7 +53,7 @@ async function onLogin() {
       localStorage.setItem('token', response.data.token);
       // Получаем роль пользователя
       try {
-        const meResp = await axios.get(`${API}/api/me`, { withCredentials: true });
+        const meResp = await axios.get('/me', { withCredentials: true });
         if (meResp.data.is_admin) {
           router.push('/admin/dashboard');
         } else {
