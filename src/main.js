@@ -5,9 +5,23 @@ import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import './assets/main.css';
 import axios from 'axios';
+
 axios.defaults.withCredentials = true;
-// Для продакшена используем относительные пути, так как Nginx проксирует запросы
-axios.defaults.baseURL = process.env.NODE_ENV === 'production' ? '' : '/';
+
+// Настройка базового URL для API
+if (process.env.NODE_ENV === 'production') {
+  // В production используем VUE_APP_API_URL или относительный путь
+  const apiUrl = process.env.VUE_APP_API_URL || '/api';
+  axios.defaults.baseURL = apiUrl;
+  
+  // Проверяем что переменная установлена
+  if (!process.env.VUE_APP_API_URL) {
+    console.warn('VUE_APP_API_URL не задана, используем /api по умолчанию');
+  }
+} else {
+  // В development используем относительный путь
+  axios.defaults.baseURL = '/';
+}
 
 // Подавляем предупреждения ResizeObserver
 const originalError = console.error;
