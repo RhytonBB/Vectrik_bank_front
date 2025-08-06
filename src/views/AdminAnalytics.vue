@@ -278,7 +278,7 @@ const formatDate = (dateString) => {
 }
 
 const fetchAnalytics = async () => {
-  const resp = await axios.get('/api/admin/analytics')
+  const resp = await axios.get('/admin/analytics')
   analytics.value = resp.data
 }
 
