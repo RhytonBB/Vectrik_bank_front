@@ -47,6 +47,7 @@ const routes = [
   
   // Клиентские маршруты
   { path: '/client', component: ClientHome },
+  { path: '/dashboard', component: ClientHome }, // Алиас для клиентов
   { path: '/client/store', component: ClientStore },
   { path: '/client/news', component: ClientNews },
   { path: '/client/about', component: ClientAbout },
@@ -64,7 +65,7 @@ router.beforeEach(async (to, from, next) => {
   
   // Проверяем авторизацию
   try {
-    const resp = await fetch(`${process.env.VUE_APP_API_URL}/api/me`, { credentials: 'include' });
+    const resp = await fetch('/api/me', { credentials: 'include' });
     if (!resp.ok) throw new Error('not auth');
     const me = await resp.json();
     const isAdmin = me.is_admin;
