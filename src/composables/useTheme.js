@@ -6,7 +6,7 @@ const currentTheme = ref('green')
 export function useTheme() {
   const fetchTheme = async () => {
     try {
-      const response = await axios.get('/api/client/theme')
+      const response = await axios.get('/client/theme')
       currentTheme.value = response.data.theme
       applyTheme(response.data.theme)
     } catch (error) {

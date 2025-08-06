@@ -184,7 +184,7 @@ return '/logo.svg'
 
 const fetchNews = async () => {
   try {
-    const response = await axios.get('/api/news')
+    const response = await axios.get('/news')
     news.value = response.data
   } catch (error) {
     console.error('Failed to fetch news:', error)
@@ -199,7 +199,7 @@ const viewNews = async (item) => {
   
   // Получаем рейтинг пользователя для этой новости
   try {
-    const response = await axios.get(`/api/news/${item.id}/rating`, { withCredentials: true })
+    const response = await axios.get(`/news/${item.id}/rating`, { withCredentials: true })
     userRating.value = response.data.rating
   } catch (error) {
     userRating.value = null
@@ -208,7 +208,7 @@ const viewNews = async (item) => {
 
 const rateNews = async (newsId, rating) => {
   try {
-    const response = await axios.post(`/api/news/${newsId}/rate`, 
+    const response = await axios.post(`/news/${newsId}/rate`, 
       { rating }, 
       { withCredentials: true }
     )
