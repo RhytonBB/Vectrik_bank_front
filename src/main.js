@@ -8,20 +8,8 @@ import axios from 'axios';
 
 axios.defaults.withCredentials = true;
 
-// Настройка базового URL для API
-if (process.env.NODE_ENV === 'production') {
-  // В production используем VUE_APP_API_URL или относительный путь
-  const apiUrl = process.env.VUE_APP_API_URL || '/api';
-  axios.defaults.baseURL = apiUrl;
-  
-  // Проверяем что переменная установлена
-  if (!process.env.VUE_APP_API_URL) {
-    console.warn('VUE_APP_API_URL не задана, используем /api по умолчанию');
-  }
-} else {
-  // В development используем относительный путь
-  axios.defaults.baseURL = '/';
-}
+// Устанавливаем базовый URL для API
+axios.defaults.baseURL = '/api';
 
 // Подавляем предупреждения ResizeObserver
 const originalError = console.error;
