@@ -6,7 +6,8 @@ import 'element-plus/dist/index.css';
 import './assets/main.css';
 import axios from 'axios';
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = process.env.VUE_APP_API_URL || '/';
+// Для продакшена используем относительные пути, так как Nginx проксирует запросы
+axios.defaults.baseURL = process.env.NODE_ENV === 'production' ? '' : '/';
 
 // Подавляем предупреждения ResizeObserver
 const originalError = console.error;
