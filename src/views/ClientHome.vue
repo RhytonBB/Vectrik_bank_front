@@ -15,9 +15,6 @@
           <div class="banner-container" :style="{ transform: `translateX(-${currentBannerIndex * 100}%)` }">
             <div v-for="banner in banners" :key="banner.id" class="banner">
               <img :src="banner.image_url" :alt="banner.title" class="banner-image">
-              <div class="banner-content">
-                <h3 class="banner-title">{{ banner.title }}</h3>
-              </div>
             </div>
           </div>
           

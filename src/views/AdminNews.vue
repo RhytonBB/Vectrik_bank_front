@@ -1,107 +1,102 @@
 <template>
-  <div class="admin-news">
-    <el-card class="news-card">
-      <div class="header">
-        <div class="header-left">
-          <h2>📰 Управление новостями</h2>
-          <p class="subtitle">Создавайте и управляйте новостями банка</p>
-        </div>
-        <el-button type="primary" size="large" @click="showCreateDialog = true" class="create-btn">
-          <el-icon><Plus /></el-icon>
-          Создать новость
-        </el-button>
-      </div>
+  <el-card>
+    <el-button type="primary" @click="$router.push('/admin/dashboard')" style="margin-bottom: 18px;">
+      <i class="el-icon-arrow-left" style="margin-right: 6px;"></i>Назад
+    </el-button>
+    <div class="header">
+      <h2>📰 Управление новостями</h2>
+      <el-button type="primary" @click="showCreateDialog = true" class="add-button">➕ Создать новость</el-button>
+    </div>
 
-      <!-- Статистика -->
-      <div class="stats">
-        <div class="stat-item">
-          <div class="stat-number">{{ totalNews }}</div>
-          <div class="stat-label">Всего новостей</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">{{ publishedNews }}</div>
-          <div class="stat-label">Опубликовано</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">{{ featuredNews }}</div>
-          <div class="stat-label">Важных</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">{{ totalViews }}</div>
-          <div class="stat-label">Просмотров</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">{{ totalRatings }}</div>
-          <div class="stat-label">Оценок</div>
-        </div>
+    <!-- Статистика -->
+    <div class="stats">
+      <div class="stat-item">
+        <div class="stat-number">{{ totalNews }}</div>
+        <div class="stat-label">Всего новостей</div>
       </div>
+      <div class="stat-item">
+        <div class="stat-number">{{ publishedNews }}</div>
+        <div class="stat-label">Опубликовано</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">{{ featuredNews }}</div>
+        <div class="stat-label">Важных</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">{{ totalViews }}</div>
+        <div class="stat-label">Просмотров</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">{{ totalRatings }}</div>
+        <div class="stat-label">Оценок</div>
+      </div>
+    </div>
 
-      <!-- Таблица новостей -->
-      <el-table :data="news" v-loading="loading" class="news-table">
-        <el-table-column prop="title" label="Заголовок" min-width="200">
-          <template #default="scope">
-            <div class="news-title-cell">
-              <span class="title-text">{{ scope.row.title }}</span>
-              <div class="news-badges">
-                <el-tag v-if="scope.row.is_featured" type="danger" size="small">Важная</el-tag>
-                <el-tag v-if="scope.row.views > 0" type="info" size="small">{{ scope.row.views }} 👁️</el-tag>
-              </div>
+    <!-- Таблица новостей -->
+    <el-table :data="news" v-loading="loading" class="news-table">
+      <el-table-column prop="title" label="Заголовок" min-width="200">
+        <template #default="scope">
+          <div class="news-title-cell">
+            <span class="title-text">{{ scope.row.title }}</span>
+            <div class="news-badges">
+              <el-tag v-if="scope.row.is_featured" type="danger" size="small">Важная</el-tag>
+              <el-tag v-if="scope.row.views > 0" type="info" size="small">{{ scope.row.views }} 👁️</el-tag>
             </div>
-          </template>
-        </el-table-column>
-        
-        <el-table-column label="Рейтинг" width="200">
-          <template #default="scope">
-            <div class="rating-stats">
-              <span class="rating-item" title="Лайки">👍 {{ scope.row.thumbs_up || 0 }}</span>
-              <span class="rating-item" title="Дизлайки">👎 {{ scope.row.thumbs_down || 0 }}</span>
-              <span class="rating-item" title="Огоньки">🔥 {{ scope.row.fire_count || 0 }}</span>
-            </div>
-          </template>
-        </el-table-column>
-        
-        <el-table-column prop="summary" label="Краткое описание" min-width="150">
-          <template #default="scope">
-            <div class="summary-text">{{ scope.row.summary || 'Нет описания' }}</div>
-          </template>
-        </el-table-column>
-        
-        <el-table-column prop="isPublished" label="Статус" width="120">
-          <template #default="scope">
-            <el-tag :type="scope.row.is_published ? 'success' : 'warning'" size="small">
-              {{ scope.row.is_published ? 'Опубликована' : 'Черновик' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        
-        <el-table-column prop="createdAt" label="Дата создания" width="120">
-          <template #default="scope">
-            {{ formatDate(scope.row.created_at) }}
-          </template>
-        </el-table-column>
-        
-        <el-table-column label="Действия" width="200" fixed="right">
-          <template #default="scope">
-            <div class="action-buttons">
-              <el-button size="small" @click="editNews(scope.row)">
-                <el-icon><Edit /></el-icon>
-              </el-button>
-              <el-button 
-                :type="scope.row.is_published ? 'warning' : 'success'"
-                size="small"
-                @click="togglePublish(scope.row.id)"
-              >
-                <el-icon><View v-if="scope.row.is_published" /><Hide v-else /></el-icon>
-                {{ scope.row.is_published ? 'Снять' : 'Опубликовать' }}
-              </el-button>
-              <el-button type="danger" size="small" @click="deleteNews(scope.row.id)">
-                <el-icon><Delete /></el-icon>
-              </el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+          </div>
+        </template>
+      </el-table-column>
+      
+      <el-table-column label="Рейтинг" width="200">
+        <template #default="scope">
+          <div class="rating-stats">
+            <span class="rating-item" title="Лайки">👍 {{ scope.row.thumbs_up || 0 }}</span>
+            <span class="rating-item" title="Дизлайки">👎 {{ scope.row.thumbs_down || 0 }}</span>
+            <span class="rating-item" title="Огоньки">🔥 {{ scope.row.fire_count || 0 }}</span>
+          </div>
+        </template>
+      </el-table-column>
+      
+      <el-table-column prop="summary" label="Краткое описание" min-width="150">
+        <template #default="scope">
+          <div class="summary-text">{{ scope.row.summary || 'Нет описания' }}</div>
+        </template>
+      </el-table-column>
+      
+      <el-table-column prop="isPublished" label="Статус" width="120">
+        <template #default="scope">
+          <el-tag :type="scope.row.is_published ? 'success' : 'warning'" size="small">
+            {{ scope.row.is_published ? 'Опубликована' : 'Черновик' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      
+      <el-table-column prop="createdAt" label="Дата создания" width="120">
+        <template #default="scope">
+          {{ formatDate(scope.row.created_at) }}
+        </template>
+      </el-table-column>
+      
+      <el-table-column label="Действия" width="200" fixed="right">
+        <template #default="scope">
+          <div class="action-buttons">
+            <el-button size="small" @click="editNews(scope.row)">
+              <el-icon><Edit /></el-icon>
+            </el-button>
+            <el-button 
+              :type="scope.row.is_published ? 'warning' : 'success'"
+              size="small"
+              @click="togglePublish(scope.row.id)"
+            >
+              <el-icon><View v-if="scope.row.is_published" /><Hide v-else /></el-icon>
+              {{ scope.row.is_published ? 'Снять' : 'Опубликовать' }}
+            </el-button>
+            <el-button type="danger" size="small" @click="deleteNews(scope.row.id)">
+              <el-icon><Delete /></el-icon>
+            </el-button>
+          </div>
+        </template>
+      </el-table-column>
+    </el-table>
 
     <!-- Диалог создания/редактирования -->
     <el-dialog 
@@ -211,7 +206,7 @@
         </div>
       </div>
     </el-dialog>
-  </div>
+  </el-card>
 </template>
 
 <script setup>
@@ -282,15 +277,31 @@ const resetForm = () => {
   editingNews.value = null
 }
 
-const handleImageSelect = (file) => {
-  // Здесь должна быть логика загрузки файла на сервер
-  // Пока что используем временный URL
-  const imageUrl = URL.createObjectURL(file.raw)
-  newsForm.value.images.push({
-    url: imageUrl,
-    position: newsForm.value.content.length,
-    alt: file.name
-  })
+const handleImageSelect = async (file) => {
+  try {
+    // Создаем FormData для загрузки файла
+    const formData = new FormData()
+    formData.append('file', file.raw)
+    
+    // Загружаем файл на сервер
+    const response = await axios.post('/api/admin/products/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    
+    // Добавляем изображение с реальным URL
+    newsForm.value.images.push({
+      url: response.data.url,
+      position: newsForm.value.content.length,
+      alt: file.name
+    })
+    
+    ElMessage.success('Изображение загружено')
+  } catch (error) {
+    ElMessage.error('Ошибка загрузки изображения')
+    console.error('Upload error:', error)
+  }
 }
 
 const removeImage = (index) => {
@@ -400,79 +411,56 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.admin-news {
-  padding: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.news-card {
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #f0f0f0;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-.header-left h2 {
-  color: #17624A;
-  margin: 0 0 8px 0;
-  font-size: 28px;
-  font-weight: 800;
-}
-
-.subtitle {
-  color: #666;
+.header h2 {
   margin: 0;
-  font-size: 16px;
+  color: var(--color-primary);
+  font-size: 24px;
+  font-weight: 700;
 }
 
-.create-btn {
-  background: linear-gradient(135deg, #17624A 0%, #27ae60 100%);
-  border: none;
-  padding: 12px 24px;
-  border-radius: 12px;
+.add-button {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  border-radius: 8px;
   font-weight: 600;
 }
 
 .stats {
-  display: flex;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
   margin-bottom: 24px;
-  flex-wrap: wrap;
 }
 
 .stat-item {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  padding: 16px 20px;
+  background: #f8f9fa;
   border-radius: 12px;
+  padding: 16px;
   text-align: center;
-  min-width: 120px;
-  border: 1px solid #dee2e6;
+  border: 1px solid #e9ecef;
 }
 
 .stat-number {
   font-size: 24px;
-  font-weight: 800;
-  color: #17624A;
+  font-weight: 700;
+  color: var(--color-primary);
   margin-bottom: 4px;
 }
 
 .stat-label {
   font-size: 14px;
   color: #666;
-  font-weight: 500;
 }
 
 .news-table {
-  border-radius: 12px;
-  overflow: hidden;
+  margin-top: 20px;
 }
 
 .news-title-cell {
@@ -488,21 +476,22 @@ onMounted(() => {
 
 .news-badges {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
 }
 
 .rating-stats {
   display: flex;
   gap: 8px;
-  font-size: 12px;
+  flex-wrap: wrap;
 }
 
 .rating-item {
-  background: #f0f0f0;
+  font-size: 12px;
+  color: #666;
+  background: #f8f9fa;
   padding: 2px 6px;
   border-radius: 4px;
-  color: #666;
 }
 
 .summary-text {
@@ -550,7 +539,7 @@ onMounted(() => {
 
 .content-preview h4 {
   margin: 0 0 12px 0;
-  color: #17624A;
+  color: var(--color-primary);
 }
 
 .preview-content {
@@ -607,10 +596,6 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .admin-news {
-    padding: 12px;
-  }
-  
   .header {
     flex-direction: column;
     gap: 16px;
@@ -618,7 +603,7 @@ onMounted(() => {
   }
   
   .stats {
-    flex-direction: column;
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
   

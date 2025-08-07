@@ -45,7 +45,7 @@
         <h3>Медиа</h3>
         <el-form-item label="Изображение">
           <el-upload
-            action="/admin/products/upload"
+            action="/api/admin/products/upload"
             :on-success="handleUploadSuccess"
             :show-file-list="false"
             class="media-upload"
