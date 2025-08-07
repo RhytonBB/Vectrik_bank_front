@@ -51,7 +51,6 @@ async function onLogin() {
     );
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
-      localStorage.removeItem('preloaderShown'); // сбросить флаг, чтобы прелоадер показался после авторизации
       // Получаем роль пользователя
       try {
         const meResp = await axios.get('/me', { withCredentials: true });
