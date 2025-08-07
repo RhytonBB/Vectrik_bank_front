@@ -74,7 +74,7 @@ return '/logo.svg'
 
 const fetchUserInfo = async () => {
   try {
-    const response = await axios.get('/api/me')
+    const response = await axios.get('/me')
     userInfo.value = response.data
   } catch (error) {
     console.error('Ошибка загрузки информации о пользователе:', error)

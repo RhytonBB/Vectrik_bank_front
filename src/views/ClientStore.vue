@@ -83,7 +83,7 @@ return '/logo.svg'
 
 const fetchProducts = async () => {
   try {
-    const response = await axios.get('/api/client/products')
+    const response = await axios.get('/client/products')
     products.value = response.data
   } catch (error) {
     console.error('Ошибка загрузки товаров:', error)
@@ -92,7 +92,7 @@ const fetchProducts = async () => {
 
 const fetchUserInfo = async () => {
   try {
-    const response = await axios.get('/api/me')
+    const response = await axios.get('/me')
     userInfo.value = response.data
   } catch (error) {
     console.error('Ошибка загрузки информации о пользователе:', error)
@@ -113,7 +113,7 @@ const purchaseProduct = async (product) => {
   if (!canPurchase(product)) return
   
   try {
-    await axios.post('/api/client/purchase', {
+    await axios.post('/client/purchase', {
       product_id: product.id,
       quantity: 1
     })
