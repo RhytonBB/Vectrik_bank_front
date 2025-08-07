@@ -19,11 +19,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
-const props = defineProps({
-  userName: String,
-  theme: String
-})
+import { ref, onMounted } from 'vue'
+const { userName, theme } = defineProps(['userName', 'theme'])
 const emit = defineEmits(['hide'])
 const visible = ref(true)
 const showLogo = ref(false)

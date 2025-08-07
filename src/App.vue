@@ -20,7 +20,7 @@ const isClientRoute = computed(() => route.path.startsWith('/client'))
 
 watch(
   () => route.fullPath,
-  async (newPath, oldPath) => {
+  async () => {
     if (isClientRoute.value && !showPreloader.value) {
       // Показываем прелоадер только при входе в клиентскую часть
       showPreloader.value = true
