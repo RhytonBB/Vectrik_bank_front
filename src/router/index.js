@@ -91,11 +91,11 @@ router.beforeEach(async (to, from, next) => {
       
       // Проверяем, что это мобильное устройство
       // Временно отключаем для диагностики
-      // if (!isMobileDevice()) {
-      //   console.log('Non-mobile device trying to access client route');
-      //   alert('Клиентская часть доступна только с мобильных устройств и планшетов');
-      //   return next('/');
-      // }
+      if (!isMobileDevice()) {
+        console.log('Non-mobile device trying to access client route');
+        alert('Клиентская часть доступна только с мобильных устройств и планшетов');
+        return next('/');
+      }
       
       console.log('Client route access granted');
       return next();
