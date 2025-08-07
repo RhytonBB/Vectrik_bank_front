@@ -1,5 +1,5 @@
 <template>
-  <Preloader v-if="showPreloader && isClientRoute" :userName="userName" :theme="theme" @hide="showPreloader = false" />
+  <Preloader v-if="showPreloader && isClientRoute" :userName="userName" :theme="theme" @hide="onPreloaderHide" />
   <router-view v-else />
 </template>
 
@@ -18,11 +18,19 @@ const theme = computed(() => currentTheme.value)
 
 const isClientRoute = computed(() => route.path.startsWith('/client'))
 
+function onPreloaderHide() {
+  showPreloader.value = false
+  localStorage.setItem('preloaderShown', '1')
+}
+
 watch(
   () => route.fullPath,
   async () => {
-    if (isClientRoute.value && !showPreloader.value) {
-      // Показываем прелоадер только при входе в клиентскую часть
+    if (
+      isClientRoute.value &&
+      !showPreloader.value &&
+      localStorage.getItem('preloaderShown') !== '1'
+    ) {
       showPreloader.value = true
       try {
         const resp = await axios.get('/me')
@@ -30,7 +38,6 @@ watch(
       } catch (e) {
         userName.value = ''
       }
-      // Прелоадер сам скроется через анимацию
     }
   },
   { immediate: true }

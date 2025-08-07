@@ -85,11 +85,13 @@ const logout = async () => {
   try {
     await axios.post('/logout')
     localStorage.removeItem('token')
+    localStorage.removeItem('preloaderShown') // сбросить флаг, чтобы прелоадер снова показывался после новой авторизации
     router.push('/')
   } catch (error) {
     console.error('Ошибка выхода:', error)
     // В любом случае перенаправляем на главную
     localStorage.removeItem('token')
+    localStorage.removeItem('preloaderShown')
     router.push('/')
   }
 }

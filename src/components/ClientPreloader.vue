@@ -1,5 +1,5 @@
 <template>
-  <div :class="['client-preloader', props.theme]" v-show="visible" @transitionend="onTransitionEnd">
+  <div class="client-preloader" v-show="visible" @transitionend="onTransitionEnd">
     <div class="preloader-content">
       <transition name="fade-text">
         <div v-if="showText" class="welcome-text">
@@ -27,15 +27,12 @@ const showLogo = ref(false)
 const showText = ref(false)
 
 onMounted(() => {
-  // Логотип появляется сразу, анимация уменьшения
   setTimeout(() => {
     showLogo.value = true
   }, 50)
-  // Текст появляется чуть позже
   setTimeout(() => {
     showText.value = true
   }, 600)
-  // Прелоадер исчезает через 2.1 сек
   setTimeout(() => {
     visible.value = false
   }, 2100)
@@ -55,22 +52,13 @@ function onTransitionEnd(e) {
   inset: 0;
   width: 100vw;
   height: 100vh;
-  background: #fff;
+  background: #fff !important;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   transition: opacity 0.7s cubic-bezier(.4,0,.2,1);
   opacity: 1;
-}
-.client-preloader.pink {
-  background: var(--color-secondary, #ffb3e6);
-}
-.client-preloader.green {
-  background: var(--color-secondary, #B4D8BA);
-}
-.client-preloader[style*="display: none"] {
-  opacity: 0;
 }
 .preloader-content {
   display: flex;
