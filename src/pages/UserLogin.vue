@@ -51,14 +51,14 @@ async function onLogin() {
     );
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
-      localStorage.removeItem('preloaderShown'); // сбросить флаг, чтобы прелоадер показался после логина
+      localStorage.removeItem('preloaderShown'); // сбросить флаг, чтобы прелоадер показался после авторизации
       // Получаем роль пользователя
       try {
         const meResp = await axios.get('/me', { withCredentials: true });
         if (meResp.data.is_admin) {
           router.push('/admin/dashboard');
         } else {
-          router.push('/dashboard');
+          router.push('/client');
         }
       } catch (e) {
         ElMessage.error('Ошибка авторизации (me)');
