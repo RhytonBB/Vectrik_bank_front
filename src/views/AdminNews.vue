@@ -284,7 +284,7 @@ const handleImageSelect = async (file) => {
     formData.append('file', file.raw)
     
     // Загружаем файл на сервер
-    const response = await axios.post('/api/admin/products/upload', formData, {
+    const response = await axios.post('/admin/products/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
