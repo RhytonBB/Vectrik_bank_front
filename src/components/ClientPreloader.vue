@@ -1,15 +1,15 @@
 <template>
-  <div :class="['client-preloader', theme]" v-show="visible" @transitionend="onTransitionEnd">
+  <div :class="['client-preloader', props.theme]" v-show="visible" @transitionend="onTransitionEnd">
     <div class="preloader-content">
       <transition name="fade-text">
         <div v-if="showText" class="welcome-text">
-          Добро пожаловать, <span class="user-name">{{ userName }}</span>
+          Добро пожаловать, <span class="user-name">{{ props.userName }}</span>
         </div>
       </transition>
       <transition name="logo-zoom">
         <img
           v-if="showLogo"
-          :src="theme === 'pink' ? '/logo-pink.svg' : '/logo.svg'"
+          :src="props.theme === 'pink' ? '/logo-pink.svg' : '/logo.svg'"
           alt="Логотип"
           class="preloader-logo"
         />
@@ -20,7 +20,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-const { userName, theme } = defineProps(['userName', 'theme'])
+const props = defineProps(['userName', 'theme'])
 const emit = defineEmits(['hide'])
 const visible = ref(true)
 const showLogo = ref(false)
