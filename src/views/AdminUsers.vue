@@ -83,7 +83,7 @@ const activeTab = ref('users')
 const isMobile = ref(false)
 
 const fetchUsers = async () => {
-  const resp = await axios.get('/api/admin/users')
+  const resp = await axios.get('/admin/users')
   users.value = resp.data
 }
 

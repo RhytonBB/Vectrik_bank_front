@@ -112,7 +112,7 @@ const isMobile = ref(false)
 
 const fetchBanners = async () => {
   try {
-    const resp = await axios.get('/api/admin/banners')
+    const resp = await axios.get('/admin/banners')
     banners.value = resp.data
   } catch (e) {
     error.value = 'Ошибка загрузки баннеров'
@@ -132,7 +132,7 @@ const addBanner = async () => {
   formData.append('title', newBanner.value.title)
   formData.append('file', newBanner.value.file)
   try {
-    await axios.post('/api/admin/banners', formData, {
+    await axios.post('/admin/banners', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     newBanner.value.title = ''
@@ -145,7 +145,7 @@ const addBanner = async () => {
 
 const toggleActive = async (banner) => {
   try {
-    await axios.post(`/api/admin/banners/${banner.id}/activate`, { is_active: banner.is_active })
+    await axios.post(`/admin/banners/${banner.id}/activate`, { is_active: banner.is_active })
     fetchBanners()
   } catch (e) {
     error.value = 'Ошибка изменения статуса баннера'
@@ -173,12 +173,12 @@ const saveEdit = async () => {
   if (editBanner.value.newFile) {
     const formData = new FormData()
     formData.append('file', editBanner.value.newFile)
-    const uploadRes = await axios.post('/api/admin/products/upload', formData, {
+    const uploadRes = await axios.post('/admin/products/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     editBanner.value.image_url = uploadRes.data.url
   }
-  await axios.put(`/api/admin/banners/${editBanner.value.id}`, {
+  await axios.put(`/admin/banners/${editBanner.value.id}`, {
     title: editBanner.value.title,
     image_url: editBanner.value.image_url,
     is_active: editBanner.value.is_active
@@ -191,7 +191,7 @@ const saveEdit = async () => {
 
 const deleteBanner = async (row) => {
   if (confirm('Удалить баннер?')) {
-    await axios.delete(`/api/admin/banners/${row.id}`)
+    await axios.delete(`/admin/banners/${row.id}`)
     fetchBanners()
   }
 }

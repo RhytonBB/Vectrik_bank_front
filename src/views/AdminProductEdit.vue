@@ -45,7 +45,7 @@
         <h3>Медиа</h3>
         <el-form-item label="Изображение">
           <el-upload
-            action="/api/admin/products/upload"
+            action="/admin/products/upload"
             :on-success="handleUploadSuccess"
             :show-file-list="false"
             class="media-upload"
@@ -88,7 +88,7 @@ const isEdit = computed(() => !!route.params.id)
 
 const fetchProduct = async () => {
   if (isEdit.value) {
-    const resp = await axios.get(`/api/admin/products/${route.params.id}`)
+    const resp = await axios.get(`/admin/products/${route.params.id}`)
     Object.assign(product.value, resp.data)
   }
 }
@@ -100,9 +100,9 @@ const saveProduct = async () => {
   }
   try {
     if (isEdit.value) {
-      await axios.put(`/api/admin/products/${route.params.id}`, product.value)
+      await axios.put(`/admin/products/${route.params.id}`, product.value)
     } else {
-      await axios.post('/api/admin/products', product.value)
+      await axios.post('/admin/products', product.value)
     }
     router.push('/admin/products')
   } catch (e) {
@@ -116,7 +116,7 @@ const handleUploadSuccess = (res) => {
 
 const deleteProduct = async () => {
   if (confirm('Удалить товар?')) {
-    await axios.delete(`/api/admin/products/${route.params.id}`)
+    await axios.delete(`/admin/products/${route.params.id}`)
     router.push('/admin/products')
   }
 }

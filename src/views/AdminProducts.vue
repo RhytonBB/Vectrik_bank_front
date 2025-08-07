@@ -103,7 +103,7 @@ const getTypeText = (type) => {
 }
 
 const fetchProducts = async () => {
-  const resp = await axios.get('/api/admin/products')
+  const resp = await axios.get('/admin/products')
   products.value = resp.data
 }
 
@@ -117,7 +117,7 @@ const goToAdd = () => {
 
 const deleteProduct = async (row) => {
   if (confirm('Удалить товар?')) {
-    await axios.delete(`/api/admin/products/${row.id}`)
+    await axios.delete(`/admin/products/${row.id}`)
     fetchProducts()
   }
 }

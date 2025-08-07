@@ -24,8 +24,14 @@ import ClientProfile from '../views/ClientProfile.vue'
 
 // Функция для проверки мобильного устройства
 function isMobileDevice() {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
          window.innerWidth <= 768;
+  console.log('Mobile device check:', { 
+    userAgent: navigator.userAgent, 
+    windowWidth: window.innerWidth, 
+    isMobile 
+  });
+  return isMobile;
 }
 
 const routes = [
@@ -61,6 +67,8 @@ const router = createRouter({
 
 // Глобальный guard для разграничения интерфейсов
 router.beforeEach(async (to, from, next) => {
+  console.log('Router guard:', { to: to.path, from: from.path });
+  
   if (to.path === '/') return next();
   
   // Проверяем авторизацию
@@ -70,34 +78,46 @@ router.beforeEach(async (to, from, next) => {
     const me = await resp.json();
     const isAdmin = me.is_admin;
     
-    // Если это клиентский маршрут
-    if (to.path.startsWith('/client')) {
+    console.log('User info:', { isAdmin, path: to.path });
+    
+    // Если это клиентский маршрут (включая /dashboard)
+    if (to.path.startsWith('/client') || to.path === '/dashboard') {
+      console.log('Client route detected');
       if (isAdmin) {
         // Админы не могут попасть в клиентскую часть
+        console.log('Admin trying to access client route, redirecting to admin dashboard');
         return next('/admin/dashboard');
       }
       
       // Проверяем, что это мобильное устройство
-      if (!isMobileDevice()) {
-        alert('Клиентская часть доступна только с мобильных устройств и планшетов');
-        return next('/');
-      }
+      // Временно отключаем для диагностики
+      // if (!isMobileDevice()) {
+      //   console.log('Non-mobile device trying to access client route');
+      //   alert('Клиентская часть доступна только с мобильных устройств и планшетов');
+      //   return next('/');
+      // }
       
+      console.log('Client route access granted');
       return next();
     }
     
     // Если это админский маршрут
     if (to.path.startsWith('/admin')) {
-      if (!isAdmin) return next('/client');
+      console.log('Admin route detected');
+      if (!isAdmin) {
+        console.log('Non-admin trying to access admin route, redirecting to client');
+        return next('/client');
+      }
+      console.log('Admin route access granted');
       return next();
     }
     
-
-    
     // Любой другой маршрут — редирект по роли
+    console.log('Unknown route, redirecting by role');
     if (isAdmin) return next('/admin/dashboard');
     return next('/client');
-  } catch {
+  } catch (error) {
+    console.log('Auth error:', error);
     return next('/');
   }
 });

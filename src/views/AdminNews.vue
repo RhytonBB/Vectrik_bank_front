@@ -260,7 +260,7 @@ const totalRatings = computed(() =>
 const fetchNews = async () => {
   loading.value = true
   try {
-    const response = await axios.get('/api/admin/news', { withCredentials: true })
+    const response = await axios.get('/admin/news', { withCredentials: true })
     news.value = response.data
   } catch (error) {
     ElMessage.error('Ошибка загрузки новостей')
@@ -337,10 +337,10 @@ const saveNews = async () => {
     }
     
     if (editingNews.value) {
-      await axios.put(`/api/admin/news/${editingNews.value.id}`, data, { withCredentials: true })
+      await axios.put(`/admin/news/${editingNews.value.id}`, data, { withCredentials: true })
       ElMessage.success('Новость обновлена')
     } else {
-      await axios.post('/api/admin/news', data, { withCredentials: true })
+      await axios.post('/admin/news', data, { withCredentials: true })
       ElMessage.success('Новость создана')
     }
     
@@ -360,7 +360,7 @@ const saveNews = async () => {
 
 const togglePublish = async (id) => {
   try {
-    await axios.post(`/api/admin/news/${id}/publish`, {}, { withCredentials: true })
+    await axios.post(`/admin/news/${id}/publish`, {}, { withCredentials: true })
     ElMessage.success('Статус новости изменен')
     await fetchNews()
   } catch (error) {
@@ -380,7 +380,7 @@ const deleteNews = async (id) => {
       }
     )
     
-    await axios.delete(`/api/admin/news/${id}`, { withCredentials: true })
+    await axios.delete(`/admin/news/${id}`, { withCredentials: true })
     ElMessage.success('Новость удалена')
     await fetchNews()
   } catch (error) {

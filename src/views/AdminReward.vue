@@ -108,7 +108,7 @@ const reasons = [
 
 const fetchUsers = async () => {
   try {
-    const resp = await axios.get('/api/admin/reward/users', {
+    const resp = await axios.get('/admin/reward/users', {
       params: { scope: activeTab.value, q: query.value }
     })
     users.value = resp.data
@@ -124,7 +124,7 @@ const onReasonChange = (val) => {
 }
 const sendReward = async () => {
   try {
-    await axios.post('/api/admin/reward', {
+    await axios.post('/admin/reward', {
       user_ids: selectedUsers.value,
       amount: amount.value,
       reason: reason.value,

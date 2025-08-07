@@ -161,12 +161,12 @@ const balanceForm = ref({
 })
 
 const fetchGroups = async () => {
-  const resp = await axios.get('/api/admin/groups')
+  const resp = await axios.get('/admin/groups')
   groups.value = resp.data
 }
 
 const fetchUser = async () => {
-  const resp = await axios.get(`/api/admin/users/${route.params.id}`)
+  const resp = await axios.get(`/admin/users/${route.params.id}`)
   user.value = resp.data
   editForm.value.first_name = user.value.first_name
   editForm.value.last_name = user.value.last_name
@@ -178,7 +178,7 @@ const fetchUser = async () => {
 
 const saveProfile = async () => {
   try {
-    await axios.put(`/api/admin/users/${user.value.id}`, {
+    await axios.put(`/admin/users/${user.value.id}`, {
       first_name: editForm.value.first_name,
       last_name: editForm.value.last_name,
       telegram_username: editForm.value.telegram_username,
@@ -200,7 +200,7 @@ const adjustBalance = async () => {
     return
   }
   try {
-    await axios.post('/api/admin/users/adjust_balance', {
+    await axios.post('/admin/users/adjust_balance', {
       user_id: user.value.id,
       amount: balanceForm.value.amount,
       context: balanceForm.value.context
@@ -216,20 +216,20 @@ const adjustBalance = async () => {
 }
 
 const toggleActive = async () => {
-  await axios.post(`/api/admin/users/${user.value.id}/activate`, { is_active: user.value.is_active })
+  await axios.post(`/admin/users/${user.value.id}/activate`, { is_active: user.value.is_active })
 }
 
 const toggleAdmin = async () => {
-  await axios.post(`/api/admin/users/${user.value.id}/admin`, { is_admin: user.value.is_admin })
+  await axios.post(`/admin/users/${user.value.id}/admin`, { is_admin: user.value.is_admin })
 }
 
 const banUser = async () => {
-  await axios.post(`/api/admin/users/${user.value.id}/ban`)
+  await axios.post(`/admin/users/${user.value.id}/ban`)
   fetchUser()
 }
 
 const unbanUser = async () => {
-  await axios.post(`/api/admin/users/${user.value.id}/unban`)
+  await axios.post(`/admin/users/${user.value.id}/unban`)
   fetchUser()
 }
 
@@ -244,7 +244,7 @@ const confirmDelete = async () => {
         type: 'warning',
       }
     )
-    await axios.delete(`/api/admin/users/${user.value.id}`)
+    await axios.delete(`/admin/users/${user.value.id}`)
     message.value = 'Пользователь удалён'
     setTimeout(() => router.push('/admin/users'), 1200)
   } catch (e) {

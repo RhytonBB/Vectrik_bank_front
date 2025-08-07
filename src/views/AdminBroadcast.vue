@@ -254,7 +254,7 @@ const getTargetText = (targetType) => {
 
 const fetchBroadcastHistory = async () => {
   try {
-    const resp = await axios.get('/api/admin/broadcast')
+    const resp = await axios.get('/admin/broadcast')
     broadcastHistory.value = resp.data
   } catch (e) {
     error.value = 'Ошибка загрузки истории'
@@ -262,7 +262,7 @@ const fetchBroadcastHistory = async () => {
 }
 const fetchAvailableUsers = async () => {
   try {
-    const resp = await axios.get('/api/admin/broadcast/users?type=all')
+    const resp = await axios.get('/admin/broadcast/users?type=all')
     availableUsers.value = resp.data
   } catch (e) {
     error.value = 'Ошибка загрузки пользователей'
@@ -304,13 +304,13 @@ const sendMessage = async () => {
     if (messageForm.value.mediaFile) {
       const formData = new FormData()
       formData.append('file', messageForm.value.mediaFile)
-      const uploadRes = await axios.post('/api/admin/products/upload', formData, {
+      const uploadRes = await axios.post('/admin/products/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       mediaURL = uploadRes.data.url
       mediaType = messageForm.value.mediaType
     }
-    await axios.post('/api/admin/broadcast', {
+    await axios.post('/admin/broadcast', {
       text: messageForm.value.text,
       media_url: mediaURL,
       media_type: mediaType,
@@ -335,7 +335,7 @@ const sendMessage = async () => {
 }
 const viewHistory = async (broadcast) => {
   try {
-    const resp = await axios.get(`/api/admin/broadcast/${broadcast.id}/history`)
+    const resp = await axios.get(`/admin/broadcast/${broadcast.id}/history`)
     messageHistory.value = resp.data
     historyDialog.value = true
   } catch (e) {
