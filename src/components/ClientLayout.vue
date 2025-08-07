@@ -57,7 +57,7 @@ const getNavIcon = (iconName) => {
 .client-content {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 80px; /* Место для навигации */
+  padding-bottom: 100px; /* Увеличенный отступ для навигации */
 }
 
 .client-navigation {

@@ -35,12 +35,6 @@
             <span class="info-label">Баланс:</span>
             <span class="info-value balance">{{ userInfo.balance }} Вектриков</span>
           </div>
-          <div class="info-item">
-            <span class="info-label">Статус:</span>
-            <span class="info-value status" :class="{ 'active': userInfo.is_active, 'inactive': !userInfo.is_active }">
-              {{ userInfo.is_active ? 'Активен' : 'Неактивен' }}
-            </span>
-          </div>
         </div>
       </div>
 

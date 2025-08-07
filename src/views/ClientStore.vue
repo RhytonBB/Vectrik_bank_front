@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import ClientLayout from '@/components/ClientLayout.vue'
 import { useTheme } from '@/composables/useTheme'
@@ -73,6 +73,7 @@ import { useTheme } from '@/composables/useTheme'
 const { currentTheme } = useTheme()
 const products = ref([])
 const userInfo = ref({})
+let updateInterval = null
 
 const getLogo = () => {
   if (currentTheme.value === 'pink') {
@@ -136,6 +137,18 @@ const purchaseProduct = async (product) => {
 onMounted(() => {
   fetchProducts()
   fetchUserInfo()
+  
+  // Запускаем автоматическое обновление каждые 5 секунд
+  updateInterval = setInterval(() => {
+    fetchProducts()
+    fetchUserInfo()
+  }, 5000)
+})
+
+onUnmounted(() => {
+  if (updateInterval) {
+    clearInterval(updateInterval)
+  }
 })
 </script>
 

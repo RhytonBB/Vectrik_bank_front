@@ -151,7 +151,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import ClientLayout from '@/components/ClientLayout.vue'
 import { useTheme } from '@/composables/useTheme'
@@ -166,6 +166,7 @@ const showImageLightbox = ref(false)
 const selectedNews = ref(null)
 const lightboxImage = ref('')
 const userRating = ref(null)
+let updateInterval = null
 
 const featuredNews = computed(() => 
   news.value.filter(item => item.is_featured)
@@ -271,10 +272,21 @@ const formatDate = (dateString) => {
 onMounted(() => {
   fetchNews()
   
+  // Запускаем автоматическое обновление каждые 10 секунд
+  updateInterval = setInterval(() => {
+    fetchNews()
+  }, 10000)
+  
   // Добавляем глобальную функцию для лайтбокса
   window.openImageLightbox = (imageUrl) => {
     lightboxImage.value = imageUrl
     showImageLightbox.value = true
+  }
+})
+
+onUnmounted(() => {
+  if (updateInterval) {
+    clearInterval(updateInterval)
   }
 })
 </script>
