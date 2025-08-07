@@ -212,7 +212,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete, View, Hide, Picture, Upload } from '@element-plus/icons-vue'
+import { Edit, Delete, View, Hide, Picture, Upload } from '@element-plus/icons-vue'
 import axios from 'axios'
 
 const news = ref([])
