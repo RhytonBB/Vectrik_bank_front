@@ -34,14 +34,15 @@
       <div class="upload-content">
         <!-- Выбор файла -->
         <div v-if="!selectedFile" class="file-select">
-          <el-upload
-            ref="uploadRef"
-            :auto-upload="false"
-            :show-file-list="false"
-            :on-change="handleFileSelect"
-            accept="image/jpeg,image/png,image/jpg"
-            class="upload-area"
-          >
+                      <el-upload
+              ref="uploadRef"
+              :auto-upload="false"
+              :show-file-list="false"
+              :on-change="handleFileSelect"
+              accept="image/jpeg,image/png,image/jpg"
+              class="upload-area"
+              :before-upload="() => false"
+            >
             <div class="upload-placeholder">
               <i class="el-icon-upload"></i>
               <div class="upload-text">
@@ -111,7 +112,7 @@ const showUploadDialog = ref(false)
 const selectedFile = ref(null)
 const previewUrl = ref('')
 const uploading = ref(false)
-const uploadRef = ref(null)
+const fileInput = ref(null)
 const previewImage = ref(null)
 const showCropOverlay = ref(false)
 const cropAreaStyle = ref({
@@ -122,22 +123,28 @@ const cropAreaStyle = ref({
 })
 
 const handleFileSelect = (file) => {
+  console.log('=== НАЧАЛО handleFileSelect ===')
   console.log('Файл выбран:', file)
   console.log('Размер файла:', file.size)
   console.log('Тип файла:', file.type)
+  console.log('Файл.raw:', file.raw)
+  console.log('Файл.uid:', file.uid)
+  console.log('Файл.raw.type:', file.raw?.type)
   
   if (file.size > 10 * 1024 * 1024) {
     ElMessage.error('Файл слишком большой. Максимальный размер: 10MB')
     return
   }
 
-  if (!file.type.startsWith('image/')) {
+  // Проверяем тип файла из raw объекта
+  const fileType = file.raw?.type || file.type
+  if (!fileType || !fileType.startsWith('image/')) {
     ElMessage.error('Пожалуйста, выберите изображение')
     return
   }
 
-  selectedFile.value = file
-  previewUrl.value = URL.createObjectURL(file)
+  selectedFile.value = file.raw || file
+  previewUrl.value = URL.createObjectURL(file.raw || file)
   
   console.log('Файл установлен:', selectedFile.value)
   console.log('Preview URL:', previewUrl.value)
@@ -158,8 +165,10 @@ const resetSelection = () => {
 }
 
 const uploadAvatar = async () => {
+  console.log('=== НАЧАЛО uploadAvatar ===')
   console.log('Начинаем загрузку аватарки')
   console.log('Выбранный файл:', selectedFile.value)
+  console.log('selectedFile.value.raw:', selectedFile.value?.raw)
   
   if (!selectedFile.value) {
     console.log('Нет выбранного файла')
