@@ -33,10 +33,14 @@
             <div class="user-info">
               <div class="user-avatar">
                 <img 
-                  :src="u.avatar_url || '/default-avatar.png'" 
+                  v-if="u.avatar_url"
+                  :src="u.avatar_url" 
                   :alt="`${u.first_name} ${u.last_name}`"
                   class="avatar-img"
                 />
+                <div v-else class="avatar-placeholder">
+                  <i class="el-icon-user"></i>
+                </div>
               </div>
               <div class="user-details">
                 <div class="user-name">{{ u.first_name }} {{ u.last_name }}</div>
@@ -52,10 +56,14 @@
           <div class="user-info">
             <div class="user-avatar">
               <img 
-                :src="u.avatar_url || '/default-avatar.png'" 
+                v-if="u.avatar_url"
+                :src="u.avatar_url" 
                 :alt="`${u.first_name} ${u.last_name}`"
                 class="avatar-img"
               />
+              <div v-else class="avatar-placeholder">
+                <i class="el-icon-user"></i>
+              </div>
             </div>
             <div class="user-details">
               <div class="user-name">{{ u.first_name }} {{ u.last_name }}</div>
@@ -287,6 +295,19 @@ onMounted(() => {
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid var(--color-primary);
+}
+
+.avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+  color: #999;
+  font-size: 20px;
   border: 2px solid var(--color-primary);
 }
 

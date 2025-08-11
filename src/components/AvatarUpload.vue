@@ -3,10 +3,14 @@
     <!-- Текущая аватарка -->
     <div class="current-avatar">
       <img 
-        :src="currentAvatarUrl || '/default-avatar.png'" 
+        :src="currentAvatarUrl" 
         :alt="`Аватар ${userName}`"
         class="avatar-preview"
+        v-if="currentAvatarUrl"
       />
+      <div v-else class="avatar-placeholder">
+        <i class="el-icon-user"></i>
+      </div>
       <div class="avatar-overlay">
         <el-button 
           type="primary" 
@@ -202,6 +206,17 @@ const uploadAvatar = async () => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+  color: #999;
+  font-size: 48px;
 }
 
 .avatar-overlay {
