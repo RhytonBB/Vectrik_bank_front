@@ -31,20 +31,38 @@
         <div v-for="u in users" :key="u.id" class="user-card">
           <el-checkbox :value="u.id" v-model="selectedUsers" class="user-checkbox">
             <div class="user-info">
-              <div class="user-name">{{ u.first_name }} {{ u.last_name }}</div>
-              <div class="user-telegram">@{{ u.telegram_username }}</div>
+              <div class="user-avatar">
+                <img 
+                  :src="u.avatar_url || '/default-avatar.png'" 
+                  :alt="`${u.first_name} ${u.last_name}`"
+                  class="avatar-img"
+                />
+              </div>
+              <div class="user-details">
+                <div class="user-name">{{ u.first_name }} {{ u.last_name }}</div>
+                <div class="user-telegram">@{{ u.telegram_username }}</div>
+              </div>
             </div>
           </el-checkbox>
         </div>
       </div>
       <div v-else class="desktop-user-list">
         <el-checkbox-group v-model="selectedUsers" class="user-checkbox-group">
-          <el-checkbox v-for="u in users" :key="u.id" :value="u.id" class="user-checkbox">
-            <div class="user-info">
+                  <el-checkbox v-for="u in users" :key="u.id" :value="u.id" class="user-checkbox">
+          <div class="user-info">
+            <div class="user-avatar">
+              <img 
+                :src="u.avatar_url || '/default-avatar.png'" 
+                :alt="`${u.first_name} ${u.last_name}`"
+                class="avatar-img"
+              />
+            </div>
+            <div class="user-details">
               <div class="user-name">{{ u.first_name }} {{ u.last_name }}</div>
               <div class="user-telegram">@{{ u.telegram_username }}</div>
             </div>
-          </el-checkbox>
+          </div>
+        </el-checkbox>
         </el-checkbox-group>
       </div>
       
@@ -255,6 +273,24 @@ onMounted(() => {
 }
 
 .user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  flex-shrink: 0;
+}
+
+.avatar-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-primary);
+}
+
+.user-details {
   display: flex;
   flex-direction: column;
   gap: 4px;

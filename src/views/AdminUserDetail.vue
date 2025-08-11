@@ -7,8 +7,18 @@
     <div class="user-header">
       <h2>👤 Детали пользователя</h2>
       <div v-if="user" class="user-info">
-        <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
-        <div class="user-id">ID: {{ user.id }}</div>
+        <div class="user-avatar-section">
+          <AvatarUpload 
+            :user-id="user.id"
+            :user-name="`${user.first_name} ${user.last_name}`"
+            :current-avatar-url="user.avatar_url"
+            @avatar-updated="handleAvatarUpdated"
+          />
+        </div>
+        <div class="user-details">
+          <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
+          <div class="user-id">ID: {{ user.id }}</div>
+        </div>
       </div>
     </div>
     
@@ -138,6 +148,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessageBox } from 'element-plus'
+import AvatarUpload from '@/components/AvatarUpload.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -252,6 +263,12 @@ const confirmDelete = async () => {
   }
 }
 
+const handleAvatarUpdated = (avatarUrl) => {
+  if (user.value) {
+    user.value.avatar_url = avatarUrl
+  }
+}
+
 onMounted(() => {
   fetchUser()
   fetchGroups()
@@ -299,6 +316,16 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+.user-avatar-section {
+  flex-shrink: 0;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .user-name {
@@ -520,8 +547,16 @@ onMounted(() => {
   
   .user-info {
     flex-direction: column !important;
-    gap: 12px !important;
-    align-items: flex-start !important;
+    gap: 16px !important;
+    align-items: center !important;
+  }
+  
+  .user-avatar-section {
+    order: -1;
+  }
+  
+  .user-details {
+    text-align: center;
   }
   
   .user-name {

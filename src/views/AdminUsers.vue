@@ -20,8 +20,17 @@
       <div v-if="isMobile" class="mobile-user-list">
         <div v-for="user in users" :key="user.id" class="user-card" @click="goToUser(user)">
           <div class="user-header">
-            <div class="user-name">{{ user.last_name }} {{ user.first_name }}</div>
-            <div class="user-balance">{{ user.balance }} Вектриков</div>
+            <div class="user-avatar">
+              <img 
+                :src="user.avatar_url || '/default-avatar.png'" 
+                :alt="`${user.first_name} ${user.last_name}`"
+                class="avatar-img"
+              />
+            </div>
+            <div class="user-info-main">
+              <div class="user-name">{{ user.last_name }} {{ user.first_name }}</div>
+              <div class="user-balance">{{ user.balance }} Вектриков</div>
+            </div>
           </div>
           <div class="user-details">
             <div class="user-row"><b>ID:</b> {{ user.id }}</div>
@@ -283,11 +292,30 @@ onMounted(() => {
   
   .user-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 16px;
     margin-bottom: 12px;
     padding-bottom: 8px;
     border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .user-avatar {
+    flex-shrink: 0;
+  }
+  
+  .avatar-img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--color-primary);
+  }
+  
+  .user-info-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
   
   .user-name {
