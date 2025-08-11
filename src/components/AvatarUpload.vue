@@ -122,6 +122,10 @@ const cropAreaStyle = ref({
 })
 
 const handleFileSelect = (file) => {
+  console.log('Файл выбран:', file)
+  console.log('Размер файла:', file.size)
+  console.log('Тип файла:', file.type)
+  
   if (file.size > 10 * 1024 * 1024) {
     ElMessage.error('Файл слишком большой. Максимальный размер: 10MB')
     return
@@ -135,8 +139,12 @@ const handleFileSelect = (file) => {
   selectedFile.value = file
   previewUrl.value = URL.createObjectURL(file)
   
+  console.log('Файл установлен:', selectedFile.value)
+  console.log('Preview URL:', previewUrl.value)
+  
   nextTick(() => {
     showCropOverlay.value = true
+    console.log('Crop overlay показан:', showCropOverlay.value)
   })
 }
 
@@ -150,7 +158,13 @@ const resetSelection = () => {
 }
 
 const uploadAvatar = async () => {
-  if (!selectedFile.value) return
+  console.log('Начинаем загрузку аватарки')
+  console.log('Выбранный файл:', selectedFile.value)
+  
+  if (!selectedFile.value) {
+    console.log('Нет выбранного файла')
+    return
+  }
 
   uploading.value = true
   
@@ -159,19 +173,24 @@ const uploadAvatar = async () => {
     formData.append('avatar', selectedFile.value)
     formData.append('user_id', props.userId.toString())
 
+    console.log('FormData создан, отправляем запрос...')
+    console.log('User ID:', props.userId)
+
     const response = await axios.post('/admin/users/avatar/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     })
 
+    console.log('Ответ сервера:', response.data)
     ElMessage.success('Аватарка успешно загружена')
     emit('avatar-updated', response.data.avatar_url)
     showUploadDialog.value = false
     resetSelection()
   } catch (error) {
     console.error('Ошибка загрузки аватарки:', error)
-    ElMessage.error('Ошибка загрузки аватарки')
+    console.error('Детали ошибки:', error.response?.data)
+    ElMessage.error('Ошибка загрузки аватарки: ' + (error.response?.data || error.message))
   } finally {
     uploading.value = false
   }
