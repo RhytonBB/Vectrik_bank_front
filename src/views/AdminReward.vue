@@ -423,6 +423,17 @@ onMounted(() => {
     font-size: 14px !important;
   }
   
+  .avatar-img {
+    width: 50px !important;
+    height: 50px !important;
+  }
+  
+  .avatar-placeholder {
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 24px !important;
+  }
+  
   .reward-details {
     padding: 20px;
     border-radius: 10px;

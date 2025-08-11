@@ -62,9 +62,14 @@
               class="preview-image"
               ref="previewImage"
             />
-            <div class="crop-overlay" v-if="showCropOverlay">
-              <div class="crop-area" :style="cropAreaStyle"></div>
-            </div>
+                         <div class="crop-overlay" v-if="showCropOverlay">
+               <div 
+                 class="crop-area" 
+                 :style="cropAreaStyle"
+                 @mousedown="startDrag"
+                 @touchstart="startDrag"
+               ></div>
+             </div>
           </div>
           
           <div class="preview-controls">
@@ -121,6 +126,11 @@ const cropAreaStyle = ref({
   height: '50%'
 })
 
+// Переменные для перетаскивания
+const isDragging = ref(false)
+const dragStart = ref({ x: 0, y: 0 })
+const cropStart = ref({ x: 0, y: 0 })
+
 const handleFileSelect = (file) => {
   console.log('=== НАЧАЛО handleFileSelect ===')
   console.log('Файл выбран:', file)
@@ -161,6 +171,63 @@ const resetSelection = () => {
   if (previewUrl.value) {
     URL.revokeObjectURL(previewUrl.value)
   }
+}
+
+// Функции для перетаскивания области обрезки
+const startDrag = (e) => {
+  isDragging.value = true
+  dragStart.value = { x: e.clientX, y: e.clientY }
+  cropStart.value = { 
+    x: parseFloat(cropAreaStyle.value.left), 
+    y: parseFloat(cropAreaStyle.value.top) 
+  }
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', stopDrag)
+  document.addEventListener('touchmove', onDrag)
+  document.addEventListener('touchend', stopDrag)
+}
+
+const onDrag = (e) => {
+  if (!isDragging.value) return
+  
+  const clientX = e.clientX || e.touches[0].clientX
+  const clientY = e.clientY || e.touches[0].clientY
+  
+  const deltaX = clientX - dragStart.value.x
+  const deltaY = clientY - dragStart.value.y
+  
+  const container = previewImage.value?.parentElement
+  if (!container) return
+  
+  const containerRect = container.getBoundingClientRect()
+  const containerWidth = containerRect.width
+  const containerHeight = containerRect.height
+  
+  const cropSize = 50 // 50% от размера контейнера
+  const maxX = 100 - cropSize
+  const maxY = 100 - cropSize
+  
+  let newX = cropStart.value.x + (deltaX / containerWidth) * 100
+  let newY = cropStart.value.y + (deltaY / containerHeight) * 100
+  
+  // Ограничиваем границы
+  newX = Math.max(0, Math.min(maxX, newX))
+  newY = Math.max(0, Math.min(maxY, newY))
+  
+  cropAreaStyle.value = {
+    left: `${newX}%`,
+    top: `${newY}%`,
+    width: `${cropSize}%`,
+    height: `${cropSize}%`
+  }
+}
+
+const stopDrag = () => {
+  isDragging.value = false
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+  document.removeEventListener('touchmove', onDrag)
+  document.removeEventListener('touchend', stopDrag)
 }
 
 const uploadAvatar = async () => {
@@ -363,8 +430,11 @@ const uploadAvatar = async () => {
 .crop-area {
   position: absolute;
   border: 2px solid #fff;
+  border-radius: 50%;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
   cursor: move;
+  user-select: none;
+  touch-action: none;
 }
 
 .preview-controls {
