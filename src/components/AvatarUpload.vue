@@ -112,7 +112,6 @@ const showUploadDialog = ref(false)
 const selectedFile = ref(null)
 const previewUrl = ref('')
 const uploading = ref(false)
-const fileInput = ref(null)
 const previewImage = ref(null)
 const showCropOverlay = ref(false)
 const cropAreaStyle = ref({
