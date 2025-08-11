@@ -1,15 +1,21 @@
 <template>
   <div class="avatar-upload">
-    <div class="avatar-preview">
+    <!-- Текущая аватарка -->
+    <div class="current-avatar">
       <img 
-        :src="currentAvatar" 
-        :alt="userName"
-        class="avatar-image"
-        @click="openUploadDialog"
+        :src="currentAvatarUrl || '/default-avatar.png'" 
+        :alt="`Аватар ${userName}`"
+        class="avatar-preview"
       />
-      <div class="avatar-overlay" @click="openUploadDialog">
-        <i class="el-icon-camera"></i>
-        <span>Изменить</span>
+      <div class="avatar-overlay">
+        <el-button 
+          type="primary" 
+          size="small" 
+          @click="showUploadDialog = true"
+          class="upload-btn"
+        >
+          <i class="el-icon-camera"></i>
+        </el-button>
       </div>
     </div>
 
@@ -18,78 +24,66 @@
       v-model="showUploadDialog" 
       title="Загрузка аватарки" 
       width="90%"
-      max-width="500px"
-      class="avatar-upload-dialog"
+      :close-on-click-modal="false"
+      class="avatar-dialog"
     >
       <div class="upload-content">
-        <div class="upload-section">
+        <!-- Выбор файла -->
+        <div v-if="!selectedFile" class="file-select">
           <el-upload
             ref="uploadRef"
             :auto-upload="false"
             :show-file-list="false"
-            :on-change="handleFileChange"
-            accept="image/jpeg,image/png"
-            class="avatar-uploader"
+            :on-change="handleFileSelect"
+            accept="image/jpeg,image/png,image/jpg"
+            class="upload-area"
           >
-            <div class="upload-trigger">
-              <i class="el-icon-plus"></i>
-              <span>Выберите изображение</span>
+            <div class="upload-placeholder">
+              <i class="el-icon-upload"></i>
+              <div class="upload-text">
+                <p>Нажмите для выбора файла</p>
+                <p class="upload-hint">JPG, PNG до 10MB</p>
+              </div>
             </div>
           </el-upload>
         </div>
 
-        <!-- Предварительный просмотр и обрезка -->
-        <div v-if="selectedFile" class="crop-section">
-          <h4>Обрезка изображения</h4>
-          <p class="crop-hint">Изображение будет автоматически обрезано до квадрата 200x200 пикселей</p>
-          
-          <div class="image-preview">
+        <!-- Предпросмотр и обрезка -->
+        <div v-if="selectedFile" class="image-preview">
+          <div class="preview-container">
             <img 
               :src="previewUrl" 
-              alt="Предварительный просмотр"
+              :alt="`Предпросмотр ${selectedFile.name}`"
               class="preview-image"
+              ref="previewImage"
             />
+            <div class="crop-overlay" v-if="showCropOverlay">
+              <div class="crop-area" :style="cropAreaStyle"></div>
+            </div>
           </div>
-
-          <div class="upload-actions">
-            <el-button @click="cancelUpload" class="cancel-btn">Отмена</el-button>
+          
+          <div class="preview-controls">
+            <el-button @click="resetSelection" size="small">
+              Выбрать другой файл
+            </el-button>
             <el-button 
               type="primary" 
               @click="uploadAvatar" 
               :loading="uploading"
-              class="upload-btn"
+              size="small"
             >
-              {{ uploading ? 'Загрузка...' : 'Загрузить' }}
+              Загрузить аватарку
             </el-button>
           </div>
         </div>
       </div>
     </el-dialog>
-
-    <!-- Уведомления -->
-    <el-alert 
-      v-if="message" 
-      :title="message" 
-      type="success" 
-      show-icon 
-      closable 
-      @close="message = ''" 
-      class="success-alert"
-    />
-    <el-alert 
-      v-if="error" 
-      :title="error" 
-      type="error" 
-      show-icon 
-      closable 
-      @close="error = ''" 
-      class="error-alert"
-    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, nextTick } from 'vue'
+import { ElMessage } from 'element-plus'
 import axios from 'axios'
 
 const props = defineProps({
@@ -113,55 +107,52 @@ const showUploadDialog = ref(false)
 const selectedFile = ref(null)
 const previewUrl = ref('')
 const uploading = ref(false)
-const message = ref('')
-const error = ref('')
-const uploadRef = ref()
-
-const currentAvatar = computed(() => {
-  return props.currentAvatarUrl || '/default-avatar.png'
+const uploadRef = ref(null)
+const previewImage = ref(null)
+const showCropOverlay = ref(false)
+const cropAreaStyle = ref({
+  left: '25%',
+  top: '25%',
+  width: '50%',
+  height: '50%'
 })
 
-const openUploadDialog = () => {
-  showUploadDialog.value = true
-  selectedFile.value = null
-  previewUrl.value = ''
-}
-
-const handleFileChange = (file) => {
-  if (!file) return
-
-  // Проверяем тип файла
-  if (!['image/jpeg', 'image/png'].includes(file.raw.type)) {
-    error.value = 'Поддерживаются только изображения в форматах JPG и PNG'
+const handleFileSelect = (file) => {
+  if (file.size > 10 * 1024 * 1024) {
+    ElMessage.error('Файл слишком большой. Максимальный размер: 10MB')
     return
   }
 
-  // Проверяем размер файла (максимум 10MB)
-  if (file.size > 10 * 1024 * 1024) {
-    error.value = 'Размер файла не должен превышать 10MB'
+  if (!file.type.startsWith('image/')) {
+    ElMessage.error('Пожалуйста, выберите изображение')
     return
   }
 
   selectedFile.value = file
-  previewUrl.value = URL.createObjectURL(file.raw)
-  error.value = ''
+  previewUrl.value = URL.createObjectURL(file)
+  
+  nextTick(() => {
+    showCropOverlay.value = true
+  })
 }
 
-const cancelUpload = () => {
+const resetSelection = () => {
   selectedFile.value = null
   previewUrl.value = ''
-  showUploadDialog.value = false
+  showCropOverlay.value = false
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+  }
 }
 
 const uploadAvatar = async () => {
   if (!selectedFile.value) return
 
   uploading.value = true
-  error.value = ''
-
+  
   try {
     const formData = new FormData()
-    formData.append('avatar', selectedFile.value.raw)
+    formData.append('avatar', selectedFile.value)
     formData.append('user_id', props.userId.toString())
 
     const response = await axios.post('/admin/users/avatar/upload', formData, {
@@ -170,35 +161,17 @@ const uploadAvatar = async () => {
       }
     })
 
-    message.value = response.data.message
+    ElMessage.success('Аватарка успешно загружена')
     emit('avatar-updated', response.data.avatar_url)
-    
-    // Закрываем диалог
-    setTimeout(() => {
-      showUploadDialog.value = false
-      selectedFile.value = null
-      previewUrl.value = ''
-    }, 1500)
-
-  } catch (err) {
-    if (err.response?.data) {
-      error.value = err.response.data
-    } else {
-      error.value = 'Ошибка загрузки аватарки'
-    }
+    showUploadDialog.value = false
+    resetSelection()
+  } catch (error) {
+    console.error('Ошибка загрузки аватарки:', error)
+    ElMessage.error('Ошибка загрузки аватарки')
   } finally {
     uploading.value = false
   }
 }
-
-onMounted(() => {
-  // Очищаем URL при размонтировании
-  return () => {
-    if (previewUrl.value) {
-      URL.revokeObjectURL(previewUrl.value)
-    }
-  }
-})
 </script>
 
 <style scoped>
@@ -209,29 +182,26 @@ onMounted(() => {
   gap: 16px;
 }
 
-.avatar-preview {
+.current-avatar {
   position: relative;
-  cursor: pointer;
-  border-radius: 50%;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.avatar-preview:hover .avatar-overlay {
-  opacity: 1;
-}
-
-.avatar-image {
   width: 120px;
   height: 120px;
-  object-fit: cover;
   border-radius: 50%;
+  overflow: hidden;
   border: 3px solid var(--color-primary);
+  box-shadow: 0 4px 16px rgba(17, 87, 64, 0.15);
   transition: all 0.3s ease;
 }
 
-.avatar-preview:hover .avatar-image {
+.current-avatar:hover {
   transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(17, 87, 64, 0.2);
+}
+
+.avatar-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .avatar-overlay {
@@ -240,28 +210,37 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: white;
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: opacity 0.3s ease;
+}
+
+.current-avatar:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.upload-btn {
+  background: var(--color-primary);
+  border: none;
+  color: white;
   border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
 }
 
-.avatar-overlay i {
-  font-size: 24px;
-  margin-bottom: 8px;
+.upload-btn:hover {
+  background: #0f4c3a;
+  transform: scale(1.1);
 }
 
-.avatar-overlay span {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.avatar-upload-dialog {
+.avatar-dialog {
   border-radius: 16px;
 }
 
@@ -269,15 +248,16 @@ onMounted(() => {
   padding: 20px 0;
 }
 
-.upload-section {
-  margin-bottom: 24px;
+.file-select {
+  display: flex;
+  justify-content: center;
 }
 
-.avatar-uploader {
+.upload-area {
   width: 100%;
 }
 
-.upload-trigger {
+.upload-placeholder {
   border: 2px dashed #d9d9d9;
   border-radius: 12px;
   padding: 40px 20px;
@@ -287,150 +267,110 @@ onMounted(() => {
   background: #fafafa;
 }
 
-.upload-trigger:hover {
+.upload-placeholder:hover {
   border-color: var(--color-primary);
-  background: #f0f9ff;
+  background: #f0f9f6;
 }
 
-.upload-trigger i {
-  font-size: 32px;
-  color: #8c8c8c;
-  margin-bottom: 12px;
-  display: block;
+.upload-placeholder i {
+  font-size: 48px;
+  color: #999;
+  margin-bottom: 16px;
 }
 
-.upload-trigger span {
-  font-size: 16px;
+.upload-text p {
+  margin: 8px 0;
   color: #666;
-  font-weight: 500;
 }
 
-.crop-section {
-  border-top: 1px solid #e8e8e8;
-  padding-top: 24px;
-}
-
-.crop-section h4 {
-  color: var(--color-primary);
-  margin: 0 0 12px 0;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.crop-hint {
-  color: #666;
-  margin: 0 0 20px 0;
+.upload-hint {
   font-size: 14px;
-  line-height: 1.5;
+  color: #999;
 }
 
 .image-preview {
-  text-align: center;
-  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.preview-container {
+  position: relative;
+  max-width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .preview-image {
   max-width: 100%;
-  max-height: 300px;
-  border-radius: 8px;
-  border: 2px solid #e8e8e8;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: auto;
+  display: block;
 }
 
-.upload-actions {
+.crop-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.crop-area {
+  position: absolute;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+  cursor: move;
+}
+
+.preview-controls {
   display: flex;
-  gap: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
   justify-content: center;
 }
 
-.cancel-btn, .upload-btn {
-  min-width: 120px;
-  height: 44px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.cancel-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.upload-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(17, 87, 64, 0.2);
-}
-
-.success-alert, .error-alert {
-  margin-top: 16px;
-  border-radius: 8px;
-}
-
-/* Мобильная адаптация */
+/* Адаптивность для мобильных устройств */
 @media (max-width: 600px) {
-  .avatar-image {
+  .current-avatar {
     width: 100px;
     height: 100px;
   }
   
-  .avatar-overlay i {
-    font-size: 20px;
-    margin-bottom: 6px;
+  .avatar-dialog {
+    width: 95% !important;
+    margin: 20px auto;
   }
   
-  .avatar-overlay span {
-    font-size: 12px;
-  }
-  
-  .upload-trigger {
+  .upload-placeholder {
     padding: 30px 16px;
   }
   
-  .upload-trigger i {
-    font-size: 28px;
-    margin-bottom: 10px;
+  .upload-placeholder i {
+    font-size: 36px;
   }
   
-  .upload-trigger span {
-    font-size: 14px;
-  }
-  
-  .crop-section h4 {
-    font-size: 16px;
-  }
-  
-  .crop-hint {
-    font-size: 13px;
-  }
-  
-  .upload-actions {
+  .preview-controls {
     flex-direction: column;
-    gap: 12px;
-  }
-  
-  .cancel-btn, .upload-btn {
     width: 100%;
-    height: 48px;
-    font-size: 16px;
   }
   
-  .cancel-btn:hover, .upload-btn:hover {
-    transform: none;
+  .preview-controls .el-button {
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .avatar-image {
+  .current-avatar {
     width: 80px;
     height: 80px;
   }
   
-  .avatar-overlay i {
-    font-size: 18px;
-  }
-  
-  .avatar-overlay span {
-    font-size: 11px;
+  .upload-btn {
+    width: 32px;
+    height: 32px;
   }
 }
 </style>
