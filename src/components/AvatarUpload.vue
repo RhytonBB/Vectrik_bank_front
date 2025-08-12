@@ -264,8 +264,9 @@ const getCropSizeInImage = () => {
   // Размер области обрезки в контейнере
   const cropSizeInContainer = cropState.value.width
   
-  // Размер в изображении = размер в контейнере / (масштаб контейнера * пользовательский масштаб)
-  const cropSizeInImage = cropSizeInContainer / (scale * zoomState.value.scale)
+  // Размер в изображении = размер в контейнере / масштаб контейнера
+  // НЕ делим на пользовательский масштаб, так как размер области обрезки в изображении должен быть постоянным
+  const cropSizeInImage = cropSizeInContainer / scale
   
   return cropSizeInImage
 }
@@ -847,6 +848,18 @@ const debugZoom = () => {
     } else {
       console.log('   ❌ Координаты центра НЕ стабильны при масштабировании!')
       console.log('   ❌ Разница по X:', diffX, 'по Y:', diffY)
+    }
+    
+    // Проверяем стабильность размера области обрезки
+    const expectedCropSize = cropState.value.width / containerScale
+    const actualCropSize = cropSizeInImage
+    const sizeDiff = Math.abs(expectedCropSize - actualCropSize)
+    
+    if (sizeDiff < 1) {
+      console.log('   ✅ Размер области обрезки стабилен при масштабировании')
+    } else {
+      console.log('   ❌ Размер области обрезки НЕ стабилен при масштабировании!')
+      console.log('   ❌ Ожидаемый размер:', expectedCropSize, 'Фактический размер:', actualCropSize, 'Разница:', sizeDiff)
     }
   }
   
