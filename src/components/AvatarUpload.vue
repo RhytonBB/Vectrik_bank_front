@@ -140,7 +140,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, computed, watch } from 'vue'
+import { ref, nextTick, computed, watch, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 
@@ -210,20 +210,38 @@ const handleFileSelect = (file) => {
     return
   }
 
-  selectedFile.value = file.raw || file
-  previewUrl.value = URL.createObjectURL(file.raw || file)
+  // Дополнительная проверка на минимальный размер изображения
+  const img = new Image()
+  img.onload = () => {
+    if (img.naturalWidth < 100 || img.naturalHeight < 100) {
+      ElMessage.error('Изображение слишком маленькое. Минимальный размер: 100x100 пикселей')
+      return
+    }
+    
+    selectedFile.value = file.raw || file
+    previewUrl.value = URL.createObjectURL(file.raw || file)
+    
+    // Сбрасываем состояние
+    resetCrop()
+    resetZoom()
+  }
   
-  // Сбрасываем состояние
-  resetCrop()
-  resetZoom()
+  img.onerror = () => {
+    ElMessage.error('Ошибка загрузки изображения')
+  }
+  
+  img.src = URL.createObjectURL(file.raw || file)
 }
 
 const resetSelection = () => {
   selectedFile.value = null
-  previewUrl.value = ''
   if (previewUrl.value) {
     URL.revokeObjectURL(previewUrl.value)
+    previewUrl.value = ''
   }
+  // Сбрасываем состояние
+  resetCrop()
+  resetZoom()
 }
 
 const onImageLoad = () => {
@@ -261,6 +279,13 @@ const centerCrop = () => {
     height: size
   }
   
+  // Сбрасываем масштабирование при центрировании
+  zoomState.value = {
+    scale: 1,
+    offsetX: 0,
+    offsetY: 0
+  }
+  
   updatePreview()
 }
 
@@ -284,7 +309,7 @@ const handleWheel = (e) => {
   const delta = e.deltaY > 0 ? -0.1 : 0.1
   const newScale = Math.max(0.5, Math.min(3, zoomState.value.scale + delta))
   
-  // Центр области обрезки
+  // Центр области обрезки в координатах контейнера
   const cropCenterX = cropState.value.x + cropState.value.width / 2
   const cropCenterY = cropState.value.y + cropState.value.height / 2
   
@@ -294,8 +319,10 @@ const handleWheel = (e) => {
   
   // Вычисляем новое смещение, чтобы область обрезки оставалась в центре
   const scaleRatio = newScale / zoomState.value.scale
-  const newOffsetX = containerCenterX - cropCenterX * scaleRatio
-  const newOffsetY = containerCenterY - cropCenterY * scaleRatio
+  
+  // Новое смещение = текущее смещение + изменение позиции центра области обрезки
+  const newOffsetX = zoomState.value.offsetX + (cropCenterX - containerCenterX) * (1 - scaleRatio)
+  const newOffsetY = zoomState.value.offsetY + (cropCenterY - containerCenterY) * (1 - scaleRatio)
   
   zoomState.value = {
     scale: newScale,
@@ -403,7 +430,7 @@ const onCropDrag = (e) => {
   let newX = cropStart.value.x + deltaX
   let newY = cropStart.value.y + deltaY
   
-  // Ограничиваем границы
+  // Ограничиваем границы с учетом размера области обрезки
   newX = Math.max(0, Math.min(containerSize.value.width - cropState.value.width, newX))
   newY = Math.max(0, Math.min(containerSize.value.height - cropState.value.height, newY))
   
@@ -481,7 +508,7 @@ const onResize = (e) => {
     newY = resizeStart.value.cropY + delta
   }
   
-  // Ограничиваем границы
+  // Ограничиваем границы с учетом нового размера
   newX = Math.max(0, Math.min(containerSize.value.width - newWidth, newX))
   newY = Math.max(0, Math.min(containerSize.value.height - newHeight, newY))
   
@@ -548,6 +575,10 @@ const uploadAvatar = async () => {
         // Конвертируем в blob и загружаем
         canvas.toBlob(async (blob) => {
           try {
+            if (!blob) {
+              throw new Error('Ошибка создания изображения')
+            }
+            
             const formData = new FormData()
             formData.append('avatar', blob, 'avatar.jpg')
             formData.append('user_id', props.userId.toString())
@@ -555,16 +586,37 @@ const uploadAvatar = async () => {
             const response = await axios.post('/admin/users/avatar/upload', formData, {
               headers: {
                 'Content-Type': 'multipart/form-data'
-              }
+              },
+              timeout: 30000 // 30 секунд таймаут
             })
             
-            ElMessage.success('Аватарка успешно загружена')
-            emit('avatar-updated', response.data.avatar_url)
-            showUploadDialog.value = false
-            resetSelection()
+            if (response.data && response.data.avatar_url) {
+              ElMessage.success('Аватарка успешно загружена')
+              emit('avatar-updated', response.data.avatar_url)
+              showUploadDialog.value = false
+              resetSelection()
+            } else {
+              throw new Error('Неверный ответ сервера')
+            }
           } catch (error) {
             console.error('Ошибка загрузки аватарки:', error)
-            ElMessage.error('Ошибка загрузки аватарки: ' + (error.response?.data || error.message))
+            let errorMessage = 'Ошибка загрузки аватарки'
+            
+            if (error.response?.status === 413) {
+              errorMessage = 'Файл слишком большой'
+            } else if (error.response?.status === 415) {
+              errorMessage = 'Неподдерживаемый формат файла'
+            } else if (error.response?.status === 400) {
+              errorMessage = error.response.data || 'Неверные данные'
+            } else if (error.code === 'ECONNABORTED') {
+              errorMessage = 'Превышено время ожидания'
+            } else if (error.response?.data) {
+              errorMessage = error.response.data
+            } else if (error.message) {
+              errorMessage += ': ' + error.message
+            }
+            
+            ElMessage.error(errorMessage)
           } finally {
             uploading.value = false
           }
@@ -601,9 +653,24 @@ const addWheelHandler = () => {
   }
 }
 
+// Удаляем обработчик колесика мыши
+const removeWheelHandler = () => {
+  if (cropWrapper.value) {
+    cropWrapper.value.removeEventListener('wheel', handleWheel)
+  }
+}
+
 // Добавляем обработчик при монтировании
 nextTick(() => {
   addWheelHandler()
+})
+
+// Очистка ресурсов при размонтировании
+onUnmounted(() => {
+  removeWheelHandler()
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+  }
 })
 </script>
 
