@@ -128,6 +128,9 @@
               <el-button @click="debugCropCoords" size="small" type="info">
                 <i class="el-icon-info"></i> Проверка координат
               </el-button>
+              <el-button @click="forceInit" size="small" type="warning">
+                <i class="el-icon-refresh"></i> Принудительная инициализация
+              </el-button>
               <el-button @click="testZoom" size="small" type="warning">
                 <i class="el-icon-zoom-in"></i> Тест масштаба
               </el-button>
@@ -452,31 +455,20 @@ const handleWheel = (e) => {
     return
   }
   
+  console.log('🔄 Масштабирование:', { oldScale: zoomState.value.scale, newScale })
+  
   // Центр области обрезки в координатах контейнера
   const cropCenterX = cropState.value.x + cropState.value.width / 2
   const cropCenterY = cropState.value.y + cropState.value.height / 2
   
-  // Вычисляем масштаб изображения в контейнере (object-fit: contain)
-  const img = cropImage.value
-  const scaleX = containerSize.value.width / img.naturalWidth
-  const scaleY = containerSize.value.height / img.naturalHeight
-  const containerScale = Math.min(scaleX, scaleY)
+  // Простая формула: масштабируем относительно центра области обрезки
+  const scaleRatio = newScale / zoomState.value.scale
   
-  // Размеры изображения в контейнере
-  const imageWidthInContainer = img.naturalWidth * containerScale
-  const imageHeightInContainer = img.naturalHeight * containerScale
+  // Новые смещения, чтобы центр области обрезки оставался на месте
+  const newOffsetX = zoomState.value.offsetX + cropCenterX * (1 - scaleRatio)
+  const newOffsetY = zoomState.value.offsetY + cropCenterY * (1 - scaleRatio)
   
-  // Смещения для центрирования изображения (object-fit: contain)
-  const objectFitOffsetX = (containerSize.value.width - imageWidthInContainer) / 2
-  const objectFitOffsetY = (containerSize.value.height - imageHeightInContainer) / 2
-  
-  // Координаты центра области обрезки в изображении (до изменения масштаба)
-  const currentImageCropCenterX = (cropCenterX - objectFitOffsetX - zoomState.value.offsetX) / zoomState.value.scale / containerScale
-  const currentImageCropCenterY = (cropCenterY - objectFitOffsetY - zoomState.value.offsetY) / zoomState.value.scale / containerScale
-  
-  // Вычисляем новые смещения, чтобы центр области обрезки в изображении оставался на месте
-  const newOffsetX = cropCenterX - objectFitOffsetX - (currentImageCropCenterX * newScale * containerScale)
-  const newOffsetY = cropCenterY - objectFitOffsetY - (currentImageCropCenterY * newScale * containerScale)
+  console.log('🎯 Новые смещения:', { x: newOffsetX, y: newOffsetY })
   
   // Ограничиваем смещения, чтобы изображение не уходило слишком далеко
   const maxOffsetX = containerSize.value.width * (newScale - 1) / 2
@@ -491,12 +483,14 @@ const handleWheel = (e) => {
     offsetY: clampedOffsetY
   }
   
+  console.log('✅ Масштабирование применено:', zoomState.value)
+  
   // Обновляем предпросмотр после изменения масштаба
   nextTick(() => {
     updatePreview()
   })
   
-  // Принудительно обновляем предпросмотр еще раз для надежности
+  // Принудительно обновляем еще раз для надежности
   setTimeout(() => {
     updatePreview()
   }, 50)
@@ -1095,6 +1089,39 @@ const debugCropCoords = () => {
   console.log('==============================================')
 }
 
+// Функция для принудительной инициализации
+const forceInit = () => {
+  console.log('🚀 Принудительная инициализация...')
+  
+  if (cropImage.value && cropWrapper.value) {
+    const wrapper = cropWrapper.value
+    const img = cropImage.value
+    
+    // Размеры контейнера
+    containerSize.value = {
+      width: wrapper.clientWidth,
+      height: wrapper.clientHeight
+    }
+    
+    console.log('📏 Размеры контейнера установлены:', containerSize.value)
+    console.log('🖼️ Размеры изображения:', { width: img.naturalWidth, height: img.naturalHeight })
+    
+    // Проверяем вычисление масштаба
+    const scaleX = containerSize.value.width / img.naturalWidth
+    const scaleY = containerSize.value.height / img.naturalHeight
+    const scale = Math.min(scaleX, scaleY)
+    
+    console.log('🔍 Масштаб контейнера:', { scaleX, scaleY, final: scale })
+    
+    // Инициализируем область обрезки
+    centerCrop()
+    
+    console.log('✅ Инициализация завершена!')
+  } else {
+    console.warn('❌ Не удалось инициализировать - отсутствуют необходимые элементы')
+  }
+}
+
 // Обновляем предпросмотр при изменении состояния
 watch([cropState], () => {
   // Обновляем предпросмотр только при изменении области обрезки
@@ -1113,6 +1140,40 @@ watch([zoomState], () => {
     updatePreview()
   }, 100)
 }, { deep: true })
+
+// Принудительная инициализация при изменении файла
+watch(selectedFile, (newFile) => {
+  if (newFile) {
+    console.log('📁 Файл изменился, инициализируем...')
+    // Даем время для загрузки изображения
+    setTimeout(() => {
+      if (cropImage.value && cropWrapper.value) {
+        console.log('🔄 Принудительная инициализация...')
+        const wrapper = cropWrapper.value
+        const img = cropImage.value
+        
+        // Размеры контейнера
+        containerSize.value = {
+          width: wrapper.clientWidth,
+          height: wrapper.clientHeight
+        }
+        
+        console.log('📏 Размеры контейнера установлены:', containerSize.value)
+        console.log('🖼️ Размеры изображения:', { width: img.naturalWidth, height: img.naturalHeight })
+        
+        // Проверяем вычисление масштаба
+        const scaleX = containerSize.value.width / img.naturalWidth
+        const scaleY = containerSize.value.height / img.naturalHeight
+        const scale = Math.min(scaleX, scaleY)
+        
+        console.log('🔍 Масштаб контейнера:', { scaleX, scaleY, final: scale })
+        
+        // Инициализируем область обрезки
+        centerCrop()
+      }
+    }, 500) // Даем 500мс на загрузку
+  }
+})
 
 // Очистка ресурсов при размонтировании
 onUnmounted(() => {
