@@ -224,8 +224,9 @@ const containerToImageCoords = (containerX, containerY) => {
   const offsetY = (containerHeight - imageHeight) / 2
   
   // Применяем пользовательские трансформации (zoom и pan)
-  const transformedX = (containerX - offsetX - zoomState.value.offsetX) / zoomState.value.scale
-  const transformedY = (containerY - offsetY - zoomState.value.offsetY) / zoomState.value.scale
+  // Сначала убираем пользовательские смещения, затем масштаб
+  const transformedX = (containerX - zoomState.value.offsetX - offsetX) / zoomState.value.scale
+  const transformedY = (containerY - zoomState.value.offsetY - offsetY) / zoomState.value.scale
   
   // Преобразуем в координаты оригинального изображения
   const imageX = transformedX / scale
@@ -267,7 +268,9 @@ const getCropSizeInImage = () => {
   // cropState.width - это размер в пикселях контейнера
   // Нужно преобразовать его в размер в оригинальном изображении
   const cropSizeInContainer = cropState.value.width
-  const cropSizeInImage = cropSizeInContainer / scale / zoomState.value.scale
+  
+  // Сначала делим на пользовательский масштаб, затем на масштаб контейнера
+  const cropSizeInImage = cropSizeInContainer / zoomState.value.scale / scale
   
   // Отладочная информация
   console.log('Debug crop size calculation:', {
@@ -411,6 +414,12 @@ const handleWheel = (e) => {
   const delta = e.deltaY > 0 ? -0.1 : 0.1
   const newScale = Math.max(0.5, Math.min(3, zoomState.value.scale + delta))
   
+  // Проверяем, что новый масштаб не слишком большой
+  if (newScale > 2.5) {
+    console.warn('Масштаб слишком большой, ограничиваем до 2.5')
+    return
+  }
+  
   // Центр области обрезки в координатах контейнера
   const cropCenterX = cropState.value.x + cropState.value.width / 2
   const cropCenterY = cropState.value.y + cropState.value.height / 2
@@ -526,6 +535,13 @@ const updatePreview = () => {
   
   const finalCropX = Math.max(0, Math.min(maxX, imageCoords.x))
   const finalCropY = Math.max(0, Math.min(maxY, imageCoords.y))
+  
+  // Дополнительная проверка - убеждаемся, что область обрезки не выходит за границы
+  if (finalCropX + cropSizeInImage > cropImage.value.naturalWidth || 
+      finalCropY + cropSizeInImage > cropImage.value.naturalHeight) {
+    console.warn('Область обрезки выходит за границы изображения')
+    return
+  }
   
   // Рисуем обрезанную часть, масштабируя до размера предпросмотра
   ctx.drawImage(
@@ -703,6 +719,12 @@ const uploadAvatar = async () => {
     
     const finalCropX = Math.max(0, Math.min(maxX, imageCoords.x))
     const finalCropY = Math.max(0, Math.min(maxY, imageCoords.y))
+    
+    // Дополнительная проверка - убеждаемся, что область обрезки не выходит за границы
+    if (finalCropX + cropSizeInImage > cropImage.value.naturalWidth || 
+        finalCropY + cropSizeInImage > cropImage.value.naturalHeight) {
+      throw new Error('Область обрезки выходит за границы изображения. Попробуйте изменить область обрезки.')
+    }
     
     // Рисуем обрезанную часть, масштабируя до финального размера
     ctx.drawImage(
