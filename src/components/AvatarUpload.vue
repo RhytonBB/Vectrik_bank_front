@@ -244,6 +244,14 @@ const containerToImageCoords = (containerX, containerY) => {
   const imageX = (containerX - offsetX - zoomState.value.offsetX) / zoomState.value.scale / scale
   const imageY = (containerY - offsetY - zoomState.value.offsetY) / zoomState.value.scale / scale
   
+  console.log('🔍 Преобразование координат:')
+  console.log('   - Входные координаты контейнера:', { x: containerX, y: containerY })
+  console.log('   - Масштаб контейнера:', scale)
+  console.log('   - Смещения центрирования:', { x: offsetX, y: offsetY })
+  console.log('   - Пользовательский масштаб:', zoomState.value.scale)
+  console.log('   - Пользовательские смещения:', { x: zoomState.value.offsetX, y: zoomState.value.offsetY })
+  console.log('   - Результат в изображении:', { x: imageX, y: imageY })
+  
   return { x: imageX, y: imageY }
 }
 
@@ -270,6 +278,11 @@ const getCropSizeInImage = () => {
   // Размер в изображении = размер в контейнере / масштаб контейнера
   // НЕ делим на пользовательский масштаб, так как размер области обрезки в изображении должен быть постоянным
   const cropSizeInImage = cropSizeInContainer / scale
+  
+  console.log('🔍 Вычисление размера области обрезки:')
+  console.log('   - Размер в контейнере:', cropSizeInContainer)
+  console.log('   - Масштаб контейнера:', scale)
+  console.log('   - Размер в изображении:', cropSizeInImage)
   
   return cropSizeInImage
 }
