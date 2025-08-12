@@ -187,7 +187,6 @@ const zoomState = ref({
 // Размеры
 const imageSize = ref({ width: 0, height: 0 })
 const containerSize = ref({ width: 0, height: 0 })
-const displaySize = ref({ width: 0, height: 0 })
 
 // Состояние перетаскивания
 const isDragging = ref(false)
@@ -245,24 +244,6 @@ const onImageLoad = () => {
         height: wrapper.clientHeight
       }
       
-      // Вычисляем размеры для отображения (сохраняем пропорции)
-      const containerRatio = containerSize.value.width / containerSize.value.height
-      const imageRatio = imageSize.value.width / imageSize.value.height
-      
-      if (imageRatio > containerRatio) {
-        // Изображение шире контейнера
-        displaySize.value = {
-          width: containerSize.value.width,
-          height: containerSize.value.width / imageRatio
-        }
-      } else {
-        // Изображение выше контейнера
-        displaySize.value = {
-          width: containerSize.value.height * imageRatio,
-          height: containerSize.value.height
-        }
-      }
-      
       // Инициализируем область обрезки
       centerCrop()
     }
@@ -302,6 +283,11 @@ const handleWheel = (e) => {
   
   const delta = e.deltaY > 0 ? -0.1 : 0.1
   const newScale = Math.max(0.5, Math.min(3, zoomState.value.scale + delta))
+  
+  // Позиция мыши относительно контейнера
+  const rect = cropWrapper.value.getBoundingClientRect()
+  const mouseX = e.clientX - rect.left
+  const mouseY = e.clientY - rect.top
   
   // Центр контейнера
   const centerX = containerSize.value.width / 2
@@ -377,7 +363,8 @@ const updatePreview = () => {
   ctx.arc(previewSize / 2, previewSize / 2, previewSize / 2, 0, 2 * Math.PI)
   ctx.clip()
   
-  // Вычисляем координаты обрезки с учетом масштаба и смещения
+  // Вычисляем координаты обрезки в оригинальном изображении
+  // Учитываем масштаб и смещение
   const scaledCropX = (cropState.value.x - zoomState.value.offsetX) / zoomState.value.scale
   const scaledCropY = (cropState.value.y - zoomState.value.offsetY) / zoomState.value.scale
   const scaledCropSize = cropState.value.width / zoomState.value.scale
