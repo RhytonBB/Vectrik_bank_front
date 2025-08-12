@@ -276,7 +276,6 @@ const startScale = (e) => {
 const onScale = (e) => {
   if (!isScaling.value) return
   
-  const clientX = e.clientX || e.touches[0].clientX
   const clientY = e.clientY || e.touches[0].clientY
   
   const deltaY = clientY - scaleStart.value.y
