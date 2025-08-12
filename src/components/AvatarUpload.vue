@@ -216,12 +216,18 @@ const resizeDirection = ref('')
 
 // Функция для преобразования координат контейнера в координаты изображения
 const containerToImageCoords = (containerX, containerY) => {
-  if (!cropImage.value || !containerSize.value.width || !containerSize.value.height) return { x: 0, y: 0 }
+  if (!cropImage.value || !containerSize.value.width || !containerSize.value.height) {
+    console.warn('❌ containerToImageCoords: отсутствуют необходимые данные')
+    return { x: 0, y: 0 }
+  }
   
   const img = cropImage.value
   
   // Проверяем, что изображение загрузилось
-  if (img.naturalWidth === 0 || img.naturalHeight === 0) return { x: 0, y: 0 }
+  if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+    console.warn('❌ containerToImageCoords: изображение не загружено')
+    return { x: 0, y: 0 }
+  }
   
   // Вычисляем масштаб изображения в контейнере (object-fit: contain)
   const scaleX = containerSize.value.width / img.naturalWidth
@@ -229,7 +235,10 @@ const containerToImageCoords = (containerX, containerY) => {
   const scale = Math.min(scaleX, scaleY)
   
   // Проверяем, что масштаб корректен
-  if (scale <= 0) return { x: 0, y: 0 }
+  if (scale <= 0 || !isFinite(scale)) {
+    console.warn('❌ containerToImageCoords: некорректный масштаб:', scale)
+    return { x: 0, y: 0 }
+  }
   
   // Размеры изображения в контейнере
   const imageWidth = img.naturalWidth * scale
@@ -260,12 +269,18 @@ const containerToImageCoords = (containerX, containerY) => {
 
 // Функция для вычисления размера области обрезки в изображении
 const getCropSizeInImage = () => {
-  if (!cropImage.value || !containerSize.value.width || !containerSize.value.height) return 0
+  if (!cropImage.value || !containerSize.value.width || !containerSize.value.height) {
+    console.warn('❌ getCropSizeInImage: отсутствуют необходимые данные')
+    return 0
+  }
   
   const img = cropImage.value
   
   // Проверяем, что изображение загрузилось
-  if (img.naturalWidth === 0 || img.naturalHeight === 0) return 0
+  if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+    console.warn('❌ getCropSizeInImage: изображение не загружено')
+    return 0
+  }
   
   // Масштаб изображения в контейнере (object-fit: contain)
   const scaleX = containerSize.value.width / img.naturalWidth
@@ -273,7 +288,10 @@ const getCropSizeInImage = () => {
   const scale = Math.min(scaleX, scaleY)
   
   // Проверяем, что масштаб корректен
-  if (scale <= 0) return 0
+  if (scale <= 0 || !isFinite(scale)) {
+    console.warn('❌ getCropSizeInImage: некорректный масштаб:', scale)
+    return 0
+  }
   
   // Размер области обрезки в контейнере
   const cropSizeInContainer = cropState.value.width
@@ -308,7 +326,7 @@ const handleFileSelect = (file) => {
   if (previewUrl.value) {
     URL.revokeObjectURL(previewUrl.value)
   }
-  
+
   selectedFile.value = file.raw || file
   previewUrl.value = URL.createObjectURL(file.raw || file)
   
@@ -346,7 +364,7 @@ const onImageLoad = () => {
       
       // Проверяем, что изображение загрузилось корректно
       if (img.naturalWidth === 0 || img.naturalHeight === 0) {
-        console.warn('Изображение не загрузилось корректно')
+        console.warn('❌ Изображение не загрузилось корректно')
         return
       }
       
@@ -358,9 +376,21 @@ const onImageLoad = () => {
       }
       
       // Размеры контейнера
+      const wrapperWidth = wrapper.clientWidth
+      const wrapperHeight = wrapper.clientHeight
+      
+      if (wrapperWidth === 0 || wrapperHeight === 0) {
+        console.warn('❌ Размеры контейнера равны нулю, ждем...')
+        // Пробуем еще раз через небольшую задержку
+        setTimeout(() => {
+          onImageLoad()
+        }, 100)
+        return
+      }
+      
       containerSize.value = {
-        width: wrapper.clientWidth,
-        height: wrapper.clientHeight
+        width: wrapperWidth,
+        height: wrapperHeight
       }
       
       console.log('📏 Размеры контейнера:', containerSize.value)
@@ -372,6 +402,12 @@ const onImageLoad = () => {
       const scale = Math.min(scaleX, scaleY)
       
       console.log('🔍 Масштаб контейнера:', { scaleX, scaleY, final: scale })
+      
+      // Проверяем, что масштаб корректен
+      if (scale <= 0 || !isFinite(scale)) {
+        console.warn('❌ Некорректный масштаб:', scale)
+        return
+      }
       
       // Инициализируем область обрезки
       centerCrop()
@@ -385,8 +421,17 @@ const centerCrop = () => {
     return
   }
   
+  if (!cropImage.value || cropImage.value.naturalWidth === 0 || cropImage.value.naturalHeight === 0) {
+    console.warn('❌ Изображение не готово для центрирования')
+    return
+  }
+  
   console.log('🎯 Центрируем область обрезки...')
   console.log('   - Размеры контейнера:', containerSize.value)
+  console.log('   - Размеры изображения:', { 
+    width: cropImage.value.naturalWidth, 
+    height: cropImage.value.naturalHeight 
+  })
   
   // Размер области обрезки - 30% от меньшей стороны контейнера
   const size = Math.min(containerSize.value.width, containerSize.value.height) * 0.3
@@ -416,12 +461,17 @@ const centerCrop = () => {
   
   console.log('   - Масштабирование сброшено:', zoomState.value)
   
-  // Обновляем предпросмотр только если изображение загружено
-  if (cropImage.value && cropImage.value.naturalWidth > 0) {
+  // Проверяем, что все данные готовы для обновления предпросмотра
+  const img = cropImage.value
+  const scaleX = containerSize.value.width / img.naturalWidth
+  const scaleY = containerSize.value.height / img.naturalHeight
+  const scale = Math.min(scaleX, scaleY)
+  
+  if (scale > 0 && isFinite(scale)) {
     console.log('   - Обновляем предпросмотр...')
     updatePreview()
   } else {
-    console.warn('   - Изображение не загружено, пропускаем обновление предпросмотра')
+    console.warn('   - Некорректный масштаб, пропускаем обновление предпросмотра:', scale)
   }
 }
 
@@ -438,13 +488,18 @@ const resetZoom = () => {
   
   // Обновляем предпросмотр только если изображение загружено
   if (cropImage.value && cropImage.value.naturalWidth > 0) {
-    updatePreview()
+  updatePreview()
   }
 }
 
 // Масштабирование колесиком мыши
 const handleWheel = (e) => {
   e.preventDefault()
+  
+  if (!cropImage.value || !containerSize.value.width || !containerSize.value.height) {
+    console.warn('❌ handleWheel: отсутствуют необходимые данные')
+    return
+  }
   
   const delta = e.deltaY > 0 ? -0.1 : 0.1
   const newScale = Math.max(0.5, Math.min(3, zoomState.value.scale + delta))
@@ -461,14 +516,32 @@ const handleWheel = (e) => {
   const cropCenterX = cropState.value.x + cropState.value.width / 2
   const cropCenterY = cropState.value.y + cropState.value.height / 2
   
-  // Простая формула: масштабируем относительно центра области обрезки
-  const scaleRatio = newScale / zoomState.value.scale
+  // Вычисляем масштаб изображения в контейнере (object-fit: contain)
+  const img = cropImage.value
+  const scaleX = containerSize.value.width / img.naturalWidth
+  const scaleY = containerSize.value.height / img.naturalHeight
+  const containerScale = Math.min(scaleX, scaleY)
   
-  // Новые смещения, чтобы центр области обрезки оставался на месте
-  const newOffsetX = zoomState.value.offsetX + cropCenterX * (1 - scaleRatio)
-  const newOffsetY = zoomState.value.offsetY + cropCenterY * (1 - scaleRatio)
+  // Размеры изображения в контейнере
+  const imageWidthInContainer = img.naturalWidth * containerScale
+  const imageHeightInContainer = img.naturalHeight * containerScale
+  
+  // Смещения для центрирования изображения (object-fit: contain)
+  const objectFitOffsetX = (containerSize.value.width - imageWidthInContainer) / 2
+  const objectFitOffsetY = (containerSize.value.height - imageHeightInContainer) / 2
+  
+  // Координаты центра области обрезки в изображении (до изменения масштаба)
+  const currentImageCropCenterX = (cropCenterX - objectFitOffsetX - zoomState.value.offsetX) / zoomState.value.scale / containerScale
+  const currentImageCropCenterY = (cropCenterY - objectFitOffsetY - zoomState.value.offsetY) / zoomState.value.scale / containerScale
+  
+  // Вычисляем новые смещения, чтобы центр области обрезки в изображении оставался на месте
+  const newOffsetX = cropCenterX - objectFitOffsetX - (currentImageCropCenterX * newScale * containerScale)
+  const newOffsetY = cropCenterY - objectFitOffsetY - (currentImageCropCenterY * newScale * containerScale)
   
   console.log('🎯 Новые смещения:', { x: newOffsetX, y: newOffsetY })
+  console.log('   - Масштаб контейнера:', containerScale)
+  console.log('   - Смещения object-fit:', { x: objectFitOffsetX, y: objectFitOffsetY })
+  console.log('   - Центр области обрезки в изображении:', { x: currentImageCropCenterX, y: currentImageCropCenterY })
   
   // Ограничиваем смещения, чтобы изображение не уходило слишком далеко
   const maxOffsetX = containerSize.value.width * (newScale - 1) / 2
@@ -533,7 +606,21 @@ const darkenRightStyle = computed(() => ({
 
 // Обновление предпросмотра
 const updatePreview = () => {
-  if (!previewCanvas.value || !cropImage.value) return
+  if (!previewCanvas.value || !cropImage.value) {
+    console.warn('❌ updatePreview: отсутствуют необходимые элементы')
+    return
+  }
+  
+  if (!containerSize.value.width || !containerSize.value.height) {
+    console.warn('❌ updatePreview: размеры контейнера не установлены')
+    return
+  }
+  
+  const img = cropImage.value
+  if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+    console.warn('❌ updatePreview: изображение не загружено')
+    return
+  }
   
   console.log('🔄 Обновление предпросмотра...')
   console.log('   - Масштаб:', zoomState.value.scale)
@@ -565,34 +652,42 @@ const updatePreview = () => {
   
   // Проверяем валидность координат и размера
   if (imageCoords.x < 0 || imageCoords.y < 0 || cropSizeInImage <= 0) {
-    console.warn('Некорректные координаты для предпросмотра:', { imageCoords, cropSizeInImage })
+    console.warn('❌ Некорректные координаты для предпросмотра:', { imageCoords, cropSizeInImage })
     return
   }
   
   // Проверяем, что размер области обрезки не слишком большой
-  const maxCropSize = Math.min(cropImage.value.naturalWidth, cropImage.value.naturalHeight)
+  const maxCropSize = Math.min(img.naturalWidth, img.naturalHeight)
   if (cropSizeInImage > maxCropSize) {
-    console.warn('Размер области обрезки слишком большой:', cropSizeInImage)
+    console.warn('❌ Размер области обрезки слишком большой:', cropSizeInImage, '>', maxCropSize)
     return
   }
   
   // Ограничиваем координаты размерами изображения
-  const maxX = cropImage.value.naturalWidth - cropSizeInImage
-  const maxY = cropImage.value.naturalHeight - cropSizeInImage
+  const maxX = img.naturalWidth - cropSizeInImage
+  const maxY = img.naturalHeight - cropSizeInImage
   
   const finalCropX = Math.max(0, Math.min(maxX, imageCoords.x))
   const finalCropY = Math.max(0, Math.min(maxY, imageCoords.y))
   
   // Проверяем, что область обрезки не выходит за границы
-  if (finalCropX + cropSizeInImage > cropImage.value.naturalWidth || 
-      finalCropY + cropSizeInImage > cropImage.value.naturalHeight) {
-    console.warn('Область обрезки выходит за границы изображения')
+  if (finalCropX + cropSizeInImage > img.naturalWidth || 
+      finalCropY + cropSizeInImage > img.naturalHeight) {
+    console.warn('❌ Область обрезки выходит за границы изображения')
     return
   }
   
+  console.log('✅ Координаты обрезки валидны:', { 
+    x: finalCropX, 
+    y: finalCropY, 
+    size: cropSizeInImage,
+    imageWidth: img.naturalWidth,
+    imageHeight: img.naturalHeight
+  })
+  
   // Рисуем обрезанную часть, масштабируя до размера предпросмотра
   ctx.drawImage(
-    cropImage.value,
+    img,
     finalCropX, finalCropY, cropSizeInImage, cropSizeInImage,
     0, 0, previewSize, previewSize
   )
@@ -600,8 +695,6 @@ const updatePreview = () => {
   ctx.restore()
   
   console.log('✅ Предпросмотр обновлен')
-  console.log('   - Координаты обрезки в изображении:', { x: finalCropX, y: finalCropY })
-  console.log('   - Размер области обрезки в изображении:', cropSizeInImage)
 }
 
 // Принудительное обновление предпросмотра
@@ -748,86 +841,97 @@ const uploadAvatar = async () => {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     
-    // РАЗМЕР ФИНАЛЬНОГО ИЗОБРАЖЕНИЯ (200x200 как на бэкенде)
-    const finalSize = 200
-    
-    // Устанавливаем размер canvas равным финальному размеру
-    canvas.width = finalSize
-    canvas.height = finalSize
-    
-    // Создаем круглую область обрезки
-    ctx.save()
-    ctx.beginPath()
-    ctx.arc(finalSize / 2, finalSize / 2, finalSize / 2, 0, 2 * Math.PI)
-    ctx.clip()
-    
-    // Вычисляем координаты обрезки в оригинальном изображении
-    const imageCoords = containerToImageCoords(cropState.value.x, cropState.value.y)
-    
-    // Вычисляем размер области обрезки в оригинальном изображении
-    const cropSizeInImage = getCropSizeInImage()
-    
-    // Проверяем валидность координат
-    if (imageCoords.x < 0 || imageCoords.y < 0 || cropSizeInImage <= 0) {
-      throw new Error('Некорректные координаты обрезки. Попробуйте изменить область обрезки.')
-    }
-    
-    // Проверяем, что размер области обрезки не слишком большой
-    const maxCropSize = Math.min(cropImage.value.naturalWidth, cropImage.value.naturalHeight)
-    if (cropSizeInImage > maxCropSize) {
-      throw new Error('Размер области обрезки слишком большой. Попробуйте уменьшить область обрезки.')
-    }
-    
-    // Ограничиваем координаты размерами изображения
-    const maxX = cropImage.value.naturalWidth - cropSizeInImage
-    const maxY = cropImage.value.naturalHeight - cropSizeInImage
-    
-    const finalCropX = Math.max(0, Math.min(maxX, imageCoords.x))
-    const finalCropY = Math.max(0, Math.min(maxY, imageCoords.y))
-    
-    // Проверяем, что область обрезки не выходит за границы
-    if (finalCropX + cropSizeInImage > cropImage.value.naturalWidth || 
-        finalCropY + cropSizeInImage > cropImage.value.naturalHeight) {
-      throw new Error('Область обрезки выходит за границы изображения. Попробуйте изменить область обрезки.')
-    }
-    
-    // Рисуем обрезанную часть, масштабируя до финального размера
-    ctx.drawImage(
+        // РАЗМЕР ФИНАЛЬНОГО ИЗОБРАЖЕНИЯ (200x200 как на бэкенде)
+        const finalSize = 200
+        
+        // Устанавливаем размер canvas равным финальному размеру
+        canvas.width = finalSize
+        canvas.height = finalSize
+        
+        // Создаем круглую область обрезки
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc(finalSize / 2, finalSize / 2, finalSize / 2, 0, 2 * Math.PI)
+        ctx.clip()
+        
+        // Вычисляем координаты обрезки в оригинальном изображении
+        const imageCoords = containerToImageCoords(cropState.value.x, cropState.value.y)
+        
+        // Вычисляем размер области обрезки в оригинальном изображении
+        const cropSizeInImage = getCropSizeInImage()
+        
+        // Проверяем валидность координат
+        if (imageCoords.x < 0 || imageCoords.y < 0 || cropSizeInImage <= 0) {
+          console.error('❌ Некорректные координаты обрезки:', { imageCoords, cropSizeInImage })
+          throw new Error('Некорректные координаты обрезки. Попробуйте изменить область обрезки.')
+        }
+        
+        // Проверяем, что размер области обрезки не слишком большой
+        const maxCropSize = Math.min(cropImage.value.naturalWidth, cropImage.value.naturalHeight)
+        if (cropSizeInImage > maxCropSize) {
+          console.error('❌ Размер области обрезки слишком большой:', cropSizeInImage, '>', maxCropSize)
+          throw new Error('Размер области обрезки слишком большой. Попробуйте уменьшить область обрезки.')
+        }
+        
+        // Ограничиваем координаты размерами изображения
+        const maxX = cropImage.value.naturalWidth - cropSizeInImage
+        const maxY = cropImage.value.naturalHeight - cropSizeInImage
+        
+        const finalCropX = Math.max(0, Math.min(maxX, imageCoords.x))
+        const finalCropY = Math.max(0, Math.min(maxY, imageCoords.y))
+        
+        // Проверяем, что область обрезки не выходит за границы
+        if (finalCropX + cropSizeInImage > cropImage.value.naturalWidth || 
+            finalCropY + cropSizeInImage > cropImage.value.naturalHeight) {
+          console.error('❌ Область обрезки выходит за границы изображения')
+          throw new Error('Область обрезки выходит за границы изображения. Попробуйте изменить область обрезки.')
+        }
+        
+        console.log('✅ Координаты обрезки для загрузки:', { 
+          x: finalCropX, 
+          y: finalCropY, 
+          size: cropSizeInImage,
+          imageWidth: cropImage.value.naturalWidth,
+          imageHeight: cropImage.value.naturalHeight
+        })
+        
+        // Рисуем обрезанную часть, масштабируя до финального размера
+        ctx.drawImage(
       cropImage.value,
       finalCropX, finalCropY, cropSizeInImage, cropSizeInImage,
-      0, 0, finalSize, finalSize
-    )
-    
-    ctx.restore()
-    
-    // Конвертируем в blob и загружаем
-    canvas.toBlob(async (blob) => {
-      try {
+          0, 0, finalSize, finalSize
+        )
+        
+        ctx.restore()
+        
+        // Конвертируем в blob и загружаем
+        canvas.toBlob(async (blob) => {
+          try {
         if (!blob) {
           throw new Error('Ошибка создания изображения')
         }
         
-        const formData = new FormData()
-        formData.append('avatar', blob, 'avatar.jpg')
-        formData.append('user_id', props.userId.toString())
-        
-        const response = await axios.post('/admin/users/avatar/upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
+            const formData = new FormData()
+            formData.append('avatar', blob, 'avatar.jpg')
+            formData.append('user_id', props.userId.toString())
+            
+            const response = await axios.post('/admin/users/avatar/upload', formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
           },
           timeout: 30000 // 30 секунд таймаут
-        })
-        
+            })
+            
         if (response.data && response.data.avatar_url) {
-          ElMessage.success('Аватарка успешно загружена')
-          emit('avatar-updated', response.data.avatar_url)
-          showUploadDialog.value = false
-          resetSelection()
+            ElMessage.success('Аватарка успешно загружена')
+            emit('avatar-updated', response.data.avatar_url)
+            showUploadDialog.value = false
+            resetSelection()
         } else {
           throw new Error('Неверный ответ сервера')
         }
-      } catch (error) {
-        console.error('Ошибка загрузки аватарки:', error)
+          } catch (error) {
+            console.error('Ошибка загрузки аватарки:', error)
         let errorMessage = 'Ошибка загрузки аватарки'
         
         if (error.response?.status === 413) {
@@ -845,18 +949,18 @@ const uploadAvatar = async () => {
         }
         
         ElMessage.error(errorMessage)
-      } finally {
-        uploading.value = false
-      }
-    }, 'image/jpeg', 0.9)
-    
-  } catch (error) {
+          } finally {
+            uploading.value = false
+          }
+        }, 'image/jpeg', 0.9)
+        
+      } catch (error) {
     console.error('Ошибка загрузки аватарки:', error)
     ElMessage.error('Ошибка загрузки аватарки')
-    uploading.value = false
-  }
-}
-
+        uploading.value = false
+      }
+    }
+    
 // Функция для отладки масштабирования
 const debugZoom = () => {
   if (!cropImage.value || !containerSize.value.width || !containerSize.value.height) return
@@ -1131,7 +1235,7 @@ watch([cropState], () => {
 // Отдельный watcher для масштабирования
 watch([zoomState], () => {
   // При масштабировании обновляем предпросмотр с задержкой
-  nextTick(() => {
+nextTick(() => {
     updatePreview()
   })
   
@@ -1152,10 +1256,44 @@ watch(selectedFile, (newFile) => {
         const wrapper = cropWrapper.value
         const img = cropImage.value
         
+        // Проверяем, что изображение загрузилось
+        if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+          console.warn('❌ Изображение еще не загрузилось, ждем...')
+          setTimeout(() => {
+            if (selectedFile.value === newFile) {
+              // Пробуем еще раз
+              watch(selectedFile, () => {}, { immediate: false })
+              watch(selectedFile, (newFile) => {
+                if (newFile) {
+                  setTimeout(() => {
+                    if (cropImage.value && cropWrapper.value) {
+                      forceInit()
+                    }
+                  }, 500)
+                }
+              })
+            }
+          }, 500)
+          return
+        }
+        
         // Размеры контейнера
+        const wrapperWidth = wrapper.clientWidth
+        const wrapperHeight = wrapper.clientHeight
+        
+        if (wrapperWidth === 0 || wrapperHeight === 0) {
+          console.warn('❌ Размеры контейнера равны нулю, ждем...')
+          setTimeout(() => {
+            if (selectedFile.value === newFile) {
+              forceInit()
+            }
+          }, 100)
+          return
+        }
+        
         containerSize.value = {
-          width: wrapper.clientWidth,
-          height: wrapper.clientHeight
+          width: wrapperWidth,
+          height: wrapperHeight
         }
         
         console.log('📏 Размеры контейнера установлены:', containerSize.value)
@@ -1168,8 +1306,18 @@ watch(selectedFile, (newFile) => {
         
         console.log('🔍 Масштаб контейнера:', { scaleX, scaleY, final: scale })
         
-        // Инициализируем область обрезки
-        centerCrop()
+        // Проверяем, что масштаб корректен
+        if (scale > 0 && isFinite(scale)) {
+          // Инициализируем область обрезки
+          centerCrop()
+        } else {
+          console.warn('❌ Некорректный масштаб, ждем...')
+          setTimeout(() => {
+            if (selectedFile.value === newFile) {
+              forceInit()
+            }
+          }, 100)
+        }
       }
     }, 500) // Даем 500мс на загрузку
   }
