@@ -57,15 +57,17 @@
         <div v-if="selectedFile" class="image-preview">
           <div class="crop-container">
             <!-- Контейнер для изображения с обрезкой -->
-            <div class="crop-wrapper" ref="cropWrapper">
-              <img 
-                :src="previewUrl" 
-                :alt="`Предпросмотр ${selectedFile.name}`"
-                class="crop-image"
-                ref="cropImage"
-                @load="onImageLoad"
-                draggable="false"
-              />
+            <div class="crop-wrapper" ref="cropWrapper" @wheel="handleWheel">
+              <div class="image-container" :style="imageContainerStyle">
+                <img 
+                  :src="previewUrl" 
+                  :alt="`Предпросмотр ${selectedFile.name}`"
+                  class="crop-image"
+                  ref="cropImage"
+                  @load="onImageLoad"
+                  draggable="false"
+                />
+              </div>
               
               <!-- Область обрезки -->
               <div 
@@ -118,6 +120,9 @@
               </el-button>
               <el-button @click="centerCrop" size="small" type="info">
                 <i class="el-icon-position"></i> По центру
+              </el-button>
+              <el-button @click="resetZoom" size="small" type="info">
+                <i class="el-icon-zoom-in"></i> Масштаб 100%
               </el-button>
             </div>
             
@@ -180,6 +185,13 @@ const cropState = ref({
   maxSize: 400
 })
 
+// Состояние масштабирования
+const zoomState = ref({
+  scale: 1,
+  translateX: 0,
+  translateY: 0
+})
+
 // Состояние перетаскивания
 const isDragging = ref(false)
 const dragStart = ref({ x: 0, y: 0 })
@@ -209,8 +221,9 @@ const handleFileSelect = (file) => {
   selectedFile.value = file.raw || file
   previewUrl.value = URL.createObjectURL(file.raw || file)
   
-  // Сбрасываем состояние обрезки
+  // Сбрасываем состояние обрезки и масштаба
   resetCrop()
+  resetZoom()
 }
 
 const resetSelection = () => {
@@ -261,6 +274,44 @@ const resetCrop = () => {
   centerCrop()
 }
 
+const resetZoom = () => {
+  zoomState.value = {
+    scale: 1,
+    translateX: 0,
+    translateY: 0
+  }
+}
+
+// Масштабирование колесиком мыши
+const handleWheel = (e) => {
+  e.preventDefault()
+  
+  const delta = e.deltaY > 0 ? -0.1 : 0.1
+  const newScale = Math.max(0.5, Math.min(3, zoomState.value.scale + delta))
+  
+  // Вычисляем позицию мыши относительно контейнера
+  const rect = cropWrapper.value.getBoundingClientRect()
+  const mouseX = e.clientX - rect.left
+  const mouseY = e.clientY - rect.top
+  
+  // Вычисляем новое смещение для центрирования масштаба на позиции мыши
+  const scaleRatio = newScale / zoomState.value.scale
+  const newTranslateX = mouseX - (mouseX - zoomState.value.translateX) * scaleRatio
+  const newTranslateY = mouseY - (mouseY - zoomState.value.translateY) * scaleRatio
+  
+  zoomState.value = {
+    scale: newScale,
+    translateX: newTranslateX,
+    translateY: newTranslateY
+  }
+}
+
+// Вычисляемые стили для контейнера изображения
+const imageContainerStyle = computed(() => ({
+  transform: `scale(${zoomState.value.scale}) translate(${zoomState.value.translateX}px, ${zoomState.value.translateY}px)`,
+  transformOrigin: 'center'
+}))
+
 // Вычисляемые стили для области обрезки
 const cropFrameStyle = computed(() => ({
   left: `${cropState.value.x}px`,
@@ -296,12 +347,19 @@ const darkenRightStyle = computed(() => ({
 const previewResultStyle = computed(() => {
   if (!imageSize.value.width || !imageSize.value.height) return {}
   
+  // Вычисляем реальные координаты обрезки с учетом масштаба и смещения
   const scaleX = imageSize.value.width / containerSize.value.width
   const scaleY = imageSize.value.height / containerSize.value.height
   
-  const sourceX = cropState.value.x * scaleX
-  const sourceY = cropState.value.y * scaleY
-  const sourceSize = cropState.value.width * scaleX
+  // Учитываем масштаб и смещение изображения
+  const scaledCropX = (cropState.value.x - zoomState.value.translateX) / zoomState.value.scale
+  const scaledCropY = (cropState.value.y - zoomState.value.translateY) / zoomState.value.scale
+  const scaledCropSize = cropState.value.width / zoomState.value.scale
+  
+  // Конвертируем в координаты оригинального изображения
+  const sourceX = scaledCropX * scaleX
+  const sourceY = scaledCropY * scaleY
+  const sourceSize = scaledCropSize * scaleX
   
   return {
     objectPosition: `${-sourceX}px ${-sourceY}px`,
@@ -443,13 +501,19 @@ const uploadAvatar = async () => {
     const img = new Image()
     img.onload = async () => {
       try {
-        // Вычисляем координаты обрезки в оригинальном изображении
+        // Вычисляем координаты обрезки в оригинальном изображении с учетом масштаба
         const scaleX = img.naturalWidth / containerSize.value.width
         const scaleY = img.naturalHeight / containerSize.value.height
         
-        const sourceX = cropState.value.x * scaleX
-        const sourceY = cropState.value.y * scaleY
-        const sourceSize = cropState.value.width * scaleX
+        // Учитываем масштаб и смещение изображения
+        const scaledCropX = (cropState.value.x - zoomState.value.translateX) / zoomState.value.scale
+        const scaledCropY = (cropState.value.y - zoomState.value.translateY) / zoomState.value.scale
+        const scaledCropSize = cropState.value.width / zoomState.value.scale
+        
+        // Конвертируем в координаты оригинального изображения
+        const sourceX = scaledCropX * scaleX
+        const sourceY = scaledCropY * scaleY
+        const sourceSize = scaledCropSize * scaleX
         
         // Устанавливаем размер canvas
         canvas.width = sourceSize
@@ -663,11 +727,28 @@ const uploadAvatar = async () => {
   width: 100%;
   height: 400px;
   overflow: hidden;
+  cursor: grab;
+}
+
+.crop-wrapper:active {
+  cursor: grabbing;
+}
+
+.image-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease;
 }
 
 .crop-image {
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   user-select: none;
   pointer-events: none;
@@ -681,6 +762,7 @@ const uploadAvatar = async () => {
   cursor: move;
   user-select: none;
   touch-action: none;
+  z-index: 10;
 }
 
 .crop-handle {
@@ -691,6 +773,7 @@ const uploadAvatar = async () => {
   border: 2px solid #007bff;
   border-radius: 50%;
   cursor: pointer;
+  z-index: 11;
 }
 
 .crop-handle-nw { top: -6px; left: -6px; cursor: nw-resize; }
@@ -709,6 +792,7 @@ const uploadAvatar = async () => {
   right: 0;
   bottom: 0;
   pointer-events: none;
+  z-index: 5;
 }
 
 .crop-darken {
