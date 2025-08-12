@@ -218,6 +218,11 @@ const handleFileSelect = (file) => {
       return
     }
     
+    // Очищаем предыдущий URL
+    if (previewUrl.value) {
+      URL.revokeObjectURL(previewUrl.value)
+    }
+    
     selectedFile.value = file.raw || file
     previewUrl.value = URL.createObjectURL(file.raw || file)
     
@@ -242,6 +247,12 @@ const resetSelection = () => {
   // Сбрасываем состояние
   resetCrop()
   resetZoom()
+  
+  // Очищаем canvas предпросмотра
+  if (previewCanvas.value) {
+    const ctx = previewCanvas.value.getContext('2d')
+    ctx.clearRect(0, 0, previewCanvas.value.width, previewCanvas.value.height)
+  }
 }
 
 const onImageLoad = () => {
@@ -324,10 +335,17 @@ const handleWheel = (e) => {
   const newOffsetX = zoomState.value.offsetX + (cropCenterX - containerCenterX) * (1 - scaleRatio)
   const newOffsetY = zoomState.value.offsetY + (cropCenterY - containerCenterY) * (1 - scaleRatio)
   
+  // Ограничиваем смещения, чтобы изображение не уходило слишком далеко
+  const maxOffsetX = containerSize.value.width * (newScale - 1) / 2
+  const maxOffsetY = containerSize.value.height * (newScale - 1) / 2
+  
+  const clampedOffsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, newOffsetX))
+  const clampedOffsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, newOffsetY))
+  
   zoomState.value = {
     scale: newScale,
-    offsetX: newOffsetX,
-    offsetY: newOffsetY
+    offsetX: clampedOffsetX,
+    offsetY: clampedOffsetY
   }
   
   updatePreview()
@@ -395,10 +413,23 @@ const updatePreview = () => {
   const scaledCropY = (cropState.value.y - zoomState.value.offsetY) / zoomState.value.scale
   const scaledCropSize = cropState.value.width / zoomState.value.scale
   
+  // Проверяем валидность координат
+  if (scaledCropX < 0 || scaledCropY < 0 || scaledCropSize <= 0) {
+    console.warn('Некорректные координаты обрезки:', { scaledCropX, scaledCropY, scaledCropSize })
+    return
+  }
+  
+  // Ограничиваем координаты размерами изображения
+  const maxX = cropImage.value.naturalWidth - scaledCropSize
+  const maxY = cropImage.value.naturalHeight - scaledCropSize
+  
+  const finalCropX = Math.max(0, Math.min(maxX, scaledCropX))
+  const finalCropY = Math.max(0, Math.min(maxY, scaledCropY))
+  
   // Рисуем обрезанную часть, масштабируя до размера предпросмотра
   ctx.drawImage(
     cropImage.value,
-    scaledCropX, scaledCropY, scaledCropSize, scaledCropSize,
+    finalCropX, finalCropY, scaledCropSize, scaledCropSize,
     0, 0, previewSize, previewSize
   )
   
@@ -563,10 +594,22 @@ const uploadAvatar = async () => {
         const scaledCropY = (cropState.value.y - zoomState.value.offsetY) / zoomState.value.scale
         const scaledCropSize = cropState.value.width / zoomState.value.scale
         
+        // Проверяем валидность координат
+        if (scaledCropX < 0 || scaledCropY < 0 || scaledCropSize <= 0) {
+          throw new Error('Некорректные координаты обрезки. Попробуйте изменить область обрезки.')
+        }
+        
+        // Ограничиваем координаты размерами изображения
+        const maxX = img.naturalWidth - scaledCropSize
+        const maxY = img.naturalHeight - scaledCropSize
+        
+        const finalCropX = Math.max(0, Math.min(maxX, scaledCropX))
+        const finalCropY = Math.max(0, Math.min(maxY, scaledCropY))
+        
         // Рисуем обрезанную часть, масштабируя до финального размера
         ctx.drawImage(
           img,
-          scaledCropX, scaledCropY, scaledCropSize, scaledCropSize,
+          finalCropX, finalCropY, scaledCropSize, scaledCropSize,
           0, 0, finalSize, finalSize
         )
         
