@@ -34,15 +34,15 @@
       <div class="upload-content">
         <!-- Выбор файла -->
         <div v-if="!selectedFile" class="file-select">
-                      <el-upload
-              ref="uploadRef"
-              :auto-upload="false"
-              :show-file-list="false"
-              :on-change="handleFileSelect"
-              accept="image/jpeg,image/png,image/jpg"
-              class="upload-area"
-              :before-upload="() => false"
-            >
+          <el-upload
+            ref="uploadRef"
+            :auto-upload="false"
+            :show-file-list="false"
+            :on-change="handleFileSelect"
+            accept="image/jpeg,image/png,image/jpg"
+            class="upload-area"
+            :before-upload="() => false"
+          >
             <div class="upload-placeholder">
               <i class="el-icon-upload"></i>
               <div class="upload-text">
@@ -53,63 +53,96 @@
           </el-upload>
         </div>
 
-                 <!-- Предпросмотр и обрезка -->
-         <div v-if="selectedFile" class="image-preview">
-           <div class="preview-container">
-             <div class="image-wrapper">
-               <img 
-                 :src="previewUrl" 
-                 :alt="`Предпросмотр ${selectedFile.name}`"
-                 class="preview-image"
-                 ref="previewImage"
-                 :style="{
-                   transform: `scale(${imageScale}) translate(${imageTranslateX}px, ${imageTranslateY}px)`,
-                   transformOrigin: 'center'
-                 }"
-                 @mousedown="startScale"
-                 @touchstart="startScale"
-               />
-             </div>
-             <div class="crop-overlay" v-if="showCropOverlay">
-               <div 
-                 class="crop-area" 
-                 :style="cropAreaStyle"
-                 @mousedown="startDrag"
-                 @touchstart="startDrag"
-               ></div>
-             </div>
-           </div>
-           
-           <div class="scale-controls">
-             <el-button @click="resetScale" size="small" type="info">
-               <i class="el-icon-refresh"></i> Сбросить масштаб
-             </el-button>
-             <div class="scale-info">
-               Масштаб: {{ Math.round(imageScale * 100) }}%
-             </div>
-           </div>
-           
-           <div class="preview-controls">
-             <el-button @click="resetSelection" size="small">
-               Выбрать другой файл
-             </el-button>
-             <el-button 
-               type="primary" 
-               @click="uploadAvatar" 
-               :loading="uploading"
-               size="small"
-             >
-               Загрузить аватарку
-             </el-button>
-           </div>
-         </div>
+        <!-- Предпросмотр и обрезка -->
+        <div v-if="selectedFile" class="image-preview">
+          <div class="crop-container">
+            <!-- Контейнер для изображения с обрезкой -->
+            <div class="crop-wrapper" ref="cropWrapper">
+              <img 
+                :src="previewUrl" 
+                :alt="`Предпросмотр ${selectedFile.name}`"
+                class="crop-image"
+                ref="cropImage"
+                @load="onImageLoad"
+                draggable="false"
+              />
+              
+              <!-- Область обрезки -->
+              <div 
+                class="crop-frame"
+                :style="cropFrameStyle"
+                @mousedown="startCropDrag"
+                @touchstart="startCropDrag"
+              >
+                <!-- Угловые маркеры для изменения размера -->
+                <div class="crop-handle crop-handle-nw" @mousedown="startResize('nw')" @touchstart="startResize('nw')"></div>
+                <div class="crop-handle crop-handle-ne" @mousedown="startResize('ne')" @touchstart="startResize('ne')"></div>
+                <div class="crop-handle crop-handle-sw" @mousedown="startResize('sw')" @touchstart="startResize('sw')"></div>
+                <div class="crop-handle crop-handle-se" @mousedown="startResize('se')" @touchstart="startResize('se')"></div>
+                
+                <!-- Центральные маркеры для изменения размера -->
+                <div class="crop-handle crop-handle-n" @mousedown="startResize('n')" @touchstart="startResize('n')"></div>
+                <div class="crop-handle crop-handle-s" @mousedown="startResize('s')" @touchstart="startResize('s')"></div>
+                <div class="crop-handle crop-handle-w" @mousedown="startResize('w')" @touchstart="startResize('w')"></div>
+                <div class="crop-handle crop-handle-e" @mousedown="startResize('e')" @touchstart="startResize('e')"></div>
+              </div>
+              
+              <!-- Затемнение вокруг области обрезки -->
+              <div class="crop-overlay">
+                <div class="crop-darken crop-darken-top" :style="darkenTopStyle"></div>
+                <div class="crop-darken crop-darken-bottom" :style="darkenBottomStyle"></div>
+                <div class="crop-darken crop-darken-left" :style="darkenLeftStyle"></div>
+                <div class="crop-darken crop-darken-right" :style="darkenRightStyle"></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Предпросмотр результата -->
+          <div class="result-preview">
+            <h4>Предпросмотр результата:</h4>
+            <div class="preview-avatar">
+              <img 
+                :src="previewUrl" 
+                :alt="Предпросмотр"
+                class="preview-result"
+                :style="previewResultStyle"
+              />
+            </div>
+          </div>
+          
+          <!-- Элементы управления -->
+          <div class="crop-controls">
+            <div class="control-group">
+              <el-button @click="resetCrop" size="small" type="info">
+                <i class="el-icon-refresh"></i> Сбросить
+              </el-button>
+              <el-button @click="centerCrop" size="small" type="info">
+                <i class="el-icon-position"></i> По центру
+              </el-button>
+            </div>
+            
+            <div class="control-group">
+              <el-button @click="resetSelection" size="small">
+                Выбрать другой файл
+              </el-button>
+              <el-button 
+                type="primary" 
+                @click="uploadAvatar" 
+                :loading="uploading"
+                size="small"
+              >
+                Загрузить аватарку
+              </el-button>
+            </div>
+          </div>
+        </div>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 
@@ -134,40 +167,39 @@ const showUploadDialog = ref(false)
 const selectedFile = ref(null)
 const previewUrl = ref('')
 const uploading = ref(false)
-const previewImage = ref(null)
-const showCropOverlay = ref(false)
-const cropAreaStyle = ref({
-  left: '25%',
-  top: '25%'
+const cropImage = ref(null)
+const cropWrapper = ref(null)
+
+// Состояние обрезки
+const cropState = ref({
+  x: 0,
+  y: 0,
+  width: 200,
+  height: 200,
+  minSize: 100,
+  maxSize: 400
 })
 
-// Переменные для перетаскивания
+// Состояние перетаскивания
 const isDragging = ref(false)
 const dragStart = ref({ x: 0, y: 0 })
 const cropStart = ref({ x: 0, y: 0 })
 
-// Переменные для масштабирования
-const imageScale = ref(1)
-const imageTranslateX = ref(0)
-const imageTranslateY = ref(0)
-const isScaling = ref(false)
-const scaleStart = ref({ x: 0, y: 0, scale: 1 })
+// Состояние изменения размера
+const isResizing = ref(false)
+const resizeStart = ref({ x: 0, y: 0, width: 0, height: 0 })
+const resizeDirection = ref('')
+
+// Размеры изображения
+const imageSize = ref({ width: 0, height: 0 })
+const containerSize = ref({ width: 0, height: 0 })
 
 const handleFileSelect = (file) => {
-  console.log('=== НАЧАЛО handleFileSelect ===')
-  console.log('Файл выбран:', file)
-  console.log('Размер файла:', file.size)
-  console.log('Тип файла:', file.type)
-  console.log('Файл.raw:', file.raw)
-  console.log('Файл.uid:', file.uid)
-  console.log('Файл.raw.type:', file.raw?.type)
-  
   if (file.size > 10 * 1024 * 1024) {
     ElMessage.error('Файл слишком большой. Максимальный размер: 10MB')
     return
   }
 
-  // Проверяем тип файла из raw объекта
   const fileType = file.raw?.type || file.type
   if (!fileType || !fileType.startsWith('image/')) {
     ElMessage.error('Пожалуйста, выберите изображение')
@@ -177,47 +209,122 @@ const handleFileSelect = (file) => {
   selectedFile.value = file.raw || file
   previewUrl.value = URL.createObjectURL(file.raw || file)
   
-  // Сбрасываем масштаб и позицию
-  imageScale.value = 1
-  imageTranslateX.value = 0
-  imageTranslateY.value = 0
-  
-  console.log('Файл установлен:', selectedFile.value)
-  console.log('Preview URL:', previewUrl.value)
-  
-  nextTick(() => {
-    showCropOverlay.value = true
-    console.log('Crop overlay показан:', showCropOverlay.value)
-  })
+  // Сбрасываем состояние обрезки
+  resetCrop()
 }
 
 const resetSelection = () => {
   selectedFile.value = null
   previewUrl.value = ''
-  showCropOverlay.value = false
-  imageScale.value = 1
-  imageTranslateX.value = 0
-  imageTranslateY.value = 0
   if (previewUrl.value) {
     URL.revokeObjectURL(previewUrl.value)
   }
 }
 
-// Функции для перетаскивания области обрезки
-const startDrag = (e) => {
-  isDragging.value = true
-  dragStart.value = { x: e.clientX, y: e.clientY }
-  cropStart.value = { 
-    x: parseFloat(cropAreaStyle.value.left), 
-    y: parseFloat(cropAreaStyle.value.top) 
-  }
-  document.addEventListener('mousemove', onDrag)
-  document.addEventListener('mouseup', stopDrag)
-  document.addEventListener('touchmove', onDrag)
-  document.addEventListener('touchend', stopDrag)
+const onImageLoad = () => {
+  nextTick(() => {
+    if (cropImage.value && cropWrapper.value) {
+      const img = cropImage.value
+      const wrapper = cropWrapper.value
+      
+      imageSize.value = {
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      }
+      
+      containerSize.value = {
+        width: wrapper.clientWidth,
+        height: wrapper.clientHeight
+      }
+      
+      // Инициализируем область обрезки по центру
+      centerCrop()
+    }
+  })
 }
 
-const onDrag = (e) => {
+const centerCrop = () => {
+  if (!containerSize.value.width || !containerSize.value.height) return
+  
+  const size = Math.min(containerSize.value.width, containerSize.value.height) * 0.6
+  cropState.value = {
+    x: (containerSize.value.width - size) / 2,
+    y: (containerSize.value.height - size) / 2,
+    width: size,
+    height: size,
+    minSize: Math.min(containerSize.value.width, containerSize.value.height) * 0.2,
+    maxSize: Math.min(containerSize.value.width, containerSize.value.height) * 0.9
+  }
+}
+
+const resetCrop = () => {
+  centerCrop()
+}
+
+// Вычисляемые стили для области обрезки
+const cropFrameStyle = computed(() => ({
+  left: `${cropState.value.x}px`,
+  top: `${cropState.value.y}px`,
+  width: `${cropState.value.width}px`,
+  height: `${cropState.value.height}px`
+}))
+
+// Стили для затемнения
+const darkenTopStyle = computed(() => ({
+  height: `${cropState.value.y}px`
+}))
+
+const darkenBottomStyle = computed(() => ({
+  top: `${cropState.value.y + cropState.value.height}px`,
+  height: `${containerSize.value.height - cropState.value.y - cropState.value.height}px`
+}))
+
+const darkenLeftStyle = computed(() => ({
+  width: `${cropState.value.x}px`,
+  top: `${cropState.value.y}px`,
+  height: `${cropState.value.height}px`
+}))
+
+const darkenRightStyle = computed(() => ({
+  left: `${cropState.value.x + cropState.value.width}px`,
+  width: `${containerSize.value.width - cropState.value.x - cropState.value.width}px`,
+  top: `${cropState.value.y}px`,
+  height: `${cropState.value.height}px`
+}))
+
+// Стиль для предпросмотра результата
+const previewResultStyle = computed(() => {
+  if (!imageSize.value.width || !imageSize.value.height) return {}
+  
+  const scaleX = imageSize.value.width / containerSize.value.width
+  const scaleY = imageSize.value.height / containerSize.value.height
+  
+  const sourceX = cropState.value.x * scaleX
+  const sourceY = cropState.value.y * scaleY
+  const sourceSize = cropState.value.width * scaleX
+  
+  return {
+    objectPosition: `${-sourceX}px ${-sourceY}px`,
+    objectFit: 'none',
+    width: `${sourceSize}px`,
+    height: `${sourceSize}px`
+  }
+})
+
+// Перетаскивание области обрезки
+const startCropDrag = (e) => {
+  e.preventDefault()
+  isDragging.value = true
+  dragStart.value = { x: e.clientX || e.touches[0].clientX, y: e.clientY || e.touches[0].clientY }
+  cropStart.value = { x: cropState.value.x, y: cropState.value.y }
+  
+  document.addEventListener('mousemove', onCropDrag)
+  document.addEventListener('mouseup', stopCropDrag)
+  document.addEventListener('touchmove', onCropDrag)
+  document.addEventListener('touchend', stopCropDrag)
+}
+
+const onCropDrag = (e) => {
   if (!isDragging.value) return
   
   const clientX = e.clientX || e.touches[0].clientX
@@ -226,145 +333,125 @@ const onDrag = (e) => {
   const deltaX = clientX - dragStart.value.x
   const deltaY = clientY - dragStart.value.y
   
-  const container = previewImage.value?.parentElement
-  if (!container) return
-  
-  const containerRect = container.getBoundingClientRect()
-  const containerWidth = containerRect.width
-  const containerHeight = containerRect.height
-  
-  const cropSize = 50 // 50% от размера контейнера
-  const maxX = 100 - cropSize
-  const maxY = 100 - cropSize
-  
-  let newX = cropStart.value.x + (deltaX / containerWidth) * 100
-  let newY = cropStart.value.y + (deltaY / containerHeight) * 100
+  let newX = cropStart.value.x + deltaX
+  let newY = cropStart.value.y + deltaY
   
   // Ограничиваем границы
-  newX = Math.max(0, Math.min(maxX, newX))
-  newY = Math.max(0, Math.min(maxY, newY))
+  newX = Math.max(0, Math.min(containerSize.value.width - cropState.value.width, newX))
+  newY = Math.max(0, Math.min(containerSize.value.height - cropState.value.height, newY))
   
-  cropAreaStyle.value = {
-    left: `${newX}%`,
-    top: `${newY}%`
-  }
+  cropState.value.x = newX
+  cropState.value.y = newY
 }
 
-const stopDrag = () => {
+const stopCropDrag = () => {
   isDragging.value = false
-  document.removeEventListener('mousemove', onDrag)
-  document.removeEventListener('mouseup', stopDrag)
-  document.removeEventListener('touchmove', onDrag)
-  document.removeEventListener('touchend', stopDrag)
+  document.removeEventListener('mousemove', onCropDrag)
+  document.removeEventListener('mouseup', stopCropDrag)
+  document.removeEventListener('touchmove', onCropDrag)
+  document.removeEventListener('touchend', stopCropDrag)
 }
 
-// Функции для масштабирования изображения
-const startScale = (e) => {
+// Изменение размера области обрезки
+const startResize = (direction) => (e) => {
   e.preventDefault()
-  isScaling.value = true
-  scaleStart.value = { 
-    x: e.clientX || e.touches[0].clientX, 
-    y: e.clientY || e.touches[0].clientY, 
-    scale: imageScale.value 
+  e.stopPropagation()
+  
+  isResizing.value = true
+  resizeDirection.value = direction
+  resizeStart.value = {
+    x: e.clientX || e.touches[0].clientX,
+    y: e.clientY || e.touches[0].clientY,
+    width: cropState.value.width,
+    height: cropState.value.height,
+    cropX: cropState.value.x,
+    cropY: cropState.value.y
   }
-  document.addEventListener('mousemove', onScale)
-  document.addEventListener('mouseup', stopScale)
-  document.addEventListener('touchmove', onScale)
-  document.addEventListener('touchend', stopScale)
+  
+  document.addEventListener('mousemove', onResize)
+  document.addEventListener('mouseup', stopResize)
+  document.addEventListener('touchmove', onResize)
+  document.addEventListener('touchend', stopResize)
 }
 
-const onScale = (e) => {
-  if (!isScaling.value) return
+const onResize = (e) => {
+  if (!isResizing.value) return
   
+  const clientX = e.clientX || e.touches[0].clientX
   const clientY = e.clientY || e.touches[0].clientY
   
-  const deltaY = clientY - scaleStart.value.y
+  const deltaX = clientX - resizeStart.value.x
+  const deltaY = clientY - resizeStart.value.y
   
-  // Масштабирование по вертикальному движению
-  const scaleDelta = deltaY * -0.01 // Отрицательное значение для интуитивного управления
-  const newScale = Math.max(0.5, Math.min(3, scaleStart.value.scale + scaleDelta))
+  let newWidth = resizeStart.value.width
+  let newHeight = resizeStart.value.height
+  let newX = resizeStart.value.cropX
+  let newY = resizeStart.value.cropY
   
-  imageScale.value = newScale
+  const direction = resizeDirection.value
+  
+  // Изменяем размер в зависимости от направления
+  if (direction.includes('e')) {
+    newWidth = Math.max(cropState.value.minSize, Math.min(cropState.value.maxSize, resizeStart.value.width + deltaX))
+  }
+  if (direction.includes('w')) {
+    const maxDelta = resizeStart.value.width - cropState.value.minSize
+    const delta = Math.min(maxDelta, -deltaX)
+    newWidth = resizeStart.value.width - delta
+    newX = resizeStart.value.cropX + delta
+  }
+  if (direction.includes('s')) {
+    newHeight = Math.max(cropState.value.minSize, Math.min(cropState.value.maxSize, resizeStart.value.height + deltaY))
+  }
+  if (direction.includes('n')) {
+    const maxDelta = resizeStart.value.height - cropState.value.minSize
+    const delta = Math.min(maxDelta, -deltaY)
+    newHeight = resizeStart.value.height - delta
+    newY = resizeStart.value.cropY + delta
+  }
+  
+  // Ограничиваем границы
+  newX = Math.max(0, Math.min(containerSize.value.width - newWidth, newX))
+  newY = Math.max(0, Math.min(containerSize.value.height - newHeight, newY))
+  
+  cropState.value = {
+    ...cropState.value,
+    x: newX,
+    y: newY,
+    width: newWidth,
+    height: newHeight
+  }
 }
 
-const stopScale = () => {
-  isScaling.value = false
-  document.removeEventListener('mousemove', onScale)
-  document.removeEventListener('mouseup', stopScale)
-  document.removeEventListener('touchmove', onScale)
-  document.removeEventListener('touchend', stopScale)
-}
-
-// Функция для сброса масштаба
-const resetScale = () => {
-  imageScale.value = 1
-  imageTranslateX.value = 0
-  imageTranslateY.value = 0
+const stopResize = () => {
+  isResizing.value = false
+  document.removeEventListener('mousemove', onResize)
+  document.removeEventListener('mouseup', stopResize)
+  document.removeEventListener('touchmove', onResize)
+  document.removeEventListener('touchend', stopResize)
 }
 
 const uploadAvatar = async () => {
-  console.log('=== НАЧАЛО uploadAvatar ===')
-  console.log('Начинаем загрузку аватарки')
-  console.log('Выбранный файл:', selectedFile.value)
-  console.log('selectedFile.value.raw:', selectedFile.value?.raw)
+  if (!selectedFile.value) return
   
-  if (!selectedFile.value) {
-    console.log('Нет выбранного файла')
-    return
-  }
-
   uploading.value = true
   
   try {
-    // Создаем canvas для обрезки изображения
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     
-    // Загружаем изображение
     const img = new Image()
     img.onload = async () => {
       try {
-        // Получаем размеры контейнера и области обрезки
-        const container = previewImage.value?.parentElement
-        if (!container) {
-          throw new Error('Контейнер не найден')
-        }
+        // Вычисляем координаты обрезки в оригинальном изображении
+        const scaleX = img.naturalWidth / containerSize.value.width
+        const scaleY = img.naturalHeight / containerSize.value.height
         
-        const containerRect = container.getBoundingClientRect()
-        const containerWidth = containerRect.width
-        const containerHeight = containerRect.height
+        const sourceX = cropState.value.x * scaleX
+        const sourceY = cropState.value.y * scaleY
+        const sourceSize = cropState.value.width * scaleX
         
-        // Вычисляем размер области обрезки в пикселях
-        const cropSizePercent = 50 // 50% от размера контейнера
-        const cropSizePx = (containerWidth * cropSizePercent) / 100
-        
-        // Вычисляем позицию области обрезки в пикселях
-        const cropLeftPercent = parseFloat(cropAreaStyle.value.left)
-        const cropTopPercent = parseFloat(cropAreaStyle.value.top)
-        const cropLeftPx = (containerWidth * cropLeftPercent) / 100
-        const cropTopPx = (containerHeight * cropTopPercent) / 100
-        
-                 // Вычисляем масштаб между отображаемым изображением и оригиналом
-         const scaleX = img.naturalWidth / containerWidth
-         const scaleY = img.naturalHeight / containerHeight
-         
-         // Учитываем масштаб изображения
-         const scaledWidth = containerWidth * imageScale.value
-         const scaledHeight = containerHeight * imageScale.value
-         
-         // Вычисляем смещение из-за масштабирования
-         const offsetX = (scaledWidth - containerWidth) / 2
-         const offsetY = (scaledHeight - containerHeight) / 2
-         
-         // Вычисляем координаты обрезки в оригинальном изображении с учетом масштаба
-         const adjustedCropLeftPx = cropLeftPx + offsetX / imageScale.value
-         const adjustedCropTopPx = cropTopPx + offsetY / imageScale.value
-         
-         const sourceX = adjustedCropLeftPx * scaleX
-         const sourceY = adjustedCropTopPx * scaleY
-         const sourceSize = cropSizePx * scaleX
-        
-        // Устанавливаем размер canvas равным размеру области обрезки
+        // Устанавливаем размер canvas
         canvas.width = sourceSize
         canvas.height = sourceSize
         
@@ -374,39 +461,34 @@ const uploadAvatar = async () => {
         ctx.arc(sourceSize / 2, sourceSize / 2, sourceSize / 2, 0, 2 * Math.PI)
         ctx.clip()
         
-        // Рисуем обрезанную часть изображения
+        // Рисуем обрезанную часть
         ctx.drawImage(
           img,
-          sourceX, sourceY, sourceSize, sourceSize, // источник
-          0, 0, sourceSize, sourceSize // назначение
+          sourceX, sourceY, sourceSize, sourceSize,
+          0, 0, sourceSize, sourceSize
         )
         
         ctx.restore()
         
-        // Конвертируем canvas в blob
+        // Конвертируем в blob и загружаем
         canvas.toBlob(async (blob) => {
           try {
             const formData = new FormData()
             formData.append('avatar', blob, 'avatar.jpg')
             formData.append('user_id', props.userId.toString())
-
-            console.log('FormData создан, отправляем запрос...')
-            console.log('User ID:', props.userId)
-
+            
             const response = await axios.post('/admin/users/avatar/upload', formData, {
               headers: {
                 'Content-Type': 'multipart/form-data'
               }
             })
-
-            console.log('Ответ сервера:', response.data)
+            
             ElMessage.success('Аватарка успешно загружена')
             emit('avatar-updated', response.data.avatar_url)
             showUploadDialog.value = false
             resetSelection()
           } catch (error) {
             console.error('Ошибка загрузки аватарки:', error)
-            console.error('Детали ошибки:', error.response?.data)
             ElMessage.error('Ошибка загрузки аватарки: ' + (error.response?.data || error.message))
           } finally {
             uploading.value = false
@@ -564,33 +646,61 @@ const uploadAvatar = async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
 }
 
-.preview-container {
-  position: relative;
-  max-width: 100%;
+.crop-container {
+  width: 100%;
+  max-width: 500px;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  background: #000;
 }
 
-.image-wrapper {
+.crop-wrapper {
   position: relative;
-  overflow: hidden;
-  cursor: grab;
-}
-
-.image-wrapper:active {
-  cursor: grabbing;
-}
-
-.preview-image {
-  max-width: 100%;
-  height: auto;
-  display: block;
   width: 100%;
+  height: 400px;
+  overflow: hidden;
 }
+
+.crop-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.crop-frame {
+  position: absolute;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+
+.crop-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border: 2px solid #007bff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.crop-handle-nw { top: -6px; left: -6px; cursor: nw-resize; }
+.crop-handle-ne { top: -6px; right: -6px; cursor: ne-resize; }
+.crop-handle-sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+.crop-handle-se { bottom: -6px; right: -6px; cursor: se-resize; }
+.crop-handle-n { top: -6px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+.crop-handle-s { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+.crop-handle-w { left: -6px; top: 50%; transform: translateY(-50%); cursor: w-resize; }
+.crop-handle-e { right: -6px; top: 50%; transform: translateY(-50%); cursor: e-resize; }
 
 .crop-overlay {
   position: absolute;
@@ -598,46 +708,76 @@ const uploadAvatar = async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  pointer-events: none;
 }
 
-.crop-area {
+.crop-darken {
   position: absolute;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
-  cursor: move;
-  user-select: none;
-  touch-action: none;
-  /* Гарантируем, что область будет круглой */
-  aspect-ratio: 1;
-  width: 50%;
-  height: 50%;
+  background: rgba(0, 0, 0, 0.7);
 }
 
-.scale-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 16px;
-  padding: 12px;
+.crop-darken-top {
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.crop-darken-bottom {
+  left: 0;
+  right: 0;
+}
+
+.crop-darken-left {
+  left: 0;
+}
+
+.crop-darken-right {
+  right: 0;
+}
+
+.result-preview {
+  text-align: center;
+  padding: 20px;
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid #e0e0e0;
 }
 
-.scale-info {
-  font-size: 14px;
-  color: #666;
-  font-weight: 500;
+.result-preview h4 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 16px;
 }
 
-.preview-controls {
+.preview-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto;
+  border: 3px solid var(--color-primary);
+  box-shadow: 0 4px 16px rgba(17, 87, 64, 0.15);
+}
+
+.preview-result {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.crop-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 500px;
+}
+
+.control-group {
   display: flex;
   gap: 12px;
-  flex-wrap: wrap;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 /* Адаптивность для мобильных устройств */
@@ -660,22 +800,26 @@ const uploadAvatar = async () => {
     font-size: 36px;
   }
   
-  .preview-controls {
-    flex-direction: column;
-    width: 100%;
+  .crop-wrapper {
+    height: 300px;
   }
   
-  .preview-controls .el-button {
-    width: 100%;
-  }
-  
-  .scale-controls {
-    flex-direction: column;
+  .crop-controls {
     gap: 12px;
   }
   
-  .scale-info {
-    font-size: 16px;
+  .control-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .control-group .el-button {
+    width: 100%;
+  }
+  
+  .preview-avatar {
+    width: 100px;
+    height: 100px;
   }
 }
 
@@ -688,6 +832,10 @@ const uploadAvatar = async () => {
   .upload-btn {
     width: 32px;
     height: 32px;
+  }
+  
+  .crop-wrapper {
+    height: 250px;
   }
 }
 </style>
