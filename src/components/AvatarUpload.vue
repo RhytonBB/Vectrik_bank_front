@@ -53,16 +53,24 @@
           </el-upload>
         </div>
 
-        <!-- Предпросмотр и обрезка -->
-        <div v-if="selectedFile" class="image-preview">
-          <div class="preview-container">
-            <img 
-              :src="previewUrl" 
-              :alt="`Предпросмотр ${selectedFile.name}`"
-              class="preview-image"
-              ref="previewImage"
-            />
-                         <div class="crop-overlay" v-if="showCropOverlay">
+                 <!-- Предпросмотр и обрезка -->
+         <div v-if="selectedFile" class="image-preview">
+           <div class="preview-container">
+             <div class="image-wrapper">
+               <img 
+                 :src="previewUrl" 
+                 :alt="`Предпросмотр ${selectedFile.name}`"
+                 class="preview-image"
+                 ref="previewImage"
+                 :style="{
+                   transform: `scale(${imageScale}) translate(${imageTranslateX}px, ${imageTranslateY}px)`,
+                   transformOrigin: 'center'
+                 }"
+                 @mousedown="startScale"
+                 @touchstart="startScale"
+               />
+             </div>
+             <div class="crop-overlay" v-if="showCropOverlay">
                <div 
                  class="crop-area" 
                  :style="cropAreaStyle"
@@ -70,22 +78,31 @@
                  @touchstart="startDrag"
                ></div>
              </div>
-          </div>
-          
-          <div class="preview-controls">
-            <el-button @click="resetSelection" size="small">
-              Выбрать другой файл
-            </el-button>
-            <el-button 
-              type="primary" 
-              @click="uploadAvatar" 
-              :loading="uploading"
-              size="small"
-            >
-              Загрузить аватарку
-            </el-button>
-          </div>
-        </div>
+           </div>
+           
+           <div class="scale-controls">
+             <el-button @click="resetScale" size="small" type="info">
+               <i class="el-icon-refresh"></i> Сбросить масштаб
+             </el-button>
+             <div class="scale-info">
+               Масштаб: {{ Math.round(imageScale * 100) }}%
+             </div>
+           </div>
+           
+           <div class="preview-controls">
+             <el-button @click="resetSelection" size="small">
+               Выбрать другой файл
+             </el-button>
+             <el-button 
+               type="primary" 
+               @click="uploadAvatar" 
+               :loading="uploading"
+               size="small"
+             >
+               Загрузить аватарку
+             </el-button>
+           </div>
+         </div>
       </div>
     </el-dialog>
   </div>
@@ -121,15 +138,20 @@ const previewImage = ref(null)
 const showCropOverlay = ref(false)
 const cropAreaStyle = ref({
   left: '25%',
-  top: '25%',
-  width: '50%',
-  height: '50%'
+  top: '25%'
 })
 
 // Переменные для перетаскивания
 const isDragging = ref(false)
 const dragStart = ref({ x: 0, y: 0 })
 const cropStart = ref({ x: 0, y: 0 })
+
+// Переменные для масштабирования
+const imageScale = ref(1)
+const imageTranslateX = ref(0)
+const imageTranslateY = ref(0)
+const isScaling = ref(false)
+const scaleStart = ref({ x: 0, y: 0, scale: 1 })
 
 const handleFileSelect = (file) => {
   console.log('=== НАЧАЛО handleFileSelect ===')
@@ -155,6 +177,11 @@ const handleFileSelect = (file) => {
   selectedFile.value = file.raw || file
   previewUrl.value = URL.createObjectURL(file.raw || file)
   
+  // Сбрасываем масштаб и позицию
+  imageScale.value = 1
+  imageTranslateX.value = 0
+  imageTranslateY.value = 0
+  
   console.log('Файл установлен:', selectedFile.value)
   console.log('Preview URL:', previewUrl.value)
   
@@ -168,6 +195,9 @@ const resetSelection = () => {
   selectedFile.value = null
   previewUrl.value = ''
   showCropOverlay.value = false
+  imageScale.value = 1
+  imageTranslateX.value = 0
+  imageTranslateY.value = 0
   if (previewUrl.value) {
     URL.revokeObjectURL(previewUrl.value)
   }
@@ -216,9 +246,7 @@ const onDrag = (e) => {
   
   cropAreaStyle.value = {
     left: `${newX}%`,
-    top: `${newY}%`,
-    width: `${cropSize}%`,
-    height: `${cropSize}%`
+    top: `${newY}%`
   }
 }
 
@@ -228,6 +256,52 @@ const stopDrag = () => {
   document.removeEventListener('mouseup', stopDrag)
   document.removeEventListener('touchmove', onDrag)
   document.removeEventListener('touchend', stopDrag)
+}
+
+// Функции для масштабирования изображения
+const startScale = (e) => {
+  e.preventDefault()
+  isScaling.value = true
+  scaleStart.value = { 
+    x: e.clientX || e.touches[0].clientX, 
+    y: e.clientY || e.touches[0].clientY, 
+    scale: imageScale.value 
+  }
+  document.addEventListener('mousemove', onScale)
+  document.addEventListener('mouseup', stopScale)
+  document.addEventListener('touchmove', onScale)
+  document.addEventListener('touchend', stopScale)
+}
+
+const onScale = (e) => {
+  if (!isScaling.value) return
+  
+  const clientX = e.clientX || e.touches[0].clientX
+  const clientY = e.clientY || e.touches[0].clientY
+  
+  const deltaX = clientX - scaleStart.value.x
+  const deltaY = clientY - scaleStart.value.y
+  
+  // Масштабирование по вертикальному движению
+  const scaleDelta = deltaY * -0.01 // Отрицательное значение для интуитивного управления
+  const newScale = Math.max(0.5, Math.min(3, scaleStart.value.scale + scaleDelta))
+  
+  imageScale.value = newScale
+}
+
+const stopScale = () => {
+  isScaling.value = false
+  document.removeEventListener('mousemove', onScale)
+  document.removeEventListener('mouseup', stopScale)
+  document.removeEventListener('touchmove', onScale)
+  document.removeEventListener('touchend', stopScale)
+}
+
+// Функция для сброса масштаба
+const resetScale = () => {
+  imageScale.value = 1
+  imageTranslateX.value = 0
+  imageTranslateY.value = 0
 }
 
 const uploadAvatar = async () => {
@@ -244,29 +318,120 @@ const uploadAvatar = async () => {
   uploading.value = true
   
   try {
-    const formData = new FormData()
-    formData.append('avatar', selectedFile.value)
-    formData.append('user_id', props.userId.toString())
+    // Создаем canvas для обрезки изображения
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    
+    // Загружаем изображение
+    const img = new Image()
+    img.onload = async () => {
+      try {
+        // Получаем размеры контейнера и области обрезки
+        const container = previewImage.value?.parentElement
+        if (!container) {
+          throw new Error('Контейнер не найден')
+        }
+        
+        const containerRect = container.getBoundingClientRect()
+        const containerWidth = containerRect.width
+        const containerHeight = containerRect.height
+        
+        // Вычисляем размер области обрезки в пикселях
+        const cropSizePercent = 50 // 50% от размера контейнера
+        const cropSizePx = (containerWidth * cropSizePercent) / 100
+        
+        // Вычисляем позицию области обрезки в пикселях
+        const cropLeftPercent = parseFloat(cropAreaStyle.value.left)
+        const cropTopPercent = parseFloat(cropAreaStyle.value.top)
+        const cropLeftPx = (containerWidth * cropLeftPercent) / 100
+        const cropTopPx = (containerHeight * cropTopPercent) / 100
+        
+                 // Вычисляем масштаб между отображаемым изображением и оригиналом
+         const scaleX = img.naturalWidth / containerWidth
+         const scaleY = img.naturalHeight / containerHeight
+         
+         // Учитываем масштаб изображения
+         const scaledWidth = containerWidth * imageScale.value
+         const scaledHeight = containerHeight * imageScale.value
+         
+         // Вычисляем смещение из-за масштабирования
+         const offsetX = (scaledWidth - containerWidth) / 2
+         const offsetY = (scaledHeight - containerHeight) / 2
+         
+         // Вычисляем координаты обрезки в оригинальном изображении с учетом масштаба
+         const adjustedCropLeftPx = cropLeftPx + offsetX / imageScale.value
+         const adjustedCropTopPx = cropTopPx + offsetY / imageScale.value
+         
+         const sourceX = adjustedCropLeftPx * scaleX
+         const sourceY = adjustedCropTopPx * scaleY
+         const sourceSize = cropSizePx * scaleX
+        
+        // Устанавливаем размер canvas равным размеру области обрезки
+        canvas.width = sourceSize
+        canvas.height = sourceSize
+        
+        // Обрезаем изображение по кругу
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc(sourceSize / 2, sourceSize / 2, sourceSize / 2, 0, 2 * Math.PI)
+        ctx.clip()
+        
+        // Рисуем обрезанную часть изображения
+        ctx.drawImage(
+          img,
+          sourceX, sourceY, sourceSize, sourceSize, // источник
+          0, 0, sourceSize, sourceSize // назначение
+        )
+        
+        ctx.restore()
+        
+        // Конвертируем canvas в blob
+        canvas.toBlob(async (blob) => {
+          try {
+            const formData = new FormData()
+            formData.append('avatar', blob, 'avatar.jpg')
+            formData.append('user_id', props.userId.toString())
 
-    console.log('FormData создан, отправляем запрос...')
-    console.log('User ID:', props.userId)
+            console.log('FormData создан, отправляем запрос...')
+            console.log('User ID:', props.userId)
 
-    const response = await axios.post('/admin/users/avatar/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+            const response = await axios.post('/admin/users/avatar/upload', formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            })
+
+            console.log('Ответ сервера:', response.data)
+            ElMessage.success('Аватарка успешно загружена')
+            emit('avatar-updated', response.data.avatar_url)
+            showUploadDialog.value = false
+            resetSelection()
+          } catch (error) {
+            console.error('Ошибка загрузки аватарки:', error)
+            console.error('Детали ошибки:', error.response?.data)
+            ElMessage.error('Ошибка загрузки аватарки: ' + (error.response?.data || error.message))
+          } finally {
+            uploading.value = false
+          }
+        }, 'image/jpeg', 0.9)
+        
+      } catch (error) {
+        console.error('Ошибка обработки изображения:', error)
+        ElMessage.error('Ошибка обработки изображения')
+        uploading.value = false
       }
-    })
-
-    console.log('Ответ сервера:', response.data)
-    ElMessage.success('Аватарка успешно загружена')
-    emit('avatar-updated', response.data.avatar_url)
-    showUploadDialog.value = false
-    resetSelection()
+    }
+    
+    img.onerror = () => {
+      ElMessage.error('Ошибка загрузки изображения')
+      uploading.value = false
+    }
+    
+    img.src = previewUrl.value
+    
   } catch (error) {
     console.error('Ошибка загрузки аватарки:', error)
-    console.error('Детали ошибки:', error.response?.data)
-    ElMessage.error('Ошибка загрузки аватарки: ' + (error.response?.data || error.message))
-  } finally {
+    ElMessage.error('Ошибка загрузки аватарки')
     uploading.value = false
   }
 }
@@ -412,10 +577,21 @@ const uploadAvatar = async () => {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
+.image-wrapper {
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.image-wrapper:active {
+  cursor: grabbing;
+}
+
 .preview-image {
   max-width: 100%;
   height: auto;
   display: block;
+  width: 100%;
 }
 
 .crop-overlay {
@@ -435,6 +611,28 @@ const uploadAvatar = async () => {
   cursor: move;
   user-select: none;
   touch-action: none;
+  /* Гарантируем, что область будет круглой */
+  aspect-ratio: 1;
+  width: 50%;
+  height: 50%;
+}
+
+.scale-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.scale-info {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
 }
 
 .preview-controls {
@@ -471,6 +669,15 @@ const uploadAvatar = async () => {
   
   .preview-controls .el-button {
     width: 100%;
+  }
+  
+  .scale-controls {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .scale-info {
+    font-size: 16px;
   }
 }
 
