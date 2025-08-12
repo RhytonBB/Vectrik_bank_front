@@ -400,17 +400,24 @@ const handleWheel = (e) => {
     return
   }
   
-  // Центр области обрезки в координатах контейнера
-  const cropCenterX = cropState.value.x + cropState.value.width / 2
-  const cropCenterY = cropState.value.y + cropState.value.height / 2
+  // Получаем текущие координаты центра области обрезки в изображении
+  const currentImageCoords = containerToImageCoords(
+    cropState.value.x + cropState.value.width / 2,
+    cropState.value.y + cropState.value.height / 2
+  )
+  
+  // Вычисляем масштаб изображения в контейнере (object-fit: contain)
+  const scaleX = containerSize.value.width / cropImage.value.naturalWidth
+  const scaleY = containerSize.value.height / cropImage.value.naturalHeight
+  const containerScale = Math.min(scaleX, scaleY)
   
   // Вычисляем новое смещение, чтобы центр области обрезки оставался на месте
   const scaleRatio = newScale / zoomState.value.scale
   
-  // Ключевая формула: чтобы точка cropCenter оставалась на месте при изменении масштаба
-  // newOffset = oldOffset + cropCenter * (1 - scaleRatio)
-  const newOffsetX = zoomState.value.offsetX + cropCenterX * (1 - scaleRatio)
-  const newOffsetY = zoomState.value.offsetY + cropCenterY * (1 - scaleRatio)
+  // Новое смещение = текущее смещение + изменение позиции центра области обрезки
+  // Формула: чтобы точка currentImageCoords оставалась на месте при изменении масштаба
+  const newOffsetX = zoomState.value.offsetX + (currentImageCoords.x * containerScale * (1 - scaleRatio))
+  const newOffsetY = zoomState.value.offsetY + (currentImageCoords.y * containerScale * (1 - scaleRatio))
   
   // Ограничиваем смещения, чтобы изображение не уходило слишком далеко
   const maxOffsetX = containerSize.value.width * (newScale - 1) / 2
@@ -789,8 +796,12 @@ const debugZoom = () => {
   const imageCoords = containerToImageCoords(cropState.value.x, cropState.value.y)
   const cropSizeInImage = getCropSizeInImage()
   
+  // Вычисляем координаты центра области обрезки в изображении
+  const centerImageCoords = containerToImageCoords(cropCenterX, cropCenterY)
+  
   console.log('=== ОТЛАДКА МАСШТАБИРОВАНИЯ ===')
   console.log('Центр области обрезки в контейнере:', { x: cropCenterX, y: cropCenterY })
+  console.log('Центр области обрезки в изображении:', centerImageCoords)
   console.log('Текущий масштаб:', zoomState.value.scale)
   console.log('Текущие смещения:', { x: zoomState.value.offsetX, y: zoomState.value.offsetY })
   console.log('Размеры контейнера:', containerSize.value)
@@ -799,6 +810,15 @@ const debugZoom = () => {
   console.log('Область обрезки в контейнере:', cropState.value)
   console.log('Координаты обрезки в изображении:', imageCoords)
   console.log('Размер области обрезки в изображении:', cropSizeInImage)
+  
+  // Проверяем, что координаты корректны
+  if (centerImageCoords.x >= 0 && centerImageCoords.y >= 0 && 
+      centerImageCoords.x < img.naturalWidth && centerImageCoords.y < img.naturalHeight) {
+    console.log('✅ Координаты центра корректны')
+  } else {
+    console.log('❌ Координаты центра некорректны!')
+  }
+  
   console.log('================================')
 }
 
@@ -814,14 +834,21 @@ const testZoom = () => {
   const oldScale = zoomState.value.scale
   const newScale = oldScale * 1.2
   
-  // Центр области обрезки
-  const cropCenterX = cropState.value.x + cropState.value.width / 2
-  const cropCenterY = cropState.value.y + cropState.value.height / 2
+  // Получаем текущие координаты центра области обрезки в изображении
+  const currentImageCoords = containerToImageCoords(
+    cropState.value.x + cropState.value.width / 2,
+    cropState.value.y + cropState.value.height / 2
+  )
+  
+  // Вычисляем масштаб изображения в контейнере (object-fit: contain)
+  const scaleX = containerSize.value.width / cropImage.value.naturalWidth
+  const scaleY = containerSize.value.height / cropImage.value.naturalHeight
+  const containerScale = Math.min(scaleX, scaleY)
   
   // Вычисляем новое смещение
   const scaleRatio = newScale / oldScale
-  const newOffsetX = zoomState.value.offsetX + cropCenterX * (1 - scaleRatio)
-  const newOffsetY = zoomState.value.offsetY + cropCenterY * (1 - scaleRatio)
+  const newOffsetX = zoomState.value.offsetX + (currentImageCoords.x * containerScale * (1 - scaleRatio))
+  const newOffsetY = zoomState.value.offsetY + (currentImageCoords.y * containerScale * (1 - scaleRatio))
   
   console.log('Тестовые значения:')
   console.log('Старый масштаб:', oldScale)
@@ -829,7 +856,8 @@ const testZoom = () => {
   console.log('scaleRatio:', scaleRatio)
   console.log('Старые смещения:', { x: zoomState.value.offsetX, y: zoomState.value.offsetY })
   console.log('Новые смещения:', { x: newOffsetX, y: newOffsetY })
-  console.log('Центр области обрезки:', { x: cropCenterX, y: cropCenterY })
+  console.log('Центр области обрезки в изображении:', currentImageCoords)
+  console.log('Масштаб контейнера:', containerScale)
   
   // Применяем тестовое масштабирование
   zoomState.value = {
