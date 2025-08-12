@@ -35,7 +35,6 @@
         <!-- Выбор файла -->
         <div v-if="!selectedFile" class="file-select">
           <el-upload
-            ref="uploadRef"
             :auto-upload="false"
             :show-file-list="false"
             :on-change="handleFileSelect"
@@ -185,7 +184,6 @@ const zoomState = ref({
 })
 
 // Размеры
-const imageSize = ref({ width: 0, height: 0 })
 const containerSize = ref({ width: 0, height: 0 })
 
 // Состояние перетаскивания
@@ -202,17 +200,31 @@ const resizeDirection = ref('')
 const containerToImageCoords = (containerX, containerY) => {
   if (!cropImage.value) return { x: 0, y: 0 }
   
-  // Учитываем, что изображение центрировано в контейнере
-  const imageContainerWidth = cropImage.value.naturalWidth * zoomState.value.scale
-  const imageContainerHeight = cropImage.value.naturalHeight * zoomState.value.scale
+  // Получаем реальные размеры изображения в контейнере (с учетом object-fit: contain)
+  const img = cropImage.value
+  const containerWidth = containerSize.value.width
+  const containerHeight = containerSize.value.height
   
-  // Вычисляем смещение изображения относительно центра контейнера
-  const imageOffsetX = (containerSize.value.width - imageContainerWidth) / 2 + zoomState.value.offsetX
-  const imageOffsetY = (containerSize.value.height - imageContainerHeight) / 2 + zoomState.value.offsetY
+  // Вычисляем масштаб изображения в контейнере
+  const scaleX = containerWidth / img.naturalWidth
+  const scaleY = containerHeight / img.naturalHeight
+  const scale = Math.min(scaleX, scaleY) // object-fit: contain использует меньший масштаб
   
-  // Преобразуем координаты контейнера в координаты изображения
-  const imageX = (containerX - imageOffsetX) / zoomState.value.scale
-  const imageY = (containerY - imageOffsetY) / zoomState.value.scale
+  // Вычисляем размеры изображения в контейнере
+  const imageWidth = img.naturalWidth * scale
+  const imageHeight = img.naturalHeight * scale
+  
+  // Вычисляем смещение изображения для центрирования
+  const offsetX = (containerWidth - imageWidth) / 2
+  const offsetY = (containerHeight - imageHeight) / 2
+  
+  // Применяем пользовательские трансформации
+  const transformedX = (containerX - offsetX - zoomState.value.offsetX) / zoomState.value.scale
+  const transformedY = (containerY - offsetY - zoomState.value.offsetY) / zoomState.value.scale
+  
+  // Преобразуем обратно в координаты оригинального изображения
+  const imageX = transformedX / scale
+  const imageY = transformedY / scale
   
   return { x: imageX, y: imageY }
 }
@@ -280,10 +292,10 @@ const onImageLoad = () => {
       const img = cropImage.value
       const wrapper = cropWrapper.value
       
-      // Размеры оригинального изображения
-      imageSize.value = {
-        width: img.naturalWidth,
-        height: img.naturalHeight
+      // Проверяем, что изображение загрузилось корректно
+      if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+        console.warn('Изображение не загрузилось корректно')
+        return
       }
       
       // Размеры контейнера
@@ -430,9 +442,20 @@ const updatePreview = () => {
   ctx.clip()
   
   // Вычисляем координаты обрезки в оригинальном изображении
-  // cropState содержит координаты в контейнере, нужно преобразовать в координаты изображения
   const imageCoords = containerToImageCoords(cropState.value.x, cropState.value.y)
-  const cropSizeInImage = cropState.value.width / zoomState.value.scale
+  
+  // Вычисляем размер области обрезки в оригинальном изображении
+  const img = cropImage.value
+  const containerWidth = containerSize.value.width
+  const containerHeight = containerSize.value.height
+  
+  // Масштаб изображения в контейнере
+  const scaleX = containerWidth / img.naturalWidth
+  const scaleY = containerHeight / img.naturalHeight
+  const scale = Math.min(scaleX, scaleY)
+  
+  // Размер области обрезки в изображении = размер в контейнере / масштаб контейнера / масштаб пользователя
+  const cropSizeInImage = cropState.value.width / scale / zoomState.value.scale
   
   // Проверяем валидность координат
   if (imageCoords.x < 0 || imageCoords.y < 0 || cropSizeInImage <= 0) {
@@ -441,15 +464,15 @@ const updatePreview = () => {
   }
   
   // Ограничиваем координаты размерами изображения
-  const maxX = cropImage.value.naturalWidth - cropSizeInImage
-  const maxY = cropImage.value.naturalHeight - cropSizeInImage
+  const maxX = img.naturalWidth - cropSizeInImage
+  const maxY = img.naturalHeight - cropSizeInImage
   
   const finalCropX = Math.max(0, Math.min(maxX, imageCoords.x))
   const finalCropY = Math.max(0, Math.min(maxY, imageCoords.y))
   
   // Рисуем обрезанную часть, масштабируя до размера предпросмотра
   ctx.drawImage(
-    cropImage.value,
+    img,
     finalCropX, finalCropY, cropSizeInImage, cropSizeInImage,
     0, 0, previewSize, previewSize
   )
@@ -585,7 +608,7 @@ const stopResize = () => {
 
 // Загрузка аватарки
 const uploadAvatar = async () => {
-  if (!selectedFile.value) return
+  if (!selectedFile.value || !cropImage.value) return
   
   uploading.value = true
   
@@ -593,111 +616,104 @@ const uploadAvatar = async () => {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     
-    const img = new Image()
-    img.onload = async () => {
+    // РАЗМЕР ФИНАЛЬНОГО ИЗОБРАЖЕНИЯ (200x200 как на бэкенде)
+    const finalSize = 200
+    
+    // Устанавливаем размер canvas равным финальному размеру
+    canvas.width = finalSize
+    canvas.height = finalSize
+    
+    // Создаем круглую область обрезки
+    ctx.save()
+    ctx.beginPath()
+    ctx.arc(finalSize / 2, finalSize / 2, finalSize / 2, 0, 2 * Math.PI)
+    ctx.clip()
+    
+    // Вычисляем координаты обрезки в оригинальном изображении
+    const imageCoords = containerToImageCoords(cropState.value.x, cropState.value.y)
+    
+    // Вычисляем размер области обрезки в оригинальном изображении
+    const containerWidth = containerSize.value.width
+    const containerHeight = containerSize.value.height
+    
+    // Масштаб изображения в контейнере
+    const scaleX = containerWidth / cropImage.value.naturalWidth
+    const scaleY = containerHeight / cropImage.value.naturalHeight
+    const scale = Math.min(scaleX, scaleY)
+    
+    // Размер области обрезки в изображении = размер в контейнере / масштаб контейнера / масштаб пользователя
+    const cropSizeInImage = cropState.value.width / scale / zoomState.value.scale
+    
+    // Проверяем валидность координат
+    if (imageCoords.x < 0 || imageCoords.y < 0 || cropSizeInImage <= 0) {
+      throw new Error('Некорректные координаты обрезки. Попробуйте изменить область обрезки.')
+    }
+    
+    // Ограничиваем координаты размерами изображения
+    const maxX = cropImage.value.naturalWidth - cropSizeInImage
+    const maxY = cropImage.value.naturalHeight - cropSizeInImage
+    
+    const finalCropX = Math.max(0, Math.min(maxX, imageCoords.x))
+    const finalCropY = Math.max(0, Math.min(maxY, imageCoords.y))
+    
+    // Рисуем обрезанную часть, масштабируя до финального размера
+    ctx.drawImage(
+      cropImage.value,
+      finalCropX, finalCropY, cropSizeInImage, cropSizeInImage,
+      0, 0, finalSize, finalSize
+    )
+    
+    ctx.restore()
+    
+    // Конвертируем в blob и загружаем
+    canvas.toBlob(async (blob) => {
       try {
-        // РАЗМЕР ФИНАЛЬНОГО ИЗОБРАЖЕНИЯ (200x200 как на бэкенде)
-        const finalSize = 200
-        
-        // Устанавливаем размер canvas равным финальному размеру
-        canvas.width = finalSize
-        canvas.height = finalSize
-        
-        // Создаем круглую область обрезки
-        ctx.save()
-        ctx.beginPath()
-        ctx.arc(finalSize / 2, finalSize / 2, finalSize / 2, 0, 2 * Math.PI)
-        ctx.clip()
-        
-        // Вычисляем координаты обрезки в оригинальном изображении
-        // cropState содержит координаты в контейнере, нужно преобразовать в координаты изображения
-        const imageCoords = containerToImageCoords(cropState.value.x, cropState.value.y)
-        const cropSizeInImage = cropState.value.width / zoomState.value.scale
-        
-        // Проверяем валидность координат
-        if (imageCoords.x < 0 || imageCoords.y < 0 || cropSizeInImage <= 0) {
-          throw new Error('Некорректные координаты обрезки. Попробуйте изменить область обрезки.')
+        if (!blob) {
+          throw new Error('Ошибка создания изображения')
         }
         
-        // Ограничиваем координаты размерами изображения
-        const maxX = img.naturalWidth - cropSizeInImage
-        const maxY = img.naturalHeight - cropSizeInImage
+        const formData = new FormData()
+        formData.append('avatar', blob, 'avatar.jpg')
+        formData.append('user_id', props.userId.toString())
         
-        const finalCropX = Math.max(0, Math.min(maxX, imageCoords.x))
-        const finalCropY = Math.max(0, Math.min(maxY, imageCoords.y))
+        const response = await axios.post('/admin/users/avatar/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          timeout: 30000 // 30 секунд таймаут
+        })
         
-        // Рисуем обрезанную часть, масштабируя до финального размера
-        ctx.drawImage(
-          img,
-          finalCropX, finalCropY, cropSizeInImage, cropSizeInImage,
-          0, 0, finalSize, finalSize
-        )
-        
-        ctx.restore()
-        
-        // Конвертируем в blob и загружаем
-        canvas.toBlob(async (blob) => {
-          try {
-            if (!blob) {
-              throw new Error('Ошибка создания изображения')
-            }
-            
-            const formData = new FormData()
-            formData.append('avatar', blob, 'avatar.jpg')
-            formData.append('user_id', props.userId.toString())
-            
-            const response = await axios.post('/admin/users/avatar/upload', formData, {
-              headers: {
-                'Content-Type': 'multipart/form-data'
-              },
-              timeout: 30000 // 30 секунд таймаут
-            })
-            
-            if (response.data && response.data.avatar_url) {
-              ElMessage.success('Аватарка успешно загружена')
-              emit('avatar-updated', response.data.avatar_url)
-              showUploadDialog.value = false
-              resetSelection()
-            } else {
-              throw new Error('Неверный ответ сервера')
-            }
-          } catch (error) {
-            console.error('Ошибка загрузки аватарки:', error)
-            let errorMessage = 'Ошибка загрузки аватарки'
-            
-            if (error.response?.status === 413) {
-              errorMessage = 'Файл слишком большой'
-            } else if (error.response?.status === 415) {
-              errorMessage = 'Неподдерживаемый формат файла'
-            } else if (error.response?.status === 400) {
-              errorMessage = error.response.data || 'Неверные данные'
-            } else if (error.code === 'ECONNABORTED') {
-              errorMessage = 'Превышено время ожидания'
-            } else if (error.response?.data) {
-              errorMessage = error.response.data
-            } else if (error.message) {
-              errorMessage += ': ' + error.message
-            }
-            
-            ElMessage.error(errorMessage)
-          } finally {
-            uploading.value = false
-          }
-        }, 'image/jpeg', 0.9)
-        
+        if (response.data && response.data.avatar_url) {
+          ElMessage.success('Аватарка успешно загружена')
+          emit('avatar-updated', response.data.avatar_url)
+          showUploadDialog.value = false
+          resetSelection()
+        } else {
+          throw new Error('Неверный ответ сервера')
+        }
       } catch (error) {
-        console.error('Ошибка обработки изображения:', error)
-        ElMessage.error('Ошибка обработки изображения')
+        console.error('Ошибка загрузки аватарки:', error)
+        let errorMessage = 'Ошибка загрузки аватарки'
+        
+        if (error.response?.status === 413) {
+          errorMessage = 'Файл слишком большой'
+        } else if (error.response?.status === 415) {
+          errorMessage = 'Неподдерживаемый формат файла'
+        } else if (error.response?.status === 400) {
+          errorMessage = error.response.data || 'Неверные данные'
+        } else if (error.code === 'ECONNABORTED') {
+          errorMessage = 'Превышено время ожидания'
+        } else if (error.response?.data) {
+          errorMessage = error.response.data
+        } else if (error.message) {
+          errorMessage += ': ' + error.message
+        }
+        
+        ElMessage.error(errorMessage)
+      } finally {
         uploading.value = false
       }
-    }
-    
-    img.onerror = () => {
-      ElMessage.error('Ошибка загрузки изображения')
-      uploading.value = false
-    }
-    
-    img.src = previewUrl.value
+    }, 'image/jpeg', 0.9)
     
   } catch (error) {
     console.error('Ошибка загрузки аватарки:', error)
@@ -712,6 +728,9 @@ watch([cropState, zoomState], updatePreview, { deep: true })
 // Добавляем обработчик колесика мыши
 const addWheelHandler = () => {
   if (cropWrapper.value) {
+    // Удаляем старый обработчик, если он есть
+    cropWrapper.value.removeEventListener('wheel', handleWheel)
+    // Добавляем новый обработчик
     cropWrapper.value.addEventListener('wheel', handleWheel, { passive: false })
   }
 }
@@ -726,6 +745,16 @@ const removeWheelHandler = () => {
 // Добавляем обработчик при монтировании
 nextTick(() => {
   addWheelHandler()
+})
+
+// Также добавляем обработчик при изменении cropWrapper
+watch(cropWrapper, (newWrapper, oldWrapper) => {
+  if (oldWrapper) {
+    oldWrapper.removeEventListener('wheel', handleWheel)
+  }
+  if (newWrapper) {
+    addWheelHandler()
+  }
 })
 
 // Очистка ресурсов при размонтировании
