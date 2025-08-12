@@ -284,11 +284,6 @@ const handleWheel = (e) => {
   const delta = e.deltaY > 0 ? -0.1 : 0.1
   const newScale = Math.max(0.5, Math.min(3, zoomState.value.scale + delta))
   
-  // Позиция мыши относительно контейнера
-  const rect = cropWrapper.value.getBoundingClientRect()
-  const mouseX = e.clientX - rect.left
-  const mouseY = e.clientY - rect.top
-  
   // Центр контейнера
   const centerX = containerSize.value.width / 2
   const centerY = containerSize.value.height / 2
