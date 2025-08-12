@@ -235,7 +235,7 @@ const containerToImageCoords = (containerX, containerY) => {
   
   // Преобразуем координаты контейнера в координаты изображения
   // 1. Убираем смещения контейнера (object-fit: contain)
-  // 2. Убираем пользовательские смещения (масштабирование относительно центра области обрезки)
+  // 2. Убираем пользовательские смещения (масштабирование)
   // 3. Делим на пользовательский масштаб
   // 4. Делим на масштаб контейнера
   const imageX = (containerX - offsetX - zoomState.value.offsetX) / zoomState.value.scale / scale
@@ -264,8 +264,8 @@ const getCropSizeInImage = () => {
   // Размер области обрезки в контейнере
   const cropSizeInContainer = cropState.value.width
   
-  // Размер в изображении = размер в контейнере / масштаб контейнера
-  const cropSizeInImage = cropSizeInContainer / scale
+  // Размер в изображении = размер в контейнере / (масштаб контейнера * пользовательский масштаб)
+  const cropSizeInImage = cropSizeInContainer / (scale * zoomState.value.scale)
   
   return cropSizeInImage
 }
