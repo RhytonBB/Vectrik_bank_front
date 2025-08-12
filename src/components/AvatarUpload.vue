@@ -450,6 +450,11 @@ const handleWheel = (e) => {
   nextTick(() => {
     updatePreview()
   })
+  
+  // Принудительно обновляем предпросмотр еще раз для надежности
+  setTimeout(() => {
+    updatePreview()
+  }, 50)
 }
 
 // Вычисляемые стили
@@ -490,6 +495,11 @@ const darkenRightStyle = computed(() => ({
 // Обновление предпросмотра
 const updatePreview = () => {
   if (!previewCanvas.value || !cropImage.value) return
+  
+  console.log('🔄 Обновление предпросмотра...')
+  console.log('   - Масштаб:', zoomState.value.scale)
+  console.log('   - Смещения:', { x: zoomState.value.offsetX, y: zoomState.value.offsetY })
+  console.log('   - Область обрезки:', cropState.value)
   
   const canvas = previewCanvas.value
   const ctx = canvas.getContext('2d')
@@ -549,6 +559,10 @@ const updatePreview = () => {
   )
   
   ctx.restore()
+  
+  console.log('✅ Предпросмотр обновлен')
+  console.log('   - Координаты обрезки в изображении:', { x: finalCropX, y: finalCropY })
+  console.log('   - Размер области обрезки в изображении:', cropSizeInImage)
 }
 
 // Принудительное обновление предпросмотра
@@ -941,6 +955,13 @@ const testZoom = () => {
   
   // Обновляем предпросмотр
   nextTick(() => {
+    updatePreview()
+    
+    // Принудительно обновляем еще раз для надежности
+    setTimeout(() => {
+      updatePreview()
+    }, 50)
+    
     console.log('После масштабирования:')
     debugZoom()
     
@@ -1041,6 +1062,11 @@ watch([zoomState], () => {
   nextTick(() => {
     updatePreview()
   })
+  
+  // Принудительно обновляем еще раз для надежности
+  setTimeout(() => {
+    updatePreview()
+  }, 100)
 }, { deep: true })
 
 // Очистка ресурсов при размонтировании
