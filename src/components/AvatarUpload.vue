@@ -200,7 +200,6 @@ const resizeDirection = ref('')
 const containerToImageCoords = (containerX, containerY) => {
   if (!cropImage.value || !containerSize.value.width || !containerSize.value.height) return { x: 0, y: 0 }
   
-  // Получаем реальные размеры изображения в контейнере (с учетом object-fit: contain)
   const img = cropImage.value
   const containerWidth = containerSize.value.width
   const containerHeight = containerSize.value.height
@@ -208,29 +207,39 @@ const containerToImageCoords = (containerX, containerY) => {
   // Проверяем, что изображение загрузилось
   if (img.naturalWidth === 0 || img.naturalHeight === 0) return { x: 0, y: 0 }
   
-  // Вычисляем масштаб изображения в контейнере
+  // Вычисляем масштаб изображения в контейнере (object-fit: contain)
   const scaleX = containerWidth / img.naturalWidth
   const scaleY = containerHeight / img.naturalHeight
-  const scale = Math.min(scaleX, scaleY) // object-fit: contain использует меньший масштаб
+  const scale = Math.min(scaleX, scaleY)
   
   // Проверяем, что масштаб корректен
   if (scale <= 0) return { x: 0, y: 0 }
   
-  // Вычисляем размеры изображения в контейнере
+  // Размеры изображения в контейнере
   const imageWidth = img.naturalWidth * scale
   const imageHeight = img.naturalHeight * scale
   
-  // Вычисляем смещение изображения для центрирования
+  // Смещение изображения для центрирования
   const offsetX = (containerWidth - imageWidth) / 2
   const offsetY = (containerHeight - imageHeight) / 2
   
-  // Применяем пользовательские трансформации
+  // Применяем пользовательские трансформации (zoom и pan)
   const transformedX = (containerX - offsetX - zoomState.value.offsetX) / zoomState.value.scale
   const transformedY = (containerY - offsetY - zoomState.value.offsetY) / zoomState.value.scale
   
-  // Преобразуем обратно в координаты оригинального изображения
+  // Преобразуем в координаты оригинального изображения
   const imageX = transformedX / scale
   const imageY = transformedY / scale
+  
+  // Отладочная информация
+  console.log('Debug coordinate transformation:', {
+    input: { containerX, containerY },
+    scale,
+    offset: { offsetX, offsetY },
+    zoom: zoomState.value,
+    transformed: { transformedX, transformedY },
+    result: { imageX, imageY }
+  })
   
   return { x: imageX, y: imageY }
 }
@@ -254,15 +263,29 @@ const getCropSizeInImage = () => {
   // Проверяем, что масштаб корректен
   if (scale <= 0) return 0
   
-  // Размер области обрезки в изображении = размер в контейнере / масштаб контейнера / масштаб пользователя
-  const cropSize = cropState.value.width / scale / zoomState.value.scale
+  // Размер области обрезки в изображении
+  // cropState.width - это размер в пикселях контейнера
+  // Нужно преобразовать его в размер в оригинальном изображении
+  const cropSizeInContainer = cropState.value.width
+  const cropSizeInImage = cropSizeInContainer / scale / zoomState.value.scale
+  
+  // Отладочная информация
+  console.log('Debug crop size calculation:', {
+    cropSizeInContainer,
+    scale,
+    userScale: zoomState.value.scale,
+    cropSizeInImage,
+    naturalWidth: img.naturalWidth,
+    naturalHeight: img.naturalHeight
+  })
   
   // Проверяем, что размер корректен
-  if (cropSize <= 0 || cropSize > Math.min(img.naturalWidth, img.naturalHeight)) {
+  if (cropSizeInImage <= 0 || cropSizeInImage > Math.min(img.naturalWidth, img.naturalHeight)) {
+    console.warn('Invalid crop size:', cropSizeInImage)
     return 0
   }
   
-  return cropSize
+  return cropSizeInImage
 }
 
 const handleFileSelect = (file) => {
@@ -480,6 +503,16 @@ const updatePreview = () => {
   
   // Вычисляем размер области обрезки в оригинальном изображении
   const cropSizeInImage = getCropSizeInImage()
+  
+  // Отладочная информация
+  console.log('Debug crop info:', {
+    containerCoords: { x: cropState.value.x, y: cropState.value.y },
+    imageCoords,
+    cropSizeInImage,
+    zoomState: zoomState.value,
+    containerSize: containerSize.value,
+    naturalSize: { width: cropImage.value.naturalWidth, height: cropImage.value.naturalHeight }
+  })
   
   // Проверяем валидность координат
   if (imageCoords.x < 0 || imageCoords.y < 0 || cropSizeInImage <= 0) {
