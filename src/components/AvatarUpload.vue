@@ -125,6 +125,9 @@
               <el-button @click="debugZoom" size="small" type="info">
                 <i class="el-icon-info"></i> Отладка
               </el-button>
+              <el-button @click="debugCropCoords" size="small" type="info">
+                <i class="el-icon-info"></i> Проверка координат
+              </el-button>
               <el-button @click="testZoom" size="small" type="warning">
                 <i class="el-icon-zoom-in"></i> Тест масштаба
               </el-button>
@@ -229,7 +232,7 @@ const containerToImageCoords = (containerX, containerY) => {
   const imageWidth = img.naturalWidth * scale
   const imageHeight = img.naturalHeight * scale
   
-  // Смещение изображения для центрирования
+  // Смещение изображения для центрирования (object-fit: contain)
   const offsetX = (containerSize.value.width - imageWidth) / 2
   const offsetY = (containerSize.value.height - imageHeight) / 2
   
@@ -961,6 +964,69 @@ const testZoom = () => {
     
     console.log('=== КОНЕЦ ТЕСТА ===')
   })
+}
+
+// Функция для детальной проверки координат обрезки
+const debugCropCoords = () => {
+  if (!cropImage.value || !containerSize.value.width || !containerSize.value.height) return
+  
+  const img = cropImage.value
+  const cropX = cropState.value.x
+  const cropY = cropState.value.y
+  
+  // Масштаб изображения в контейнере (object-fit: contain)
+  const scaleX = containerSize.value.width / img.naturalWidth
+  const scaleY = containerSize.value.height / img.naturalHeight
+  const scale = Math.min(scaleX, scaleY)
+  
+  // Размеры изображения в контейнере
+  const imageWidth = img.naturalWidth * scale
+  const imageHeight = img.naturalHeight * scale
+  
+  // Смещения для центрирования
+  const offsetX = (containerSize.value.width - imageWidth) / 2
+  const offsetY = (containerSize.value.height - imageHeight) / 2
+  
+  console.log('=== ДЕТАЛЬНАЯ ПРОВЕРКА КООРДИНАТ ОБРЕЗКИ ===')
+  console.log('Координаты обрезки в контейнере:', { x: cropX, y: cropY })
+  console.log('Масштаб контейнера (object-fit):', scale)
+  console.log('Размеры изображения в контейнере:', { width: imageWidth, height: imageHeight })
+  console.log('Смещения центрирования:', { x: offsetX, y: offsetY })
+  console.log('Пользовательский масштаб:', zoomState.value.scale)
+  console.log('Пользовательские смещения:', { x: zoomState.value.offsetX, y: zoomState.value.offsetY })
+  
+  // Пошаговое вычисление
+  const step1X = cropX - offsetX
+  const step1Y = cropY - offsetY
+  console.log('Шаг 1 (убираем центрирование):', { x: step1X, y: step1Y })
+  
+  const step2X = step1X - zoomState.value.offsetX
+  const step2Y = step1Y - zoomState.value.offsetY
+  console.log('Шаг 2 (убираем пользовательские смещения):', { x: step2X, y: step2Y })
+  
+  const step3X = step2X / zoomState.value.scale
+  const step3Y = step2Y / zoomState.value.scale
+  console.log('Шаг 3 (делим на пользовательский масштаб):', { x: step3X, y: step3Y })
+  
+  const finalX = step3X / scale
+  const finalY = step3Y / scale
+  console.log('Шаг 4 (делим на масштаб контейнера):', { x: finalX, y: finalY })
+  
+  // Проверяем с помощью containerToImageCoords
+  const computedCoords = containerToImageCoords(cropX, cropY)
+  console.log('Результат containerToImageCoords:', computedCoords)
+  
+  const diffX = Math.abs(finalX - computedCoords.x)
+  const diffY = Math.abs(finalY - computedCoords.y)
+  
+  if (diffX < 0.01 && diffY < 0.01) {
+    console.log('✅ Вычисления совпадают!')
+  } else {
+    console.log('❌ ОШИБКА В ВЫЧИСЛЕНИЯХ!')
+    console.log('Разница по X:', diffX, 'по Y:', diffY)
+  }
+  
+  console.log('==============================================')
 }
 
 // Обновляем предпросмотр при изменении состояния
