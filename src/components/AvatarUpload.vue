@@ -56,8 +56,8 @@
         <!-- Предпросмотр и обрезка -->
         <div v-if="selectedFile" class="image-preview">
           <div class="crop-container">
-            <!-- Контейнер для изображения с обрезкой -->
-            <div class="crop-wrapper" ref="cropWrapper" @wheel="handleWheel">
+            <div class="crop-wrapper" ref="cropWrapper">
+              <!-- Изображение с масштабированием -->
               <div class="image-container" :style="imageContainerStyle">
                 <img 
                   :src="previewUrl" 
@@ -76,13 +76,11 @@
                 @mousedown="startCropDrag"
                 @touchstart="startCropDrag"
               >
-                <!-- Угловые маркеры для изменения размера -->
+                <!-- Маркеры изменения размера -->
                 <div class="crop-handle crop-handle-nw" @mousedown="startResize('nw')" @touchstart="startResize('nw')"></div>
                 <div class="crop-handle crop-handle-ne" @mousedown="startResize('ne')" @touchstart="startResize('ne')"></div>
                 <div class="crop-handle crop-handle-sw" @mousedown="startResize('sw')" @touchstart="startResize('sw')"></div>
                 <div class="crop-handle crop-handle-se" @mousedown="startResize('se')" @touchstart="startResize('se')"></div>
-                
-                <!-- Центральные маркеры для изменения размера -->
                 <div class="crop-handle crop-handle-n" @mousedown="startResize('n')" @touchstart="startResize('n')"></div>
                 <div class="crop-handle crop-handle-s" @mousedown="startResize('s')" @touchstart="startResize('s')"></div>
                 <div class="crop-handle crop-handle-w" @mousedown="startResize('w')" @touchstart="startResize('w')"></div>
@@ -103,12 +101,7 @@
           <div class="result-preview">
             <h4>Предпросмотр результата:</h4>
             <div class="preview-avatar">
-              <img 
-                :src="previewUrl" 
-                :alt="Предпросмотр"
-                class="preview-result"
-                :style="previewResultStyle"
-              />
+              <canvas ref="previewCanvas" class="preview-canvas"></canvas>
             </div>
           </div>
           
@@ -147,7 +140,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, computed } from 'vue'
+import { ref, nextTick, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 
@@ -174,23 +167,27 @@ const previewUrl = ref('')
 const uploading = ref(false)
 const cropImage = ref(null)
 const cropWrapper = ref(null)
+const previewCanvas = ref(null)
 
-// Состояние обрезки
+// Состояние обрезки (в пикселях контейнера)
 const cropState = ref({
   x: 0,
   y: 0,
   width: 200,
-  height: 200,
-  minSize: 100,
-  maxSize: 400
+  height: 200
 })
 
 // Состояние масштабирования
 const zoomState = ref({
   scale: 1,
-  translateX: 0,
-  translateY: 0
+  offsetX: 0,
+  offsetY: 0
 })
+
+// Размеры
+const imageSize = ref({ width: 0, height: 0 })
+const containerSize = ref({ width: 0, height: 0 })
+const displaySize = ref({ width: 0, height: 0 })
 
 // Состояние перетаскивания
 const isDragging = ref(false)
@@ -201,10 +198,6 @@ const cropStart = ref({ x: 0, y: 0 })
 const isResizing = ref(false)
 const resizeStart = ref({ x: 0, y: 0, width: 0, height: 0 })
 const resizeDirection = ref('')
-
-// Размеры изображения
-const imageSize = ref({ width: 0, height: 0 })
-const containerSize = ref({ width: 0, height: 0 })
 
 const handleFileSelect = (file) => {
   if (file.size > 10 * 1024 * 1024) {
@@ -221,7 +214,7 @@ const handleFileSelect = (file) => {
   selectedFile.value = file.raw || file
   previewUrl.value = URL.createObjectURL(file.raw || file)
   
-  // Сбрасываем состояние обрезки и масштаба
+  // Сбрасываем состояние
   resetCrop()
   resetZoom()
 }
@@ -240,17 +233,37 @@ const onImageLoad = () => {
       const img = cropImage.value
       const wrapper = cropWrapper.value
       
+      // Размеры оригинального изображения
       imageSize.value = {
         width: img.naturalWidth,
         height: img.naturalHeight
       }
       
+      // Размеры контейнера
       containerSize.value = {
         width: wrapper.clientWidth,
         height: wrapper.clientHeight
       }
       
-      // Инициализируем область обрезки по центру
+      // Вычисляем размеры для отображения (сохраняем пропорции)
+      const containerRatio = containerSize.value.width / containerSize.value.height
+      const imageRatio = imageSize.value.width / imageSize.value.height
+      
+      if (imageRatio > containerRatio) {
+        // Изображение шире контейнера
+        displaySize.value = {
+          width: containerSize.value.width,
+          height: containerSize.value.width / imageRatio
+        }
+      } else {
+        // Изображение выше контейнера
+        displaySize.value = {
+          width: containerSize.value.height * imageRatio,
+          height: containerSize.value.height
+        }
+      }
+      
+      // Инициализируем область обрезки
       centerCrop()
     }
   })
@@ -264,10 +277,10 @@ const centerCrop = () => {
     x: (containerSize.value.width - size) / 2,
     y: (containerSize.value.height - size) / 2,
     width: size,
-    height: size,
-    minSize: Math.min(containerSize.value.width, containerSize.value.height) * 0.2,
-    maxSize: Math.min(containerSize.value.width, containerSize.value.height) * 0.9
+    height: size
   }
+  
+  updatePreview()
 }
 
 const resetCrop = () => {
@@ -277,9 +290,10 @@ const resetCrop = () => {
 const resetZoom = () => {
   zoomState.value = {
     scale: 1,
-    translateX: 0,
-    translateY: 0
+    offsetX: 0,
+    offsetY: 0
   }
+  updatePreview()
 }
 
 // Масштабирование колесиком мыши
@@ -289,30 +303,35 @@ const handleWheel = (e) => {
   const delta = e.deltaY > 0 ? -0.1 : 0.1
   const newScale = Math.max(0.5, Math.min(3, zoomState.value.scale + delta))
   
-  // Вычисляем позицию мыши относительно контейнера
+  // Позиция мыши относительно контейнера
   const rect = cropWrapper.value.getBoundingClientRect()
   const mouseX = e.clientX - rect.left
   const mouseY = e.clientY - rect.top
   
-  // Вычисляем новое смещение для центрирования масштаба на позиции мыши
+  // Центр контейнера
+  const centerX = containerSize.value.width / 2
+  const centerY = containerSize.value.height / 2
+  
+  // Новое смещение для центрирования на позиции мыши
   const scaleRatio = newScale / zoomState.value.scale
-  const newTranslateX = mouseX - (mouseX - zoomState.value.translateX) * scaleRatio
-  const newTranslateY = mouseY - (mouseY - zoomState.value.translateY) * scaleRatio
+  const newOffsetX = centerX - (centerX - zoomState.value.offsetX) * scaleRatio
+  const newOffsetY = centerY - (centerY - zoomState.value.offsetY) * scaleRatio
   
   zoomState.value = {
     scale: newScale,
-    translateX: newTranslateX,
-    translateY: newTranslateY
+    offsetX: newOffsetX,
+    offsetY: newOffsetY
   }
+  
+  updatePreview()
 }
 
-// Вычисляемые стили для контейнера изображения
+// Вычисляемые стили
 const imageContainerStyle = computed(() => ({
-  transform: `scale(${zoomState.value.scale}) translate(${zoomState.value.translateX}px, ${zoomState.value.translateY}px)`,
+  transform: `translate(${zoomState.value.offsetX}px, ${zoomState.value.offsetY}px) scale(${zoomState.value.scale})`,
   transformOrigin: 'center'
 }))
 
-// Вычисляемые стили для области обрезки
 const cropFrameStyle = computed(() => ({
   left: `${cropState.value.x}px`,
   top: `${cropState.value.y}px`,
@@ -320,7 +339,6 @@ const cropFrameStyle = computed(() => ({
   height: `${cropState.value.height}px`
 }))
 
-// Стили для затемнения
 const darkenTopStyle = computed(() => ({
   height: `${cropState.value.y}px`
 }))
@@ -343,31 +361,41 @@ const darkenRightStyle = computed(() => ({
   height: `${cropState.value.height}px`
 }))
 
-// Стиль для предпросмотра результата
-const previewResultStyle = computed(() => {
-  if (!imageSize.value.width || !imageSize.value.height) return {}
+// Обновление предпросмотра
+const updatePreview = () => {
+  if (!previewCanvas.value || !cropImage.value) return
   
-  // Вычисляем реальные координаты обрезки с учетом масштаба и смещения
-  const scaleX = imageSize.value.width / containerSize.value.width
-  const scaleY = imageSize.value.height / containerSize.value.height
+  const canvas = previewCanvas.value
+  const ctx = canvas.getContext('2d')
   
-  // Учитываем масштаб и смещение изображения
-  const scaledCropX = (cropState.value.x - zoomState.value.translateX) / zoomState.value.scale
-  const scaledCropY = (cropState.value.y - zoomState.value.translateY) / zoomState.value.scale
+  // Размер предпросмотра
+  const previewSize = 120
+  canvas.width = previewSize
+  canvas.height = previewSize
+  
+  // Очищаем canvas
+  ctx.clearRect(0, 0, previewSize, previewSize)
+  
+  // Создаем круглую область обрезки
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(previewSize / 2, previewSize / 2, previewSize / 2, 0, 2 * Math.PI)
+  ctx.clip()
+  
+  // Вычисляем координаты обрезки с учетом масштаба и смещения
+  const scaledCropX = (cropState.value.x - zoomState.value.offsetX) / zoomState.value.scale
+  const scaledCropY = (cropState.value.y - zoomState.value.offsetY) / zoomState.value.scale
   const scaledCropSize = cropState.value.width / zoomState.value.scale
   
-  // Конвертируем в координаты оригинального изображения
-  const sourceX = scaledCropX * scaleX
-  const sourceY = scaledCropY * scaleY
-  const sourceSize = scaledCropSize * scaleX
+  // Рисуем обрезанную часть, масштабируя до размера предпросмотра
+  ctx.drawImage(
+    cropImage.value,
+    scaledCropX, scaledCropY, scaledCropSize, scaledCropSize,
+    0, 0, previewSize, previewSize
+  )
   
-  return {
-    objectPosition: `${-sourceX}px ${-sourceY}px`,
-    objectFit: 'none',
-    width: `${sourceSize}px`,
-    height: `${sourceSize}px`
-  }
-})
+  ctx.restore()
+}
 
 // Перетаскивание области обрезки
 const startCropDrag = (e) => {
@@ -400,6 +428,8 @@ const onCropDrag = (e) => {
   
   cropState.value.x = newX
   cropState.value.y = newY
+  
+  updatePreview()
 }
 
 const stopCropDrag = () => {
@@ -447,22 +477,24 @@ const onResize = (e) => {
   let newY = resizeStart.value.cropY
   
   const direction = resizeDirection.value
+  const minSize = Math.min(containerSize.value.width, containerSize.value.height) * 0.2
+  const maxSize = Math.min(containerSize.value.width, containerSize.value.height) * 0.9
   
   // Изменяем размер в зависимости от направления
   if (direction.includes('e')) {
-    newWidth = Math.max(cropState.value.minSize, Math.min(cropState.value.maxSize, resizeStart.value.width + deltaX))
+    newWidth = Math.max(minSize, Math.min(maxSize, resizeStart.value.width + deltaX))
   }
   if (direction.includes('w')) {
-    const maxDelta = resizeStart.value.width - cropState.value.minSize
+    const maxDelta = resizeStart.value.width - minSize
     const delta = Math.min(maxDelta, -deltaX)
     newWidth = resizeStart.value.width - delta
     newX = resizeStart.value.cropX + delta
   }
   if (direction.includes('s')) {
-    newHeight = Math.max(cropState.value.minSize, Math.min(cropState.value.maxSize, resizeStart.value.height + deltaY))
+    newHeight = Math.max(minSize, Math.min(maxSize, resizeStart.value.height + deltaY))
   }
   if (direction.includes('n')) {
-    const maxDelta = resizeStart.value.height - cropState.value.minSize
+    const maxDelta = resizeStart.value.height - minSize
     const delta = Math.min(maxDelta, -deltaY)
     newHeight = resizeStart.value.height - delta
     newY = resizeStart.value.cropY + delta
@@ -479,6 +511,8 @@ const onResize = (e) => {
     width: newWidth,
     height: newHeight
   }
+  
+  updatePreview()
 }
 
 const stopResize = () => {
@@ -489,6 +523,7 @@ const stopResize = () => {
   document.removeEventListener('touchend', stopResize)
 }
 
+// Загрузка аватарки
 const uploadAvatar = async () => {
   if (!selectedFile.value) return
   
@@ -501,35 +536,35 @@ const uploadAvatar = async () => {
     const img = new Image()
     img.onload = async () => {
       try {
-        // Вычисляем координаты обрезки в оригинальном изображении с учетом масштаба
-        const scaleX = img.naturalWidth / containerSize.value.width
-        const scaleY = img.naturalHeight / containerSize.value.height
+        // РАЗМЕР ФИНАЛЬНОГО ИЗОБРАЖЕНИЯ (200x200 как на бэкенде)
+        const finalSize = 200
         
-        // Учитываем масштаб и смещение изображения
-        const scaledCropX = (cropState.value.x - zoomState.value.translateX) / zoomState.value.scale
-        const scaledCropY = (cropState.value.y - zoomState.value.translateY) / zoomState.value.scale
+        // Устанавливаем размер canvas равным финальному размеру
+        canvas.width = finalSize
+        canvas.height = finalSize
+        
+        // Создаем круглую область обрезки
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc(finalSize / 2, finalSize / 2, finalSize / 2, 0, 2 * Math.PI)
+        ctx.clip()
+        
+        // Вычисляем координаты обрезки в оригинальном изображении
+        // Учитываем масштаб и смещение
+        const scaledCropX = (cropState.value.x - zoomState.value.offsetX) / zoomState.value.scale
+        const scaledCropY = (cropState.value.y - zoomState.value.offsetY) / zoomState.value.scale
         const scaledCropSize = cropState.value.width / zoomState.value.scale
         
         // Конвертируем в координаты оригинального изображения
-        const sourceX = scaledCropX * scaleX
-        const sourceY = scaledCropY * scaleY
-        const sourceSize = scaledCropSize * scaleX
+        const sourceX = scaledCropX
+        const sourceY = scaledCropY
+        const sourceSize = scaledCropSize
         
-        // Устанавливаем размер canvas
-        canvas.width = sourceSize
-        canvas.height = sourceSize
-        
-        // Обрезаем изображение по кругу
-        ctx.save()
-        ctx.beginPath()
-        ctx.arc(sourceSize / 2, sourceSize / 2, sourceSize / 2, 0, 2 * Math.PI)
-        ctx.clip()
-        
-        // Рисуем обрезанную часть
+        // Рисуем обрезанную часть, масштабируя до финального размера
         ctx.drawImage(
           img,
           sourceX, sourceY, sourceSize, sourceSize,
-          0, 0, sourceSize, sourceSize
+          0, 0, finalSize, finalSize
         )
         
         ctx.restore()
@@ -579,6 +614,28 @@ const uploadAvatar = async () => {
     uploading.value = false
   }
 }
+
+// Обновляем предпросмотр при изменении состояния
+watch([cropState, zoomState], updatePreview, { deep: true })
+
+// Добавляем обработчик колесика мыши
+const addWheelHandler = () => {
+  if (cropWrapper.value) {
+    cropWrapper.value.addEventListener('wheel', handleWheel, { passive: false })
+  }
+}
+
+// Убираем обработчик колесика мыши
+const removeWheelHandler = () => {
+  if (cropWrapper.value) {
+    cropWrapper.value.removeEventListener('wheel', handleWheel)
+  }
+}
+
+// Добавляем/убираем обработчик при монтировании/размонтировании
+nextTick(() => {
+  addWheelHandler()
+})
 </script>
 
 <style scoped>
@@ -727,11 +784,6 @@ const uploadAvatar = async () => {
   width: 100%;
   height: 400px;
   overflow: hidden;
-  cursor: grab;
-}
-
-.crop-wrapper:active {
-  cursor: grabbing;
 }
 
 .image-container {
@@ -781,7 +833,7 @@ const uploadAvatar = async () => {
 .crop-handle-sw { bottom: -6px; left: -6px; cursor: sw-resize; }
 .crop-handle-se { bottom: -6px; right: -6px; cursor: se-resize; }
 .crop-handle-n { top: -6px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
-.crop-handle-s { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+.crop-handle-s { bottom: -6px; left: 50%; transform: translateY(-50%); cursor: s-resize; }
 .crop-handle-w { left: -6px; top: 50%; transform: translateY(-50%); cursor: w-resize; }
 .crop-handle-e { right: -6px; top: 50%; transform: translateY(-50%); cursor: e-resize; }
 
@@ -841,12 +893,13 @@ const uploadAvatar = async () => {
   margin: 0 auto;
   border: 3px solid var(--color-primary);
   box-shadow: 0 4px 16px rgba(17, 87, 64, 0.15);
+  background: #fff;
 }
 
-.preview-result {
+.preview-canvas {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  display: block;
 }
 
 .crop-controls {
