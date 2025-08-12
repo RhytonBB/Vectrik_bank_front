@@ -214,34 +214,7 @@ const containerToImageCoords = (containerX, containerY) => {
   const imageX = (containerX - imageOffsetX) / zoomState.value.scale
   const imageY = (containerY - imageOffsetY) / zoomState.value.scale
   
-  console.log('containerToImageCoords debug:', {
-    containerCoords: { x: containerX, y: containerY },
-    imageContainerSize: { width: imageContainerWidth, height: imageContainerHeight },
-    imageOffset: { x: imageOffsetX, y: imageOffsetY },
-    zoomState: zoomState.value,
-    result: { x: imageX, y: imageY }
-  })
-  
   return { x: imageX, y: imageY }
-}
-
-// Функция для преобразования координат изображения в координаты контейнера
-const imageToContainerCoords = (imageX, imageY) => {
-  if (!cropImage.value) return { x: 0, y: 0 }
-  
-  // Учитываем, что изображение центрировано в контейнере
-  const imageContainerWidth = cropImage.value.naturalWidth * zoomState.value.scale
-  const imageContainerHeight = cropImage.value.naturalHeight * zoomState.value.scale
-  
-  // Вычисляем смещение изображения относительно центра контейнера
-  const imageOffsetX = (containerSize.value.width - imageContainerWidth) / 2 + zoomState.value.offsetX
-  const imageOffsetY = (containerSize.value.height - imageContainerHeight) / 2 + zoomState.value.offsetY
-  
-  // Преобразуем координаты изображения в координаты контейнера
-  const containerX = imageX * zoomState.value.scale + imageOffsetX
-  const containerY = imageY * zoomState.value.scale + imageOffsetY
-  
-  return { x: containerX, y: containerY }
 }
 
 const handleFileSelect = (file) => {
@@ -397,15 +370,6 @@ const handleWheel = (e) => {
     offsetY: clampedOffsetY
   }
   
-  console.log('handleWheel debug:', {
-    oldScale: zoomState.value.scale,
-    newScale,
-    oldOffset: { x: zoomState.value.offsetX, y: zoomState.value.offsetY },
-    newOffset: { x: clampedOffsetX, y: clampedOffsetY },
-    cropCenter: { x: cropCenterX, y: cropCenterY },
-    containerCenter: { x: containerCenterX, y: containerCenterY }
-  })
-  
   updatePreview()
 }
 
@@ -470,16 +434,6 @@ const updatePreview = () => {
   const imageCoords = containerToImageCoords(cropState.value.x, cropState.value.y)
   const cropSizeInImage = cropState.value.width / zoomState.value.scale
   
-  // Отладочная информация
-  console.log('updatePreview debug:', {
-    cropState: cropState.value,
-    zoomState: zoomState.value,
-    imageCoords,
-    cropSizeInImage,
-    naturalWidth: cropImage.value.naturalWidth,
-    naturalHeight: cropImage.value.naturalHeight
-  })
-  
   // Проверяем валидность координат
   if (imageCoords.x < 0 || imageCoords.y < 0 || cropSizeInImage <= 0) {
     console.warn('Некорректные координаты обрезки:', { imageCoords, cropSizeInImage })
@@ -492,8 +446,6 @@ const updatePreview = () => {
   
   const finalCropX = Math.max(0, Math.min(maxX, imageCoords.x))
   const finalCropY = Math.max(0, Math.min(maxY, imageCoords.y))
-  
-  console.log('Final crop coordinates:', { finalCropX, finalCropY, cropSizeInImage })
   
   // Рисуем обрезанную часть, масштабируя до размера предпросмотра
   ctx.drawImage(
