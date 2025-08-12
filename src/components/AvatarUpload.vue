@@ -288,6 +288,8 @@ const getCropSizeInImage = () => {
 }
 
 const handleFileSelect = (file) => {
+  console.log('📁 Файл выбран:', file.name, file.size, file.type)
+  
   if (file.size > 10 * 1024 * 1024) {
     ElMessage.error('Файл слишком большой. Максимальный размер: 10MB')
     return
@@ -306,6 +308,8 @@ const handleFileSelect = (file) => {
   
   selectedFile.value = file.raw || file
   previewUrl.value = URL.createObjectURL(file.raw || file)
+  
+  console.log('✅ Файл установлен, URL создан:', previewUrl.value)
   
   // Сбрасываем состояние
   resetCrop()
@@ -330,18 +334,21 @@ const resetSelection = () => {
 }
 
 const onImageLoad = () => {
+  console.log('🖼️ Изображение загружено, инициализируем...')
+  
   nextTick(() => {
     if (cropImage.value && cropWrapper.value) {
       const wrapper = cropWrapper.value
+      const img = cropImage.value
       
       // Проверяем, что изображение загрузилось корректно
-      if (cropImage.value.naturalWidth === 0 || cropImage.value.naturalHeight === 0) {
+      if (img.naturalWidth === 0 || img.naturalHeight === 0) {
         console.warn('Изображение не загрузилось корректно')
         return
       }
       
       // Проверяем минимальный размер изображения
-      if (cropImage.value.naturalWidth < 100 || cropImage.value.naturalHeight < 100) {
+      if (img.naturalWidth < 100 || img.naturalHeight < 100) {
         ElMessage.error('Изображение слишком маленькое. Минимальный размер: 100x100 пикселей')
         resetSelection()
         return
@@ -353,6 +360,16 @@ const onImageLoad = () => {
         height: wrapper.clientHeight
       }
       
+      console.log('📏 Размеры контейнера:', containerSize.value)
+      console.log('🖼️ Размеры изображения:', { width: img.naturalWidth, height: img.naturalHeight })
+      
+      // Проверяем вычисление масштаба
+      const scaleX = containerSize.value.width / img.naturalWidth
+      const scaleY = containerSize.value.height / img.naturalHeight
+      const scale = Math.min(scaleX, scaleY)
+      
+      console.log('🔍 Масштаб контейнера:', { scaleX, scaleY, final: scale })
+      
       // Инициализируем область обрезки
       centerCrop()
     }
@@ -360,7 +377,13 @@ const onImageLoad = () => {
 }
 
 const centerCrop = () => {
-  if (!containerSize.value.width || !containerSize.value.height) return
+  if (!containerSize.value.width || !containerSize.value.height) {
+    console.warn('❌ Размеры контейнера не установлены')
+    return
+  }
+  
+  console.log('🎯 Центрируем область обрезки...')
+  console.log('   - Размеры контейнера:', containerSize.value)
   
   // Размер области обрезки - 30% от меньшей стороны контейнера
   const size = Math.min(containerSize.value.width, containerSize.value.height) * 0.3
@@ -368,6 +391,8 @@ const centerCrop = () => {
   // Ограничиваем максимальный размер области обрезки
   const maxSize = Math.min(containerSize.value.width, containerSize.value.height) * 0.4
   const finalSize = Math.min(size, maxSize)
+  
+  console.log('   - Размер области обрезки:', { size, maxSize, final: finalSize })
   
   // Центрируем область обрезки в контейнере
   cropState.value = {
@@ -377,6 +402,8 @@ const centerCrop = () => {
     height: finalSize
   }
   
+  console.log('   - Позиция области обрезки:', cropState.value)
+  
   // Сбрасываем масштабирование при центрировании
   zoomState.value = {
     scale: 1,
@@ -384,9 +411,14 @@ const centerCrop = () => {
     offsetY: 0
   }
   
+  console.log('   - Масштабирование сброшено:', zoomState.value)
+  
   // Обновляем предпросмотр только если изображение загружено
   if (cropImage.value && cropImage.value.naturalWidth > 0) {
+    console.log('   - Обновляем предпросмотр...')
     updatePreview()
+  } else {
+    console.warn('   - Изображение не загружено, пропускаем обновление предпросмотра')
   }
 }
 
