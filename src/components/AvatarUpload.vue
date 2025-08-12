@@ -55,9 +55,9 @@
         <!-- Предпросмотр и обрезка -->
         <div v-if="selectedFile" class="image-preview">
           <div class="crop-container">
-            <div class="crop-wrapper" ref="cropWrapper">
+            <div class="crop-wrapper" ref="cropWrapper" @wheel="handleWheel">
               <!-- Изображение с масштабированием -->
-              <div class="image-container" :style="imageContainerStyle" @wheel="handleWheel">
+              <div class="image-container" :style="imageContainerStyle">
                 <img 
                   :src="previewUrl" 
                   :alt="`Предпросмотр ${selectedFile.name}`"
