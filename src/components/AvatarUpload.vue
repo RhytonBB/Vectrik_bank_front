@@ -523,9 +523,7 @@ const updatePreview = () => {
     cropSizeInImage,
     zoomState: zoomState.value,
     containerSize: containerSize.value,
-    naturalSize: { width: cropImage.value.naturalWidth, height: cropImage.value.naturalHeight },
-    finalCoords: { x: finalCropX, y: finalCropY },
-    bounds: { maxX, maxY }
+    naturalSize: { width: cropImage.value.naturalWidth, height: cropImage.value.naturalHeight }
   })
   
   // Проверяем валидность координат и размера
@@ -554,16 +552,16 @@ const updatePreview = () => {
   const finalCropX = Math.max(0, Math.min(maxX, imageCoords.x))
   const finalCropY = Math.max(0, Math.min(maxY, imageCoords.y))
   
+  // Дополнительная отладочная информация после вычисления финальных координат
+  console.log('Debug final crop coordinates:', {
+    finalCoords: { x: finalCropX, y: finalCropY },
+    bounds: { maxX, maxY }
+  })
+  
   // Дополнительная проверка - убеждаемся, что область обрезки не выходит за границы
   if (finalCropX + cropSizeInImage > cropImage.value.naturalWidth || 
       finalCropY + cropSizeInImage > cropImage.value.naturalHeight) {
     console.warn('Область обрезки выходит за границы изображения')
-    return
-  }
-  
-  // Проверяем, что координаты не слишком далеко от границ
-  if (finalCropX < -cropSizeInImage * 0.1 || finalCropY < -cropSizeInImage * 0.1) {
-    console.warn('Координаты слишком далеко от границ изображения')
     return
   }
   
