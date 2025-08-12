@@ -279,7 +279,6 @@ const onScale = (e) => {
   const clientX = e.clientX || e.touches[0].clientX
   const clientY = e.clientY || e.touches[0].clientY
   
-  const deltaX = clientX - scaleStart.value.x
   const deltaY = clientY - scaleStart.value.y
   
   // Масштабирование по вертикальному движению
