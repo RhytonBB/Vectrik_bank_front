@@ -119,6 +119,9 @@
               <el-button @click="updatePreview" size="small" type="warning">
                 <i class="el-icon-refresh"></i> Обновить предпросмотр
               </el-button>
+              <el-button @click="debugZoom" size="small" type="info">
+                <i class="el-icon-info"></i> Отладка
+              </el-button>
             </div>
             
             <div class="control-group">
@@ -226,7 +229,7 @@ const containerToImageCoords = (containerX, containerY) => {
   
   // Преобразуем координаты контейнера в координаты изображения
   // 1. Убираем смещения контейнера
-  // 2. Убираем пользовательские смещения
+  // 2. Убираем пользовательские смещения (масштабирование относительно центра области обрезки)
   // 3. Делим на пользовательский масштаб
   // 4. Делим на масштаб контейнера
   const imageX = (containerX - offsetX - zoomState.value.offsetX) / zoomState.value.scale / scale
@@ -398,16 +401,13 @@ const handleWheel = (e) => {
   const cropCenterX = cropState.value.x + cropState.value.width / 2
   const cropCenterY = cropState.value.y + cropState.value.height / 2
   
-  // Центр контейнера
-  const containerCenterX = containerSize.value.width / 2
-  const containerCenterY = containerSize.value.height / 2
-  
-  // Вычисляем новое смещение, чтобы область обрезки оставалась в центре
+  // Вычисляем новое смещение, чтобы центр области обрезки оставался на месте
   const scaleRatio = newScale / zoomState.value.scale
   
   // Новое смещение = текущее смещение + изменение позиции центра области обрезки
-  const newOffsetX = zoomState.value.offsetX + (cropCenterX - containerCenterX) * (1 - scaleRatio)
-  const newOffsetY = zoomState.value.offsetY + (cropCenterY - containerCenterY) * (1 - scaleRatio)
+  // Формула: чтобы точка cropCenter оставалась на месте при изменении масштаба
+  const newOffsetX = zoomState.value.offsetX + cropCenterX * (1 - scaleRatio)
+  const newOffsetY = zoomState.value.offsetY + cropCenterY * (1 - scaleRatio)
   
   // Ограничиваем смещения, чтобы изображение не уходило слишком далеко
   const maxOffsetX = containerSize.value.width * (newScale - 1) / 2
@@ -766,8 +766,28 @@ const uploadAvatar = async () => {
   }
 }
 
+// Функция для отладки масштабирования
+const debugZoom = () => {
+  if (!cropImage.value || !containerSize.value.width || !containerSize.value.height) return
+  
+  const img = cropImage.value
+  const cropCenterX = cropState.value.x + cropState.value.width / 2
+  const cropCenterY = cropState.value.y + cropState.value.height / 2
+  
+  console.log('=== ОТЛАДКА МАСШТАБИРОВАНИЯ ===')
+  console.log('Центр области обрезки:', { x: cropCenterX, y: cropCenterY })
+  console.log('Текущий масштаб:', zoomState.value.scale)
+  console.log('Текущие смещения:', { x: zoomState.value.offsetX, y: zoomState.value.offsetY })
+  console.log('Размеры контейнера:', containerSize.value)
+  console.log('Размеры изображения:', { width: img.naturalWidth, height: img.naturalHeight })
+  console.log('================================')
+}
+
 // Обновляем предпросмотр при изменении состояния
-watch([cropState, zoomState], updatePreview, { deep: true })
+watch([cropState, zoomState], () => {
+  updatePreview()
+  debugZoom() // Добавляем отладку масштабирования
+}, { deep: true })
 
 // Добавляем обработчик колесика мыши
 const addWheelHandler = () => {
