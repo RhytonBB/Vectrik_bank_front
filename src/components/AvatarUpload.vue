@@ -284,14 +284,18 @@ const handleWheel = (e) => {
   const delta = e.deltaY > 0 ? -0.1 : 0.1
   const newScale = Math.max(0.5, Math.min(3, zoomState.value.scale + delta))
   
-  // Центр контейнера
-  const centerX = containerSize.value.width / 2
-  const centerY = containerSize.value.height / 2
+  // Центр области обрезки
+  const cropCenterX = cropState.value.x + cropState.value.width / 2
+  const cropCenterY = cropState.value.y + cropState.value.height / 2
   
-  // Новое смещение для центрирования на позиции мыши
+  // Центр контейнера
+  const containerCenterX = containerSize.value.width / 2
+  const containerCenterY = containerSize.value.height / 2
+  
+  // Вычисляем новое смещение, чтобы область обрезки оставалась в центре
   const scaleRatio = newScale / zoomState.value.scale
-  const newOffsetX = centerX - (centerX - zoomState.value.offsetX) * scaleRatio
-  const newOffsetY = centerY - (centerY - zoomState.value.offsetY) * scaleRatio
+  const newOffsetX = containerCenterX - cropCenterX * scaleRatio
+  const newOffsetY = containerCenterY - cropCenterY * scaleRatio
   
   zoomState.value = {
     scale: newScale,
@@ -532,15 +536,10 @@ const uploadAvatar = async () => {
         const scaledCropY = (cropState.value.y - zoomState.value.offsetY) / zoomState.value.scale
         const scaledCropSize = cropState.value.width / zoomState.value.scale
         
-        // Конвертируем в координаты оригинального изображения
-        const sourceX = scaledCropX
-        const sourceY = scaledCropY
-        const sourceSize = scaledCropSize
-        
         // Рисуем обрезанную часть, масштабируя до финального размера
         ctx.drawImage(
           img,
-          sourceX, sourceY, sourceSize, sourceSize,
+          scaledCropX, scaledCropY, scaledCropSize, scaledCropSize,
           0, 0, finalSize, finalSize
         )
         
