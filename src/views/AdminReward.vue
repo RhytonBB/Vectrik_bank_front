@@ -263,7 +263,7 @@ onMounted(() => {
 .user-card {
   background: #ffffff;
   border-radius: 8px;
-  padding: 16px;
+  padding: 24px;
   border: 1px solid #e0e0e0;
   transition: all 0.3s ease;
 }
@@ -411,7 +411,7 @@ onMounted(() => {
   }
   
   .user-card {
-    padding: 14px;
+    padding: 24px;
     border-radius: 8px;
   }
   
@@ -424,14 +424,14 @@ onMounted(() => {
   }
   
   .avatar-img {
-    width: 70px !important;
-    height: 70px !important;
+    width: 80px !important;
+    height: 80px !important;
   }
   
   .avatar-placeholder {
-    width: 70px !important;
-    height: 70px !important;
-    font-size: 32px !important;
+    width: 80px !important;
+    height: 80px !important;
+    font-size: 36px !important;
   }
   
   .reward-details {
