@@ -454,14 +454,6 @@ const handleWheel = (e) => {
   const scaleY = containerSize.value.height / img.naturalHeight
   const containerScale = Math.min(scaleX, scaleY)
   
-  // Размеры изображения в контейнере
-  const imageWidthInContainer = img.naturalWidth * containerScale
-  const imageHeightInContainer = img.naturalHeight * containerScale
-  
-  // Смещения для центрирования изображения (object-fit: contain)
-  const objectFitOffsetX = (containerSize.value.width - imageWidthInContainer) / 2
-  const objectFitOffsetY = (containerSize.value.height - imageHeightInContainer) / 2
-  
   // Простая логика масштабирования вокруг центра области обрезки
   const scaleRatio = newScale / zoomState.value.scale
   
