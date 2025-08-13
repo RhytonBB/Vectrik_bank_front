@@ -478,15 +478,15 @@ onMounted(() => {
 }
 
 .send-button {
-  min-width: 100px;
-  font-size: 14px;
-  padding: 10px 20px;
+  min-width: 120px;
+  font-size: 13px;
+  padding: 12px 24px;
   height: auto;
   word-wrap: break-word;
   white-space: normal;
   line-height: 1.2;
   text-align: center;
-  max-width: 200px;
+  max-width: 220px;
   overflow-wrap: break-word;
   hyphens: auto;
   display: flex;
@@ -498,8 +498,8 @@ onMounted(() => {
 @media (min-width: 601px) {
   .send-button {
     width: auto;
-    min-width: 200px;
-    max-width: 300px;
+    min-width: 220px;
+    max-width: 320px;
   }
 }
 
@@ -577,10 +577,10 @@ onMounted(() => {
   
   .send-button {
     width: 100%;
-    max-width: 200px;
+    max-width: 220px;
     min-width: auto;
-    font-size: 16px;
-    padding: 12px 24px;
+    font-size: 15px;
+    padding: 14px 28px;
     word-wrap: break-word;
     white-space: normal;
     line-height: 1.2;

@@ -320,7 +320,7 @@ const uploadAvatar = async () => {
     formData.append('avatar', selectedFile.value)
     formData.append('user_id', user.value.id.toString())
 
-    const response = await axios.post('/api/admin/users/avatar/upload', formData, {
+    const response = await axios.post('/admin/users/avatar/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
