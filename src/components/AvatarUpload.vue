@@ -307,9 +307,9 @@ const getCropSizeInImage = () => {
   // Размер области обрезки в контейнере
   const cropSizeInContainer = cropState.value.width
   
-  // Размер в изображении = размер в контейнере / масштаб контейнера
-  // НЕ делим на пользовательский масштаб, так как он уже учтен в координатах
-  const cropSizeInImage = cropSizeInContainer / containerScale
+  // Размер в изображении = размер в контейнере / (масштаб контейнера * пользовательский масштаб)
+  // Пользовательский масштаб влияет на размер области обрезки
+  const cropSizeInImage = cropSizeInContainer / (containerScale * zoomState.value.scale)
   
   // Отладочная информация
   console.log('📏 Размер области обрезки:', {
