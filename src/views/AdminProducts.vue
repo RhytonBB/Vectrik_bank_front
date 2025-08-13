@@ -72,6 +72,48 @@
         </template>
       </el-table-column>
     </el-table>
+    
+    <!-- Таблица покупок пользователей -->
+    <div class="purchases-section">
+      <h3>📊 История покупок пользователей</h3>
+      <div v-if="isMobile" class="mobile-purchases-list">
+        <div v-for="purchase in purchases" :key="purchase.id" class="purchase-card">
+          <div class="purchase-header">
+            <div class="purchase-user">{{ purchase.first_name }} {{ purchase.last_name }}</div>
+            <div class="purchase-id">ID: {{ purchase.id }}</div>
+          </div>
+          <div class="purchase-details">
+            <div class="purchase-row">
+              <span class="purchase-detail-label">Товар:</span>
+              <span class="purchase-detail-value">{{ purchase.product_name }}</span>
+            </div>
+            <div class="purchase-row">
+              <span class="purchase-detail-label">Telegram:</span>
+              <span class="purchase-detail-value">@{{ purchase.telegram_username }}</span>
+            </div>
+            <div class="purchase-row">
+              <span class="purchase-detail-label">Дата:</span>
+              <span class="purchase-detail-value">{{ formatDate(purchase.created_at) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <el-table v-else :data="purchases" style="width: 100%" class="purchases-table">
+        <el-table-column prop="first_name" label="Имя" width="120" />
+        <el-table-column prop="last_name" label="Фамилия" width="120" />
+        <el-table-column prop="telegram_username" label="Telegram" width="150">
+          <template #default="scope">
+            @{{ scope.row.telegram_username }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="product_name" label="Название товара" min-width="200" />
+        <el-table-column prop="created_at" label="Дата покупки" width="150">
+          <template #default="scope">
+            {{ formatDate(scope.row.created_at) }}
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
   </el-card>
 </template>
 
@@ -81,6 +123,7 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 const products = ref([])
+const purchases = ref([])
 const router = useRouter()
 const isMobile = ref(false)
 
@@ -98,13 +141,22 @@ const getTypeText = (type) => {
     case 'regular': return 'Обычный'
     case 'drop': return 'Мгновенный'
     case 'shared': return 'Коллективный'
-    default: return type
+    default: return 'Неизвестно'
   }
+}
+
+const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString('ru-RU')
 }
 
 const fetchProducts = async () => {
   const resp = await axios.get('/admin/products')
   products.value = resp.data
+}
+
+const fetchPurchases = async () => {
+  const resp = await axios.get('/admin/purchases')
+  purchases.value = resp.data
 }
 
 const goToEdit = (row) => {
@@ -124,6 +176,7 @@ const deleteProduct = async (row) => {
 
 onMounted(() => {
   fetchProducts()
+  fetchPurchases()
   isMobile.value = window.innerWidth < 600
   window.addEventListener('resize', () => {
     isMobile.value = window.innerWidth < 600
@@ -295,7 +348,124 @@ onMounted(() => {
     width: 100%;
     height: 44px;
     font-size: 16px;
-    border-radius: 8px;
+    border-radius: 8px !important;
+  }
+  
+  .purchases-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #f0f0f0;
+  }
+  
+  .purchases-section h3 {
+    margin: 0 0 20px 0;
+    color: var(--color-primary);
+    font-size: 20px;
+    font-weight: 600;
+  }
+  
+  .purchases-table {
+    margin-top: 20px;
+  }
+  
+  .mobile-purchases-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .purchase-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(17,87,64,0.06);
+    border: 1px solid #e0e0e0;
+  }
+  
+  .purchase-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .purchase-user {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--color-primary);
+  }
+  
+  .purchase-id {
+    font-size: 12px;
+    color: #666;
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  
+  .purchase-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .purchase-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+  }
+  
+  .purchase-detail-label {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+  }
+  
+  .purchase-detail-value {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+  }
+  
+  @media (max-width: 600px) {
+    .purchases-section {
+      margin-top: 30px;
+      padding-top: 20px;
+    }
+    
+    .purchases-section h3 {
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+    
+    .purchase-card {
+      padding: 12px;
+    }
+    
+    .purchase-header {
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+    }
+    
+    .purchase-user {
+      font-size: 15px;
+    }
+    
+    .purchase-details {
+      gap: 6px;
+    }
+    
+    .purchase-row {
+      padding: 3px 0;
+    }
+    
+    .purchase-detail-label,
+    .purchase-detail-value {
+      font-size: 13px;
+    }
   }
 }
 </style> 

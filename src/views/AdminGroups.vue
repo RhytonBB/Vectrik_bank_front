@@ -89,8 +89,10 @@
           </el-checkbox-group>
         </el-form-item>
         <el-form-item class="form-actions">
-          <el-button type="primary" native-type="submit" class="submit-btn">Создать</el-button>
-          <el-button @click="showCreate = false" class="cancel-btn">Отмена</el-button>
+          <div class="dialog-footer">
+            <el-button size="small" @click="showCreate = false" class="cancel-btn">Отмена</el-button>
+            <el-button type="primary" size="small" native-type="submit" class="submit-btn">Создать</el-button>
+          </div>
         </el-form-item>
       </el-form>
       <el-alert v-if="error" :title="error" type="error" show-icon closable @close="error = ''" />
@@ -294,6 +296,18 @@ onMounted(() => {
   height: 40px;
 }
 
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.dialog-footer .el-button {
+  min-width: 80px;
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
 @media (max-width: 600px) {
   .el-card {
     max-width: 100vw !important;
@@ -478,6 +492,21 @@ onMounted(() => {
     font-size: 16px !important;
     margin-top: 16px !important;
     border-radius: 8px !important;
+  }
+
+  .desktop-table {
+    display: none;
+  }
+  
+  .dialog-footer {
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .dialog-footer .el-button {
+    min-width: 70px;
+    font-size: 13px;
+    padding: 6px 12px;
   }
 }
 </style> 

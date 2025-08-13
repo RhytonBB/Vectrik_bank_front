@@ -154,10 +154,12 @@
       </el-form>
       
       <template #footer>
-        <el-button @click="showCreateDialog = false">Отмена</el-button>
-        <el-button type="primary" @click="saveNews" :loading="saving">
-          {{ editingNews ? 'Сохранить' : 'Создать' }}
-        </el-button>
+        <div class="dialog-footer">
+          <el-button size="small" @click="showCreateDialog = false">Отмена</el-button>
+          <el-button type="primary" size="small" @click="saveNews" :loading="saving">
+            {{ editingNews ? 'Сохранить' : 'Создать' }}
+          </el-button>
+        </div>
       </template>
     </el-dialog>
 
@@ -595,6 +597,18 @@ onMounted(() => {
   right: 4px;
 }
 
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dialog-footer .el-button {
+  min-width: 80px;
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
 @media (max-width: 768px) {
   .header {
     flex-direction: column;
@@ -613,6 +627,17 @@ onMounted(() => {
   
   .images-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  
+  .dialog-footer {
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .dialog-footer .el-button {
+    min-width: 70px;
+    font-size: 13px;
+    padding: 6px 12px;
   }
 }
 </style> 

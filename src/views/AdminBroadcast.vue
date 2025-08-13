@@ -54,7 +54,7 @@
           </el-select>
         </el-form-item>
         <el-form-item class="send-button-item">
-          <el-button type="primary" @click="sendMessage" :loading="sending" class="send-button">
+          <el-button type="primary" size="small" @click="sendMessage" :loading="sending" class="send-button">
             Отправить
           </el-button>
         </el-form-item>
@@ -473,22 +473,15 @@ onMounted(() => {
 }
 
 .send-button-item {
-  width: 100%;
   margin-top: 20px;
+  text-align: right;
 }
 
 .send-button {
-  width: 100%;
-  height: 48px;
-  font-size: 18px;
-  font-weight: 600;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-}
-
-.send-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(17,87,64,0.15);
+  min-width: 100px;
+  font-size: 14px;
+  padding: 10px 20px;
+  height: auto;
 }
 
 @media (min-width: 601px) {
@@ -541,111 +534,113 @@ onMounted(() => {
   background-color: #f8f9fa;
 }
 
-@media (max-width: 600px) {
-  .el-card {
-    max-width: 100vw !important;
-    margin: 12px 0 !important;
-    padding: 16px 4vw !important;
-    border-radius: 12px !important;
-    box-shadow: none !important;
-    box-sizing: border-box;
-    border: 1px solid var(--color-primary) !important;
-  }
-  
-  h2, h3 {
-    font-size: 1.4rem !important;
-    margin-bottom: 16px !important;
-    color: var(--color-primary);
-  }
-  
-  .broadcast-form-section {
-    margin-bottom: 24px;
-    padding: 20px;
-    border-radius: 10px;
-  }
-  
+@media (max-width: 768px) {
   .broadcast-form {
-    gap: 16px;
+    padding: 16px;
   }
   
-  .el-form-item {
-    width: 100% !important;
-    margin-bottom: 16px !important;
+  .broadcast-form .el-form-item {
+    margin-bottom: 20px;
   }
   
-  .el-input, .el-button, .el-select {
-    width: 100% !important;
-    font-size: 16px !important;
+  .message-text-item {
+    margin-bottom: 24px;
   }
   
-  .target-radio-group {
-    flex-direction: column !important;
-    gap: 8px !important;
+  .media-item {
+    margin-bottom: 24px;
   }
   
-  .target-item :deep(.el-form-item__label) {
-    font-size: 16px !important;
-    margin-bottom: 12px !important;
-    text-align: left !important;
+  .target-item {
+    margin-bottom: 24px;
   }
   
-  .target-radio-group :deep(.el-radio) {
-    padding: 12px 16px !important;
-    font-size: 16px !important;
-    border-radius: 8px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
+  .users-select-item {
+    margin-bottom: 24px;
   }
   
-  .target-radio-group :deep(.el-radio__input) {
-    margin-right: 16px !important;
-  }
-  
-  .target-radio-group :deep(.el-radio__label) {
-    font-size: 16px !important;
-  }
-  
-  .media-item :deep(.el-form-item__label) {
-    text-align: left !important;
+  .send-button-item {
+    text-align: center;
+    margin-top: 24px;
   }
   
   .send-button {
-    height: 52px !important;
-    font-size: 18px !important;
-    border-radius: 10px !important;
+    width: 100%;
+    max-width: 200px;
+    min-width: auto;
+    font-size: 16px;
+    padding: 12px 24px;
+  }
+  
+  .broadcast-form-section {
+    padding: 20px;
+    margin-bottom: 32px;
+  }
+  
+  .broadcast-form-section h3 {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .message-textarea {
+    font-size: 16px;
+  }
+  
+  .target-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .users-select {
+    width: 100%;
+  }
+  
+  .media-upload {
+    width: 100%;
+  }
+  
+  .media-upload .el-button {
+    width: 100%;
+    height: 44px;
+    font-size: 16px;
+  }
+  
+  .media-preview {
+    margin-top: 12px;
+  }
+  
+  .preview-image,
+  .preview-video {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+  
+  .file-info {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .broadcast-table {
+    display: none;
   }
   
   .mobile-broadcast-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    display: block;
   }
   
   .broadcast-card-mobile {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 2px 12px rgba(17,87,64,0.08);
-    border: 1px solid #e0e0e0;
-    transition: all 0.3s ease;
-  }
-  
-  .broadcast-card-mobile:hover {
-    box-shadow: 0 4px 20px rgba(17,87,64,0.12);
-    transform: translateY(-2px);
+    margin-bottom: 16px;
+    padding: 16px;
   }
   
   .broadcast-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 12px;
   }
   
   .broadcast-id {
-    font-weight: 600;
+    font-size: 14px;
     color: #666;
   }
   
@@ -673,17 +668,13 @@ onMounted(() => {
   
   .broadcast-stats {
     display: flex;
-    gap: 20px;
+    gap: 16px;
     margin-bottom: 16px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 8px;
   }
   
   .stat-item {
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 4px;
   }
   
@@ -693,8 +684,8 @@ onMounted(() => {
   }
   
   .stat-value {
-    font-weight: 700;
     font-size: 18px;
+    font-weight: 600;
   }
   
   .stat-value.success {
