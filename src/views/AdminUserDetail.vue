@@ -701,6 +701,27 @@ onMounted(() => {
     height: 48px !important;
     font-size: 16px !important;
   }
+  
+  .ban-btn:hover, .unban-btn:hover {
+    transform: none !important;
+  }
+  
+  .delete-btn {
+    width: 100% !important;
+    height: 56px !important;
+    font-size: 18px !important;
+    border-radius: 10px !important;
+  }
+  
+  .delete-btn:hover {
+    transform: none !important;
+  }
+  
+  .success-alert, .error-alert {
+    font-size: 16px !important;
+    margin-top: 16px !important;
+    border-radius: 8px !important;
+  }
 }
 
 .avatar-display {
@@ -774,33 +795,6 @@ onMounted(() => {
   
   .avatar-upload-form {
     padding: 16px;
-  }
-}
-    width: 100% !important;
-    height: 52px !important;
-    font-size: 18px !important;
-    border-radius: 10px !important;
-  }
-  
-  .ban-btn:hover, .unban-btn:hover {
-    transform: none !important;
-  }
-  
-  .delete-btn {
-    width: 100% !important;
-    height: 56px !important;
-    font-size: 18px !important;
-    border-radius: 10px !important;
-  }
-  
-  .delete-btn:hover {
-    transform: none !important;
-  }
-  
-  .success-alert, .error-alert {
-    font-size: 16px !important;
-    margin-top: 16px !important;
-    border-radius: 8px !important;
   }
 }
 </style> 

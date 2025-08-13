@@ -489,6 +489,10 @@ onMounted(() => {
   max-width: 200px;
   overflow-wrap: break-word;
   hyphens: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 @media (min-width: 601px) {
@@ -583,6 +587,10 @@ onMounted(() => {
     text-align: center;
     overflow-wrap: break-word;
     hyphens: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
   }
   
   .broadcast-form-section {
