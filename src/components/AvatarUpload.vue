@@ -165,8 +165,9 @@ const uploadAvatar = async () => {
   try {
     const formData = new FormData()
     formData.append('avatar', selectedFile.value)
+    formData.append('user_id', props.userId.toString())
 
-    const response = await axios.post(`/admin/users/${props.userId}/avatar`, formData, {
+    const response = await axios.post('/api/admin/users/avatar/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

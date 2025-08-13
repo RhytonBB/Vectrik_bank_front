@@ -482,9 +482,10 @@ onMounted(() => {
   font-size: 14px;
   padding: 10px 20px;
   height: auto;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-wrap: break-word;
+  white-space: normal;
+  line-height: 1.2;
+  text-align: center;
 }
 
 @media (min-width: 601px) {
@@ -573,9 +574,10 @@ onMounted(() => {
     min-width: auto;
     font-size: 16px;
     padding: 12px 24px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-wrap: break-word;
+    white-space: normal;
+    line-height: 1.2;
+    text-align: center;
   }
   
   .broadcast-form-section {
