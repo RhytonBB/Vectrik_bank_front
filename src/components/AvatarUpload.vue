@@ -252,17 +252,25 @@ const containerToImageCoords = (containerX, containerY) => {
   const scaleY = containerSize.value.height / img.naturalHeight
   const containerScale = Math.min(scaleX, scaleY)
   
-  // Размеры изображения в контейнере
-  const imageWidth = img.naturalWidth * containerScale
-  const imageHeight = img.naturalHeight * containerScale
+  // Размеры изображения в контейнере (без пользовательского масштаба)
+  const imageWidthInContainer = img.naturalWidth * containerScale
+  const imageHeightInContainer = img.naturalHeight * containerScale
   
   // Смещение изображения для центрирования (object-fit: contain)
-  const offsetX = (containerSize.value.width - imageWidth) / 2
-  const offsetY = (containerSize.value.height - imageHeight) / 2
+  const objectFitOffsetX = (containerSize.value.width - imageWidthInContainer) / 2
+  const objectFitOffsetY = (containerSize.value.height - imageHeightInContainer) / 2
   
-  // Преобразуем координаты контейнера в координаты изображения
-  const imageX = (containerX - offsetX - zoomState.value.offsetX) / zoomState.value.scale / containerScale
-  const imageY = (containerY - offsetY - zoomState.value.offsetY) / zoomState.value.scale / containerScale
+  // Координаты относительно изображения (без пользовательского масштаба)
+  const imageRelativeX = containerX - objectFitOffsetX
+  const imageRelativeY = containerY - objectFitOffsetY
+  
+  // Применяем пользовательский масштаб и смещения
+  const scaledX = (imageRelativeX - zoomState.value.offsetX) / zoomState.value.scale
+  const scaledY = (imageRelativeY - zoomState.value.offsetY) / zoomState.value.scale
+  
+  // Преобразуем в координаты оригинального изображения
+  const imageX = scaledX / containerScale
+  const imageY = scaledY / containerScale
   
   return { x: imageX, y: imageY }
 }
@@ -288,8 +296,8 @@ const getCropSizeInImage = () => {
   // Размер области обрезки в контейнере
   const cropSizeInContainer = cropState.value.width
   
-  // Размер в изображении = размер в контейнере / масштаб контейнера
-  const cropSizeInImage = cropSizeInContainer / containerScale
+  // Размер в изображении = размер в контейнере / (масштаб контейнера * пользовательский масштаб)
+  const cropSizeInImage = cropSizeInContainer / (containerScale * zoomState.value.scale)
   
   return cropSizeInImage
 }
@@ -437,27 +445,46 @@ const handleWheel = (e) => {
   }
   
   const delta = e.deltaY > 0 ? -0.1 : 0.1
-  const newScale = Math.max(0.5, Math.min(3, zoomState.value.scale + delta))
+  const oldScale = zoomState.value.scale
+  const newScale = Math.max(0.5, Math.min(2.5, oldScale + delta))
   
-  // Проверяем, что новый масштаб не слишком большой
-  if (newScale > 2.5) {
+  // Если масштаб не изменился, выходим
+  if (Math.abs(newScale - oldScale) < 0.01) {
     return
   }
+  
+  // Получаем размеры изображения в контейнере
+  const img = cropImage.value
+  const scaleX = containerSize.value.width / img.naturalWidth
+  const scaleY = containerSize.value.height / img.naturalHeight
+  const containerScale = Math.min(scaleX, scaleY)
+  
+  // Размеры изображения в контейнере (без пользовательского масштаба)
+  const imageWidthInContainer = img.naturalWidth * containerScale
+  const imageHeightInContainer = img.naturalHeight * containerScale
+  
+  // Смещения для центрирования изображения (object-fit: contain)
+  const objectFitOffsetX = (containerSize.value.width - imageWidthInContainer) / 2
+  const objectFitOffsetY = (containerSize.value.height - imageHeightInContainer) / 2
   
   // Центр области обрезки в координатах контейнера
   const cropCenterX = cropState.value.x + cropState.value.width / 2
   const cropCenterY = cropState.value.y + cropState.value.height / 2
   
-  // Простая логика масштабирования вокруг центра области обрезки
-  const scaleRatio = newScale / zoomState.value.scale
+  // Координаты центра области обрезки относительно изображения (без пользовательского масштаба)
+  const imageCropCenterX = cropCenterX - objectFitOffsetX
+  const imageCropCenterY = cropCenterY - objectFitOffsetY
   
-  // Вычисляем новые смещения для сохранения центра области обрезки
-  const newOffsetX = cropCenterX - (cropCenterX - zoomState.value.offsetX) * scaleRatio
-  const newOffsetY = cropCenterY - (cropCenterY - zoomState.value.offsetY) * scaleRatio
+  // Вычисляем новые смещения, чтобы центр области обрезки остался на месте
+  const scaleRatio = newScale / oldScale
+  
+  // Новые смещения для сохранения центра области обрезки
+  const newOffsetX = imageCropCenterX - (imageCropCenterX - zoomState.value.offsetX) * scaleRatio
+  const newOffsetY = imageCropCenterY - (imageCropCenterY - zoomState.value.offsetY) * scaleRatio
   
   // Ограничиваем смещения, чтобы изображение не уходило слишком далеко
-  const maxOffsetX = Math.max(0, containerSize.value.width * (newScale - 1))
-  const maxOffsetY = Math.max(0, containerSize.value.height * (newScale - 1))
+  const maxOffsetX = Math.max(0, imageWidthInContainer * (newScale - 1))
+  const maxOffsetY = Math.max(0, imageHeightInContainer * (newScale - 1))
   
   const clampedOffsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, newOffsetX))
   const clampedOffsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, newOffsetY))
@@ -475,10 +502,14 @@ const handleWheel = (e) => {
   
   // Отладочная информация
   console.log('🔄 Масштабирование:', {
-    oldScale: zoomState.value.scale,
+    oldScale,
     newScale,
     scaleRatio,
+    containerScale,
+    imageSize: { width: imageWidthInContainer, height: imageHeightInContainer },
+    objectFitOffset: { x: objectFitOffsetX, y: objectFitOffsetY },
     cropCenter: { x: cropCenterX, y: cropCenterY },
+    imageCropCenter: { x: imageCropCenterX, y: imageCropCenterY },
     oldOffset: { x: zoomState.value.offsetX, y: zoomState.value.offsetY },
     newOffset: { x: newOffsetX, y: newOffsetY },
     clampedOffset: { x: clampedOffsetX, y: clampedOffsetY }
@@ -495,20 +526,38 @@ const testZoom = () => {
   const oldScale = zoomState.value.scale
   const newScale = Math.min(2.5, oldScale * 1.2)
   
+  // Получаем размеры изображения в контейнере
+  const img = cropImage.value
+  const scaleX = containerSize.value.width / img.naturalWidth
+  const scaleY = containerSize.value.height / img.naturalHeight
+  const containerScale = Math.min(scaleX, scaleY)
+  
+  // Размеры изображения в контейнере (без пользовательского масштаба)
+  const imageWidthInContainer = img.naturalWidth * containerScale
+  const imageHeightInContainer = img.naturalHeight * containerScale
+  
+  // Смещения для центрирования изображения (object-fit: contain)
+  const objectFitOffsetX = (containerSize.value.width - imageWidthInContainer) / 2
+  const objectFitOffsetY = (containerSize.value.height - imageHeightInContainer) / 2
+  
   // Центр области обрезки в координатах контейнера
   const cropCenterX = cropState.value.x + cropState.value.width / 2
   const cropCenterY = cropState.value.y + cropState.value.height / 2
   
-  // Простая логика масштабирования вокруг центра области обрезки
+  // Координаты центра области обрезки относительно изображения (без пользовательского масштаба)
+  const imageCropCenterX = cropCenterX - objectFitOffsetX
+  const imageCropCenterY = cropCenterY - objectFitOffsetY
+  
+  // Вычисляем новые смещения, чтобы центр области обрезки остался на месте
   const scaleRatio = newScale / oldScale
   
-  // Вычисляем новые смещения для сохранения центра области обрезки
-  const newOffsetX = cropCenterX - (cropCenterX - zoomState.value.offsetX) * scaleRatio
-  const newOffsetY = cropCenterY - (cropCenterY - zoomState.value.offsetY) * scaleRatio
+  // Новые смещения для сохранения центра области обрезки
+  const newOffsetX = imageCropCenterX - (imageCropCenterX - zoomState.value.offsetX) * scaleRatio
+  const newOffsetY = imageCropCenterY - (imageCropCenterY - zoomState.value.offsetY) * scaleRatio
   
-  // Ограничиваем смещения
-  const maxOffsetX = Math.max(0, containerSize.value.width * (newScale - 1))
-  const maxOffsetY = Math.max(0, containerSize.value.height * (newScale - 1))
+  // Ограничиваем смещения, чтобы изображение не уходило слишком далеко
+  const maxOffsetX = Math.max(0, imageWidthInContainer * (newScale - 1))
+  const maxOffsetY = Math.max(0, imageHeightInContainer * (newScale - 1))
   
   const clampedOffsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, newOffsetX))
   const clampedOffsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, newOffsetY))
@@ -523,7 +572,11 @@ const testZoom = () => {
     oldScale,
     newScale,
     scaleRatio,
+    containerScale,
+    imageSize: { width: imageWidthInContainer, height: imageHeightInContainer },
+    objectFitOffset: { x: objectFitOffsetX, y: objectFitOffsetY },
     cropCenter: { x: cropCenterX, y: cropCenterY },
+    imageCropCenter: { x: imageCropCenterX, y: imageCropCenterY },
     oldOffset: { x: zoomState.value.offsetX, y: zoomState.value.offsetY },
     newOffset: { x: newOffsetX, y: newOffsetY },
     clampedOffset: { x: clampedOffsetX, y: clampedOffsetY }
