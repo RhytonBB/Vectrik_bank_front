@@ -55,7 +55,7 @@
         <!-- Предпросмотр и обрезка -->
         <div v-if="selectedFile" class="image-preview">
           <div class="crop-container">
-            <div class="crop-wrapper" ref="cropWrapper">
+            <div class="crop-wrapper" ref="cropWrapper" @wheel="handleWheel">
               <!-- Изображение с масштабированием -->
               <div class="image-container" :style="imageContainerStyle">
                 <img 
@@ -65,7 +65,6 @@
                   ref="cropImage"
                   @load="onImageLoad"
                   draggable="false"
-                  @wheel="handleWheel"
                 />
               </div>
               
@@ -116,6 +115,9 @@
               </el-button>
               <el-button @click="resetZoom" size="small" type="info">
                 <i class="el-icon-zoom-in"></i> Масштаб 100%
+              </el-button>
+              <el-button @click="testZoom" size="small" type="warning">
+                <i class="el-icon-zoom-in"></i> Тест масштаба
               </el-button>
             </div>
             
@@ -460,17 +462,16 @@ const handleWheel = (e) => {
   const objectFitOffsetX = (containerSize.value.width - imageWidthInContainer) / 2
   const objectFitOffsetY = (containerSize.value.height - imageHeightInContainer) / 2
   
-  // Координаты центра области обрезки в изображении (до изменения масштаба)
-  const currentImageCropCenterX = (cropCenterX - objectFitOffsetX - zoomState.value.offsetX) / zoomState.value.scale / containerScale
-  const currentImageCropCenterY = (cropCenterY - objectFitOffsetY - zoomState.value.offsetY) / zoomState.value.scale / containerScale
+  // Простая логика масштабирования вокруг центра области обрезки
+  const scaleRatio = newScale / zoomState.value.scale
   
-  // Вычисляем новые смещения, чтобы центр области обрезки в изображении оставался на месте
-  const newOffsetX = cropCenterX - objectFitOffsetX - (currentImageCropCenterX * newScale * containerScale)
-  const newOffsetY = cropCenterY - objectFitOffsetY - (currentImageCropCenterY * newScale * containerScale)
+  // Вычисляем новые смещения для сохранения центра области обрезки
+  const newOffsetX = cropCenterX - (cropCenterX - zoomState.value.offsetX) * scaleRatio
+  const newOffsetY = cropCenterY - (cropCenterY - zoomState.value.offsetY) * scaleRatio
   
   // Ограничиваем смещения, чтобы изображение не уходило слишком далеко
-  const maxOffsetX = containerSize.value.width * (newScale - 1) / 2
-  const maxOffsetY = containerSize.value.height * (newScale - 1) / 2
+  const maxOffsetX = Math.max(0, containerSize.value.width * (newScale - 1))
+  const maxOffsetY = Math.max(0, containerSize.value.height * (newScale - 1))
   
   const clampedOffsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, newOffsetX))
   const clampedOffsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, newOffsetY))
@@ -482,6 +483,67 @@ const handleWheel = (e) => {
   }
   
   // Обновляем предпросмотр после изменения масштаба
+  nextTick(() => {
+    updatePreview()
+  })
+  
+  // Отладочная информация
+  console.log('🔄 Масштабирование:', {
+    oldScale: zoomState.value.scale,
+    newScale,
+    scaleRatio,
+    cropCenter: { x: cropCenterX, y: cropCenterY },
+    oldOffset: { x: zoomState.value.offsetX, y: zoomState.value.offsetY },
+    newOffset: { x: newOffsetX, y: newOffsetY },
+    clampedOffset: { x: clampedOffsetX, y: clampedOffsetY }
+  })
+}
+
+// Функция для тестирования масштабирования
+const testZoom = () => {
+  if (!cropImage.value || !containerSize.value.width || !containerSize.value.height) {
+    return
+  }
+  
+  // Тестируем увеличение масштаба
+  const oldScale = zoomState.value.scale
+  const newScale = Math.min(2.5, oldScale * 1.2)
+  
+  // Центр области обрезки в координатах контейнера
+  const cropCenterX = cropState.value.x + cropState.value.width / 2
+  const cropCenterY = cropState.value.y + cropState.value.height / 2
+  
+  // Простая логика масштабирования вокруг центра области обрезки
+  const scaleRatio = newScale / oldScale
+  
+  // Вычисляем новые смещения для сохранения центра области обрезки
+  const newOffsetX = cropCenterX - (cropCenterX - zoomState.value.offsetX) * scaleRatio
+  const newOffsetY = cropCenterY - (cropCenterY - zoomState.value.offsetY) * scaleRatio
+  
+  // Ограничиваем смещения
+  const maxOffsetX = Math.max(0, containerSize.value.width * (newScale - 1))
+  const maxOffsetY = Math.max(0, containerSize.value.height * (newScale - 1))
+  
+  const clampedOffsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, newOffsetX))
+  const clampedOffsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, newOffsetY))
+  
+  zoomState.value = {
+    scale: newScale,
+    offsetX: clampedOffsetX,
+    offsetY: clampedOffsetY
+  }
+  
+  console.log('🧪 Тест масштабирования:', {
+    oldScale,
+    newScale,
+    scaleRatio,
+    cropCenter: { x: cropCenterX, y: cropCenterY },
+    oldOffset: { x: zoomState.value.offsetX, y: zoomState.value.offsetY },
+    newOffset: { x: newOffsetX, y: newOffsetY },
+    clampedOffset: { x: clampedOffsetX, y: clampedOffsetY }
+  })
+  
+  // Обновляем предпросмотр
   nextTick(() => {
     updatePreview()
   })
