@@ -486,6 +486,9 @@ onMounted(() => {
   white-space: normal;
   line-height: 1.2;
   text-align: center;
+  max-width: 200px;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 @media (min-width: 601px) {
@@ -578,6 +581,8 @@ onMounted(() => {
     white-space: normal;
     line-height: 1.2;
     text-align: center;
+    overflow-wrap: break-word;
+    hyphens: auto;
   }
   
   .broadcast-form-section {

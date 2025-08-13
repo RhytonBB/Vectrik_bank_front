@@ -8,12 +8,42 @@
       <h2>👤 Детали пользователя</h2>
       <div v-if="user" class="user-info">
         <div class="user-avatar-section">
-          <AvatarUpload 
-            :user-id="user.id"
-            :user-name="`${user.first_name} ${user.last_name}`"
-            :current-avatar-url="user.avatar_url"
-            @avatar-updated="handleAvatarUpdated"
-          />
+          <div class="avatar-display">
+            <img 
+              v-if="user.avatar_url" 
+              :src="user.avatar_url" 
+              :alt="`Аватар ${user.first_name} ${user.last_name}`"
+              class="current-avatar"
+            />
+            <div v-else class="avatar-placeholder">
+              <i class="el-icon-user"></i>
+            </div>
+          </div>
+          <div class="avatar-upload-form">
+            <h4>Загрузка аватарки</h4>
+            <el-form @submit.prevent="uploadAvatar" class="avatar-form">
+              <el-form-item>
+                <el-upload
+                  :auto-upload="false"
+                  :show-file-list="false"
+                  :on-change="handleFileSelect"
+                  accept="image/jpeg,image/png,image/jpg"
+                  class="avatar-upload"
+                >
+                  <el-button type="primary" size="small">Выбрать файл</el-button>
+                </el-upload>
+              </el-form-item>
+              <el-form-item v-if="selectedFile">
+                <div class="file-info">
+                  <p><strong>Файл:</strong> {{ selectedFile.name }}</p>
+                  <p><strong>Размер:</strong> {{ formatFileSize(selectedFile.size) }}</p>
+                </div>
+                <el-button type="success" @click="uploadAvatar" :loading="uploading" size="small">
+                  Загрузить аватарку
+                </el-button>
+              </el-form-item>
+            </el-form>
+          </div>
         </div>
         <div class="user-details">
           <div class="user-name">{{ user.first_name }} {{ user.last_name }}</div>
@@ -263,9 +293,48 @@ const confirmDelete = async () => {
   }
 }
 
-const handleAvatarUpdated = (avatarUrl) => {
-  if (user.value) {
-    user.value.avatar_url = avatarUrl
+const selectedFile = ref(null)
+const uploading = ref(false)
+
+const handleFileSelect = (file) => {
+  selectedFile.value = file.raw
+}
+
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+const uploadAvatar = async () => {
+  if (!selectedFile.value) {
+    ElMessage.error('Пожалуйста, выберите файл')
+    return
+  }
+
+  uploading.value = true
+  
+  try {
+    const formData = new FormData()
+    formData.append('avatar', selectedFile.value)
+    formData.append('user_id', user.value.id.toString())
+
+    const response = await axios.post('/api/admin/users/avatar/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    ElMessage.success('Аватарка успешно загружена')
+    user.value.avatar_url = response.data.avatar_url
+    selectedFile.value = null
+  } catch (error) {
+    console.error('Ошибка загрузки аватарки:', error)
+    ElMessage.error('Ошибка загрузки аватарки')
+  } finally {
+    uploading.value = false
   }
 }
 
@@ -628,6 +697,85 @@ onMounted(() => {
   }
   
   .ban-btn, .unban-btn {
+    width: 100% !important;
+    height: 48px !important;
+    font-size: 16px !important;
+  }
+}
+
+.avatar-display {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.current-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.avatar-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 48px;
+  margin: 0 auto;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.avatar-upload-form {
+  text-align: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.avatar-upload-form h4 {
+  margin-bottom: 16px;
+  color: var(--color-primary);
+}
+
+.avatar-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.file-info {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.file-info p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #606266;
+}
+
+@media (max-width: 768px) {
+  .current-avatar, .avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    font-size: 36px;
+  }
+  
+  .avatar-upload-form {
+    padding: 16px;
+  }
+}
     width: 100% !important;
     height: 52px !important;
     font-size: 18px !important;
