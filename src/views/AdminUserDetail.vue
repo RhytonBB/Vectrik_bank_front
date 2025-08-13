@@ -177,8 +177,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
-import { ElMessageBox } from 'element-plus'
-import AvatarUpload from '@/components/AvatarUpload.vue'
+import { ElMessageBox, ElMessage } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
