@@ -132,7 +132,7 @@ const handleFileSelect = (file) => {
   }
 
   // Проверяем тип файла
-  if (!file.type.startsWith('image/')) {
+  if (!file.type || !file.type.startsWith('image/')) {
     ElMessage.error('Пожалуйста, выберите изображение')
     return
   }
