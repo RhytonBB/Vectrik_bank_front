@@ -448,12 +448,6 @@ const handleWheel = (e) => {
   const cropCenterX = cropState.value.x + cropState.value.width / 2
   const cropCenterY = cropState.value.y + cropState.value.height / 2
   
-  // Вычисляем масштаб изображения в контейнере (object-fit: contain)
-  const img = cropImage.value
-  const scaleX = containerSize.value.width / img.naturalWidth
-  const scaleY = containerSize.value.height / img.naturalHeight
-  const containerScale = Math.min(scaleX, scaleY)
-  
   // Простая логика масштабирования вокруг центра области обрезки
   const scaleRatio = newScale / zoomState.value.scale
   
