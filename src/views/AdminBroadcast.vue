@@ -486,7 +486,7 @@ onMounted(() => {
   white-space: normal;
   line-height: 1.2;
   text-align: center;
-  max-width: 220px;
+  max-width: 240px;
   overflow-wrap: break-word;
   hyphens: auto;
   display: flex;

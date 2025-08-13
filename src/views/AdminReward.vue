@@ -291,23 +291,23 @@ onMounted(() => {
 }
 
 .avatar-img {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--color-primary);
 }
 
 .avatar-placeholder {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f0f0f0;
   color: #999;
-  font-size: 20px;
+  font-size: 28px;
   border: 2px solid var(--color-primary);
 }
 
@@ -424,14 +424,14 @@ onMounted(() => {
   }
   
   .avatar-img {
-    width: 50px !important;
-    height: 50px !important;
+    width: 70px !important;
+    height: 70px !important;
   }
   
   .avatar-placeholder {
-    width: 50px !important;
-    height: 50px !important;
-    font-size: 24px !important;
+    width: 70px !important;
+    height: 70px !important;
+    font-size: 32px !important;
   }
   
   .reward-details {
