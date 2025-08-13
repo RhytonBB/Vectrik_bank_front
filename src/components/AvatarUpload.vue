@@ -272,6 +272,17 @@ const containerToImageCoords = (containerX, containerY) => {
   const imageX = scaledX / containerScale
   const imageY = scaledY / containerScale
   
+  // Отладочная информация
+  console.log('🔍 Преобразование координат:', {
+    input: { containerX, containerY },
+    containerScale,
+    objectFitOffset: { x: objectFitOffsetX, y: objectFitOffsetY },
+    imageRelative: { x: imageRelativeX, y: imageRelativeY },
+    zoom: zoomState.value,
+    scaled: { x: scaledX, y: scaledY },
+    result: { x: imageX, y: imageY }
+  })
+  
   return { x: imageX, y: imageY }
 }
 
@@ -296,8 +307,17 @@ const getCropSizeInImage = () => {
   // Размер области обрезки в контейнере
   const cropSizeInContainer = cropState.value.width
   
-  // Размер в изображении = размер в контейнере / (масштаб контейнера * пользовательский масштаб)
-  const cropSizeInImage = cropSizeInContainer / (containerScale * zoomState.value.scale)
+  // Размер в изображении = размер в контейнере / масштаб контейнера
+  // НЕ делим на пользовательский масштаб, так как он уже учтен в координатах
+  const cropSizeInImage = cropSizeInContainer / containerScale
+  
+  // Отладочная информация
+  console.log('📏 Размер области обрезки:', {
+    cropSizeInContainer,
+    containerScale,
+    userScale: zoomState.value.scale,
+    cropSizeInImage
+  })
   
   return cropSizeInImage
 }
