@@ -263,7 +263,7 @@ onMounted(() => {
 .user-card {
   background: #ffffff;
   border-radius: 8px;
-  padding: 24px;
+  padding: 28px;
   border: 1px solid #e0e0e0;
   transition: all 0.3s ease;
 }
@@ -411,7 +411,7 @@ onMounted(() => {
   }
   
   .user-card {
-    padding: 24px;
+    padding: 28px;
     border-radius: 8px;
   }
   
