@@ -478,15 +478,15 @@ onMounted(() => {
 }
 
 .send-button {
-  min-width: 120px;
-  font-size: 13px;
-  padding: 12px 24px;
+  min-width: 140px;
+  font-size: 15px;
+  padding: 16px 32px;
   height: auto;
   word-wrap: break-word;
   white-space: normal;
   line-height: 1.2;
   text-align: center;
-  max-width: 240px;
+  max-width: 280px;
   overflow-wrap: break-word;
   hyphens: auto;
   display: flex;
@@ -577,10 +577,10 @@ onMounted(() => {
   
   .send-button {
     width: 100%;
-    max-width: 220px;
+    max-width: 280px;
     min-width: auto;
-    font-size: 15px;
-    padding: 14px 28px;
+    font-size: 16px;
+    padding: 18px 36px;
     word-wrap: break-word;
     white-space: normal;
     line-height: 1.2;
