@@ -577,13 +577,13 @@ onMounted(() => {
   
   .send-button {
     width: 100%;
-    max-width: 300px;
+    max-width: 200px;
     min-width: auto;
-    font-size: 16px;
-    padding: 18px 36px;
+    font-size: 14px;
+    padding: 14px 20px;
     word-wrap: break-word;
     white-space: normal;
-    line-height: 1.2;
+    line-height: 1.3;
     text-align: center;
     overflow-wrap: break-word;
     hyphens: auto;
@@ -591,6 +591,8 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
+    height: auto;
+    min-height: 44px;
   }
   
   .broadcast-form-section {
@@ -803,6 +805,28 @@ onMounted(() => {
     font-size: 16px !important;
     margin-top: 16px !important;
     border-radius: 8px !important;
+  }
+}
+
+/* Дополнительные стили для очень маленьких экранов */
+@media (max-width: 480px) {
+  .send-button {
+    max-width: 160px;
+    font-size: 13px;
+    padding: 12px 16px;
+    min-height: 40px;
+  }
+  
+  .send-button-item {
+    margin-top: 20px;
+  }
+  
+  .broadcast-form-section {
+    padding: 16px;
+  }
+  
+  .broadcast-form-section h3 {
+    font-size: 18px;
   }
 }
 </style> 
