@@ -577,7 +577,7 @@ onMounted(() => {
   
   .send-button {
     width: 100%;
-    max-width: 280px;
+    max-width: 300px;
     min-width: auto;
     font-size: 16px;
     padding: 18px 36px;
