@@ -14,7 +14,14 @@
       </div>
 
       <!-- Заголовок магазина -->
-      <h2 class="store-title">Магазин</h2>
+      <div class="store-header">
+        <h2 class="store-title">Магазин</h2>
+        <button @click="refreshStore" class="refresh-store-btn" :disabled="isRefreshing">
+          <span v-if="!isRefreshing">🔄</span>
+          <span v-else class="loading-spinner-small"></span>
+          {{ isRefreshing ? 'Обновление...' : 'Обновить' }}
+        </button>
+      </div>
 
       <!-- Список товаров -->
       <div v-if="products.length > 0" class="products-grid">
@@ -75,6 +82,7 @@ import { useTheme } from '@/composables/useTheme'
 const { currentTheme } = useTheme()
 const products = ref([])
 const userInfo = ref({})
+const isRefreshing = ref(false)
 let updateInterval = null
 
 const getLogo = () => {
@@ -87,18 +95,32 @@ return '/logo.svg'
 const fetchProducts = async () => {
   try {
     const response = await axios.get('/client/products')
-    products.value = response.data
+    products.value = response.data || []
+    
+    // Если товаров нет, показываем соответствующее сообщение
+    if (products.value.length === 0) {
+      console.log('Нет доступных товаров в магазине')
+    } else {
+      console.log(`Загружено ${products.value.length} товаров`)
+    }
   } catch (error) {
     console.error('Ошибка загрузки товаров:', error)
+    // В случае ошибки устанавливаем пустой массив
+    products.value = []
+    
+    // Показываем сообщение об ошибке пользователю
+    alert('Ошибка загрузки товаров. Попробуйте обновить страницу.')
   }
 }
 
 const fetchUserInfo = async () => {
   try {
     const response = await axios.get('/me')
-    userInfo.value = response.data
+    userInfo.value = response.data || {}
   } catch (error) {
     console.error('Ошибка загрузки информации о пользователе:', error)
+    // В случае ошибки устанавливаем пустой объект
+    userInfo.value = {}
   }
 }
 
@@ -143,15 +165,54 @@ const purchaseProduct = async (product) => {
   }
 }
 
+const refreshStore = async () => {
+  isRefreshing.value = true
+  try {
+    await fetchProducts()
+    await fetchUserInfo()
+    alert('Магазин успешно обновлен!')
+  } catch (error) {
+    console.error('Ошибка обновления магазина:', error)
+    alert('Произошла ошибка при обновлении магазина. Попробуйте позже.')
+  } finally {
+    isRefreshing.value = false
+  }
+}
+
 onMounted(() => {
   fetchProducts()
   fetchUserInfo()
   
-  // Запускаем автоматическое обновление каждые 5 секунд
+  // Запускаем автоматическое обновление каждые 5 секунд для быстрой реакции на изменения
   updateInterval = setInterval(() => {
     fetchProducts()
     fetchUserInfo()
   }, 5000)
+  
+  // Добавляем обработчик видимости страницы для обновления при возвращении пользователя
+  const handleVisibilityChange = () => {
+    if (!document.hidden) {
+      console.log('Страница магазина стала видимой, обновляем товары')
+      fetchProducts()
+      fetchUserInfo()
+    }
+  }
+  
+  // Добавляем обработчик фокуса для обновления при возвращении на страницу
+  const handleFocus = () => {
+    console.log('Страница магазина получила фокус, обновляем товары')
+    fetchProducts()
+    fetchUserInfo()
+  }
+  
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+  window.addEventListener('focus', handleFocus)
+  
+  // Очищаем обработчики при размонтировании
+  onUnmounted(() => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+    window.removeEventListener('focus', handleFocus)
+  })
 })
 
 onUnmounted(() => {
@@ -212,12 +273,59 @@ onUnmounted(() => {
   font-size: 14px;
 }
 
+.store-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+
 .store-title {
   color: var(--color-primary);
   font-size: 20px;
   font-weight: 700;
-  margin: 0 0 20px 0;
-  text-align: center;
+  margin: 0;
+}
+
+.refresh-store-btn {
+  background: #e9ecef;
+  color: #333;
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.refresh-store-btn:hover:not(:disabled) {
+  background: #dee2e6;
+}
+
+.refresh-store-btn:disabled {
+  background: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.loading-spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #333;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .products-grid {
