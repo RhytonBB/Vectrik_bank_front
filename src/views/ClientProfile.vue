@@ -26,14 +26,6 @@
               <el-icon><User /></el-icon>
             </div>
           </div>
-          <div class="profile-actions">
-            <button @click="showChangeLoginModal = true" class="action-button change-login-btn">
-              Сменить логин
-            </button>
-            <button @click="showChangePasswordModal = true" class="action-button change-password-btn">
-              Сменить пароль
-            </button>
-          </div>
         </div>
         
         <div class="info-card">
@@ -60,6 +52,16 @@
         </div>
       </div>
 
+      <!-- Кнопки действий -->
+      <div class="actions-section">
+        <button @click="showChangeLoginModal = true" class="action-button change-login-btn">
+          Сменить логин
+        </button>
+        <button @click="showChangePasswordModal = true" class="action-button change-password-btn">
+          Сменить пароль
+        </button>
+      </div>
+
       <!-- Модальное окно смены логина -->
       <el-dialog v-model="showChangeLoginModal" title="Смена логина" width="400px" center>
         <el-form @submit.prevent="changeLogin" :model="loginForm" :rules="loginRules" ref="loginFormRef">
@@ -74,8 +76,10 @@
           </el-form-item>
         </el-form>
         <template #footer>
-          <el-button @click="showChangeLoginModal = false">Отмена</el-button>
-          <el-button type="primary" @click="changeLogin" :loading="isLoading">Сменить</el-button>
+          <div class="modal-footer">
+            <el-button size="small" @click="showChangeLoginModal = false">Отмена</el-button>
+            <el-button size="small" type="primary" @click="changeLogin" :loading="isLoading">Сменить</el-button>
+          </div>
         </template>
       </el-dialog>
 
@@ -93,8 +97,10 @@
           </el-form-item>
         </el-form>
         <template #footer>
-          <el-button @click="showChangePasswordModal = false">Отмена</el-button>
-          <el-button type="primary" @click="changePassword" :loading="isLoading">Сменить</el-button>
+          <div class="modal-footer">
+            <el-button size="small" @click="showChangePasswordModal = false">Отмена</el-button>
+            <el-button size="small" type="primary" @click="changePassword" :loading="isLoading">Сменить</el-button>
+          </div>
         </template>
       </el-dialog>
 
@@ -357,21 +363,22 @@ onMounted(() => {
   font-size: 32px;
 }
 
-.profile-actions {
+.actions-section {
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  margin-bottom: 24px;
+  justify-content: center;
 }
 
 .action-button {
-  padding: 8px 15px;
-  background: #e0e0e0;
-  color: #333;
+  padding: 12px 20px;
   border: none;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 140px;
 }
 
 .action-button:hover {
@@ -379,12 +386,13 @@ onMounted(() => {
 }
 
 .change-login-btn {
-  background: #409eff;
+  background: var(--color-primary);
   color: #fff;
 }
 
 .change-login-btn:hover {
-  background: #66b1ff;
+  background: #0d503c;
+  transform: translateY(-1px);
 }
 
 .change-password-btn {
@@ -393,7 +401,8 @@ onMounted(() => {
 }
 
 .change-password-btn:hover {
-  background: #85ce61;
+  background: #5daf34;
+  transform: translateY(-1px);
 }
 
 .info-card {
@@ -459,6 +468,16 @@ body.theme-pink .info-card {
   color: #721c24;
 }
 
+.modal-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.modal-footer .el-button {
+  min-width: 80px;
+}
+
 .logout-section {
   display: flex;
   justify-content: center;
@@ -495,15 +514,17 @@ body.theme-pink .info-card {
     align-items: center;
   }
   
-  .profile-actions {
+  .actions-section {
     flex-direction: column;
+    gap: 12px;
     width: 100%;
   }
   
   .action-button {
     width: 100%;
-    padding: 12px;
+    padding: 14px;
     font-size: 16px;
+    min-width: auto;
   }
   
   .info-card {
