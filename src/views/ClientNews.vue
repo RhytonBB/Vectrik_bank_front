@@ -23,9 +23,16 @@
 
       <!-- Нет новостей -->
       <div v-else-if="news.length === 0" class="no-news">
-        <div class="no-news-icon">📰</div>
-        <h3>Пока нет новостей</h3>
-        <p>Следите за обновлениями, скоро здесь появятся интересные новости!</p>
+        <div class="no-news-container">
+          <div class="no-news-icon">📰</div>
+          <h3>Пока нет новостей</h3>
+          <p>Следите за обновлениями, скоро здесь появятся интересные новости!</p>
+          <div class="no-news-actions">
+            <button @click="refreshNews" class="refresh-btn">
+              <span>🔄</span> Обновить
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Список новостей -->
@@ -185,10 +192,23 @@ return '/logo.svg'
 
 const fetchNews = async () => {
   try {
+    loading.value = true
     const response = await axios.get('/news')
-    news.value = response.data
+    news.value = response.data || []
+    
+    // Если новостей нет, показываем соответствующее сообщение
+    if (news.value.length === 0) {
+      console.log('Нет опубликованных новостей')
+    } else {
+      console.log(`Загружено ${news.value.length} новостей`)
+    }
   } catch (error) {
     console.error('Failed to fetch news:', error)
+    // В случае ошибки устанавливаем пустой массив
+    news.value = []
+    
+    // Показываем сообщение об ошибке пользователю
+    ElMessage.error('Ошибка загрузки новостей. Попробуйте обновить страницу.')
   } finally {
     loading.value = false
   }
@@ -269,19 +289,39 @@ const formatDate = (dateString) => {
   })
 }
 
+const refreshNews = () => {
+  loading.value = true
+  fetchNews()
+}
+
 onMounted(() => {
   fetchNews()
   
-  // Запускаем автоматическое обновление каждые 10 секунд
+  // Запускаем автоматическое обновление каждые 5 секунд для быстрой реакции на изменения
   updateInterval = setInterval(() => {
     fetchNews()
-  }, 10000)
+  }, 5000)
+  
+  // Добавляем обработчик видимости страницы для обновления при возвращении пользователя
+  const handleVisibilityChange = () => {
+    if (!document.hidden) {
+      console.log('Страница стала видимой, обновляем новости')
+      fetchNews()
+    }
+  }
+  
+  document.addEventListener('visibilitychange', handleVisibilityChange)
   
   // Добавляем глобальную функцию для лайтбокса
   window.openImageLightbox = (imageUrl) => {
     lightboxImage.value = imageUrl
     showImageLightbox.value = true
   }
+  
+  // Очищаем обработчик при размонтировании
+  onUnmounted(() => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+  })
 })
 
 onUnmounted(() => {
@@ -374,18 +414,75 @@ body.theme-pink .news-header {
 .no-news {
   text-align: center;
   padding: 60px 20px;
-  color: #666;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 16px;
+  margin: 20px 0;
+  border: 1px dashed #dee2e6;
+}
+
+.no-news-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
 }
 
 .no-news-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
+  font-size: 64px;
+  opacity: 0.7;
 }
 
 .no-news h3 {
-  color: #333;
-  margin: 0 0 12px 0;
-  font-size: 20px;
+  color: var(--color-primary);
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.no-news p {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+  line-height: 1.5;
+  opacity: 0.8;
+  max-width: 400px;
+}
+
+.no-news-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.refresh-btn {
+  background-color: var(--color-primary);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.refresh-btn:hover {
+  background-color: #0f4a3a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.refresh-btn span {
+  font-size: 18px;
+}
+
+/* Розовая тема */
+body.theme-pink .refresh-btn:hover {
+  background-color: #e6399b;
 }
 
 .news-container {

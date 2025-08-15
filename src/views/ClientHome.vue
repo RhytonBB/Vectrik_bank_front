@@ -49,6 +49,13 @@
         </div>
       </div>
 
+      <!-- Заглушка для баннеров -->
+      <div v-else class="banner-placeholder">
+        <div class="placeholder-icon">🎨</div>
+        <h3>Добро пожаловать в Вектрик Банк!</h3>
+        <p>Мы рады приветствовать вас в нашем банке</p>
+      </div>
+
       <!-- Информация о счете -->
       <div class="account-info">
         <div class="info-row">
@@ -77,14 +84,16 @@
           </div>
         </div>
         <div v-else class="empty-purchases">
-          <p>У вас пока нет покупок</p>
+          <div class="empty-icon">🛒</div>
+          <h3>У вас пока нет покупок</h3>
+          <p>Посетите наш магазин и выберите интересующие вас товары</p>
         </div>
       </div>
 
       <!-- История транзакций -->
       <div class="history-section">
         <h2 class="section-title">История</h2>
-        <div class="history-table">
+        <div v-if="transactions.length > 0" class="history-table">
           <div class="table-header">
             <div class="header-cell">Дата</div>
             <div class="header-cell">Операция</div>
@@ -97,6 +106,11 @@
               {{ transaction.amount > 0 ? '+' : '' }}{{ transaction.amount }} Вектриков
             </div>
           </div>
+        </div>
+        <div v-else class="empty-transactions">
+          <div class="empty-icon">📊</div>
+          <h3>История транзакций пуста</h3>
+          <p>Здесь будут отображаться все ваши операции</p>
         </div>
       </div>
     </div>
@@ -360,6 +374,35 @@ onUnmounted(() => {
   transform: scale(1.2);
 }
 
+.banner-placeholder {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px dashed #dee2e6;
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+  opacity: 0.7;
+}
+
+.banner-placeholder h3 {
+  color: var(--color-primary);
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.banner-placeholder p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
 .account-info {
   background: #f8f9fa;
   border-radius: 12px;
@@ -445,8 +488,30 @@ body.theme-pink .purchase-card {
 
 .empty-purchases {
   text-align: center;
+  padding: 40px 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px dashed #dee2e6;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+  opacity: 0.7;
+}
+
+.empty-purchases h3 {
+  color: var(--color-primary);
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.empty-purchases p {
+  margin: 0;
   color: #666;
-  padding: 20px;
+  font-size: 14px;
+  opacity: 0.8;
 }
 
 .history-section {
@@ -499,6 +564,34 @@ body.theme-pink .purchase-card {
 .table-cell.negative {
   color: #dc3545;
   font-weight: 600;
+}
+
+.empty-transactions {
+  text-align: center;
+  padding: 40px 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px dashed #dee2e6;
+}
+
+.empty-transactions .empty-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+  opacity: 0.7;
+}
+
+.empty-transactions h3 {
+  color: var(--color-primary);
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.empty-transactions p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  opacity: 0.8;
 }
 
 @media (max-width: 480px) {

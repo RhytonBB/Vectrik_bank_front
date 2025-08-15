@@ -17,7 +17,7 @@
       <h2 class="store-title">Магазин</h2>
 
       <!-- Список товаров -->
-      <div class="products-grid">
+      <div v-if="products.length > 0" class="products-grid">
         <div v-for="product in products" :key="product.id" class="product-card">
           <!-- Изображение товара -->
           <div class="product-image-container">
@@ -57,8 +57,10 @@
       </div>
 
       <!-- Сообщение об отсутствии товаров -->
-      <div v-if="products.length === 0" class="empty-products">
-        <p>В магазине пока нет товаров</p>
+      <div v-else class="empty-products">
+        <div class="empty-icon">🛍️</div>
+        <h3>В магазине пока нет товаров</h3>
+        <p>Загляните позже, мы готовим для вас новые предложения!</p>
       </div>
     </div>
   </ClientLayout>
@@ -346,7 +348,31 @@ body.theme-pink .purchase-button:hover:not(.disabled) {
 .empty-products {
   text-align: center;
   color: #666;
-  padding: 40px 20px;
+  padding: 60px 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  margin: 20px 0;
+  border: 1px dashed #dee2e6;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.7;
+}
+
+.empty-products h3 {
+  color: var(--color-primary);
+  margin: 0 0 15px 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.empty-products p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  opacity: 0.8;
 }
 
 @media (max-width: 480px) {
