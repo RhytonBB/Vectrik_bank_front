@@ -256,8 +256,8 @@ onMounted(() => {
 
 .user-checkbox-group {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
   align-items: start;
 }
 
