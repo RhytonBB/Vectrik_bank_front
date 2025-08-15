@@ -13,32 +13,11 @@
             <div class="kpi-value">{{ analytics.total_users }}</div>
           </div>
         </div>
-        <div class="kpi-mobile-card success">
-          <div class="kpi-icon">🟢</div>
-          <div class="kpi-content">
-            <div class="kpi-label">Активных</div>
-            <div class="kpi-value">{{ analytics.active_users }}</div>
-          </div>
-        </div>
-        <div class="kpi-mobile-card danger">
-          <div class="kpi-icon">🚫</div>
-          <div class="kpi-content">
-            <div class="kpi-label">Забанено</div>
-            <div class="kpi-value">{{ analytics.banned_users }}</div>
-          </div>
-        </div>
         <div class="kpi-mobile-card warning">
           <div class="kpi-icon">💰</div>
           <div class="kpi-content">
             <div class="kpi-label">Общий баланс</div>
             <div class="kpi-value">{{ analytics.total_balance }}</div>
-          </div>
-        </div>
-        <div class="kpi-mobile-card info">
-          <div class="kpi-icon">🆕</div>
-          <div class="kpi-content">
-            <div class="kpi-label">Новых за период</div>
-            <div class="kpi-value">{{ analytics.new_users }}</div>
           </div>
         </div>
         <div class="kpi-mobile-card danger">
@@ -84,8 +63,8 @@
           </div>
         </div>
         <div class="table-section">
-          <h3>Топ-10 по начислениям</h3>
-          <div v-for="(item, index) in analytics.top_rewarded || []" :key="item.user_id" class="table-mobile-card">
+          <h3>Топ-10 по балансу</h3>
+          <div v-for="(item, index) in analytics.top_balance || []" :key="item.user_id" class="table-mobile-card">
             <div class="rank-badge success">{{ index + 1 }}</div>
             <div class="table-content">
               <div class="user-info">
@@ -128,39 +107,12 @@
             </div>
           </div>
         </el-card>
-        <el-card class="kpi-card success">
-          <div class="kpi-content">
-            <div class="kpi-icon">🟢</div>
-            <div class="kpi-text">
-              <div class="kpi-label">Активных</div>
-              <div class="kpi-value">{{ analytics.active_users }}</div>
-            </div>
-          </div>
-        </el-card>
-        <el-card class="kpi-card danger">
-          <div class="kpi-content">
-            <div class="kpi-icon">🚫</div>
-            <div class="kpi-text">
-              <div class="kpi-label">Забанено</div>
-              <div class="kpi-value">{{ analytics.banned_users }}</div>
-            </div>
-          </div>
-        </el-card>
         <el-card class="kpi-card warning">
           <div class="kpi-content">
             <div class="kpi-icon">💰</div>
             <div class="kpi-text">
               <div class="kpi-label">Общий баланс</div>
               <div class="kpi-value">{{ analytics.total_balance }}</div>
-            </div>
-          </div>
-        </el-card>
-        <el-card class="kpi-card info">
-          <div class="kpi-content">
-            <div class="kpi-icon">🆕</div>
-            <div class="kpi-text">
-              <div class="kpi-label">Новых за период</div>
-              <div class="kpi-value">{{ analytics.new_users }}</div>
             </div>
           </div>
         </el-card>
@@ -205,11 +157,11 @@
           </el-table>
         </div>
         <div class="table-block">
-          <h3>Топ-10 по начислениям</h3>
-          <el-table :data="analytics.top_rewarded || []" size="small" class="analytics-table">
+          <h3>Топ-10 по балансу</h3>
+          <el-table :data="analytics.top_balance || []" size="small" class="analytics-table">
             <el-table-column prop="last_name" label="Фамилия" />
             <el-table-column prop="first_name" label="Имя" />
-            <el-table-column prop="total" label="Сумма начислений" />
+            <el-table-column prop="total" label="Баланс" />
           </el-table>
         </div>
       </div>
@@ -245,23 +197,72 @@ const chartData = computed(() => {
         data: analytics.value.day_stats.map(d => -d.spend),
         borderColor: '#e74c3c',
         backgroundColor: 'rgba(231,76,60,0.1)',
-        tension: 0.3
+        tension: 0.3,
+        yAxisID: 'y'
       },
       {
         label: 'Начисления',
         data: analytics.value.day_stats.map(d => d.reward),
         borderColor: '#27ae60',
         backgroundColor: 'rgba(39,174,96,0.1)',
-        tension: 0.3
+        tension: 0.3,
+        yAxisID: 'y'
+      },
+      {
+        label: 'Количество покупок',
+        data: analytics.value.day_stats.map(d => d.purchase_count),
+        borderColor: '#f39c12',
+        backgroundColor: 'rgba(243,156,18,0.1)',
+        tension: 0.3,
+        yAxisID: 'y1',
+        type: 'bar'
       }
     ]
   }
 })
 const chartOptions = {
+  responsive: true,
+  interaction: {
+    mode: 'index',
+    intersect: false,
+  },
   scales: {
+    x: {
+      display: true,
+      title: {
+        display: true,
+        text: 'Дата'
+      }
+    },
     y: {
-      type: 'logarithmic',
-      beginAtZero: true
+      type: 'linear',
+      display: true,
+      position: 'left',
+      title: {
+        display: true,
+        text: 'Сумма (Вектрики)'
+      }
+    },
+    y1: {
+      type: 'linear',
+      display: true,
+      position: 'right',
+      title: {
+        display: true,
+        text: 'Количество операций'
+      },
+      grid: {
+        drawOnChartArea: false,
+      },
+    }
+  },
+  plugins: {
+    legend: {
+      position: 'top',
+    },
+    title: {
+      display: true,
+      text: 'Динамика финансовых операций'
     }
   }
 }

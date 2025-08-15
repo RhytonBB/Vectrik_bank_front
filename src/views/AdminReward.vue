@@ -76,12 +76,12 @@
       
       <div class="reward-details">
         <h3>Детали начисления</h3>
-        <el-form-item label="Причина:" class="reason-item">
-          <el-select v-model="reason" placeholder="Выберите причину" required @change="onReasonChange" class="reason-select">
+        <el-form-item label="Основание:" class="reason-item">
+          <el-select v-model="reason" placeholder="Основание для начисления" required @change="onReasonChange" class="reason-select">
             <el-option v-for="r in reasons" :key="r.value" :label="r.label" :value="r.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Сумма (Вектрики):" class="amount-item">
+        <el-form-item label="Сумма:" class="amount-item">
           <el-input-number v-model="amount" :min="1" required class="amount-input" />
         </el-form-item>
         <el-form-item class="reward-button-item">
@@ -256,8 +256,9 @@ onMounted(() => {
 
 .user-checkbox-group {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  align-items: start;
 }
 
 .user-card {
@@ -274,20 +275,30 @@ onMounted(() => {
 
 .user-checkbox {
   width: 100%;
+  margin: 0;
 }
 
 .user-checkbox :deep(.el-checkbox__label) {
   width: 100%;
+  padding-left: 8px;
+}
+
+.user-checkbox :deep(.el-checkbox__input) {
+  margin-right: 8px;
 }
 
 .user-info {
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
+  min-height: 60px;
 }
 
 .user-avatar {
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .avatar-img {
@@ -370,6 +381,13 @@ onMounted(() => {
 .success-alert, .error-alert {
   margin-top: 16px;
   border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .user-checkbox-group {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 
 @media (max-width: 600px) {
