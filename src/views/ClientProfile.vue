@@ -215,7 +215,7 @@ const changeLogin = async () => {
         old_login: loginForm.value.oldLogin,
         new_login: loginForm.value.newLogin
       })
-        .then(response => {
+        .then(() => {
           ElMessage.success('Логин успешно изменен!')
           showChangeLoginModal.value = false
           // Очищаем форму
@@ -241,7 +241,7 @@ const changePassword = async () => {
         new_password: passwordForm.value.newPassword,
         confirm_password: passwordForm.value.confirmPassword
       })
-        .then(response => {
+        .then(() => {
           ElMessage.success('Пароль успешно изменен!')
           showChangePasswordModal.value = false
           // Очищаем форму
