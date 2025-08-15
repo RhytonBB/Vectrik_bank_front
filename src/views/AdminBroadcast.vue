@@ -19,16 +19,32 @@
         <el-form-item label="Медиа" class="media-item">
           <el-upload
             :auto-upload="false"
-            :show-file-list="false"
+            :show-file-list="true"
             :on-change="handleMediaChange"
+            :on-remove="handleMediaRemove"
+            multiple
             class="media-upload"
           >
-            <el-button>Выбрать файл</el-button>
+            <el-button>Выбрать файлы</el-button>
           </el-upload>
-          <div v-if="messageForm.mediaPreview" class="media-preview">
-            <img v-if="messageForm.mediaType === 'image'" :src="messageForm.mediaPreview" class="preview-image"/>
-            <video v-else-if="messageForm.mediaType === 'video'" :src="messageForm.mediaPreview" class="preview-video" controls/>
-            <div class="file-info">{{ messageForm.mediaFile?.name }}</div>
+          <div v-if="messageForm.mediaFiles.length > 0" class="media-preview">
+            <div v-for="(file, index) in messageForm.mediaFiles" :key="index" class="media-file-preview">
+              <img v-if="file.type === 'image'" :src="file.preview" class="preview-image"/>
+              <video v-else-if="file.type === 'video'" :src="file.preview" class="preview-video" controls/>
+              <div v-else class="file-preview-placeholder">{{ file.raw.name }}</div>
+              <div class="file-info">
+                <span>{{ file.raw.name }}</span>
+                <el-button size="small" type="danger" @click="removeMediaFile(index)" class="remove-file-btn">
+                  Удалить
+                </el-button>
+              </div>
+              <el-input
+                v-model="file.caption"
+                placeholder="Подпись для файла (необязательно)"
+                size="small"
+                class="file-caption"
+              />
+            </div>
           </div>
         </el-form-item>
         <el-form-item label="Целевая аудитория *" class="target-item">
@@ -187,14 +203,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 
 const messageForm = ref({
   text: '',
-  mediaFile: null,
-  mediaPreview: null,
-  mediaType: null,
+  mediaFiles: [],
   targetType: 'all',
   targetUserIDs: []
 })
@@ -206,6 +220,15 @@ const sending = ref(false)
 const error = ref('')
 const success = ref('')
 const isMobile = ref(false)
+
+// Очистка URL объектов при размонтировании
+onUnmounted(() => {
+  messageForm.value.mediaFiles.forEach(file => {
+    if (file.preview) {
+      URL.revokeObjectURL(file.preview)
+    }
+  })
+})
 
 const formatDate = (dateString) => {
   const date = new Date(dateString)
@@ -269,20 +292,46 @@ const fetchAvailableUsers = async () => {
   }
 }
 const handleMediaChange = (file) => {
-  messageForm.value.mediaFile = file.raw
+  // Проверяем размер файла в зависимости от типа
+  let maxSize
   const fileName = file.raw.name.toLowerCase()
+  
   if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-    messageForm.value.mediaType = 'image'
-  } else if (fileName.match(/\.(mp4|avi|mov|mkv)$/)) {
-    messageForm.value.mediaType = 'video'
+    maxSize = 100 * 1024 * 1024 // 100MB для фото
+  } else if (fileName.match(/\.(mp4|avi|mov|mkv|webm)$/)) {
+    maxSize = 3 * 1024 * 1024 * 1024 // 3GB для видео
   } else {
-    messageForm.value.mediaType = 'document'
+    maxSize = 200 * 1024 * 1024 // 200MB для документов
   }
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    messageForm.value.mediaPreview = e.target.result
+  
+  if (file.raw.size > maxSize) {
+    const sizeText = maxSize >= 1024 * 1024 * 1024 
+      ? `${maxSize / (1024 * 1024 * 1024)}GB` 
+      : `${maxSize / (1024 * 1024)}MB`
+    error.value = `Файл ${file.raw.name} слишком большой. Максимальный размер: ${sizeText}`
+    return
   }
-  reader.readAsDataURL(file.raw)
+  
+  const newFile = {
+    raw: file.raw,
+    preview: URL.createObjectURL(file.raw),
+    type: file.raw.type.split('/')[0], // image, video, document
+    caption: ''
+  }
+  messageForm.value.mediaFiles.push(newFile)
+}
+const handleMediaRemove = (file) => {
+  const index = messageForm.value.mediaFiles.findIndex(f => f.raw === file.raw)
+  if (index !== -1) {
+    messageForm.value.mediaFiles.splice(index, 1)
+  }
+}
+const removeMediaFile = (index) => {
+  // Очищаем URL объект для предотвращения утечек памяти
+  if (messageForm.value.mediaFiles[index].preview) {
+    URL.revokeObjectURL(messageForm.value.mediaFiles[index].preview)
+  }
+  messageForm.value.mediaFiles.splice(index, 1)
 }
 const handleTargetTypeChange = () => {
   messageForm.value.targetUserIDs = []
@@ -299,30 +348,46 @@ const sendMessage = async () => {
   sending.value = true
   error.value = ''
   try {
-    let mediaURL = null
-    let mediaType = null
-    if (messageForm.value.mediaFile) {
+    // Загружаем все медиафайлы
+    const mediaFiles = []
+    for (const file of messageForm.value.mediaFiles) {
       const formData = new FormData()
-      formData.append('file', messageForm.value.mediaFile)
+      formData.append('file', file.raw)
       const uploadRes = await axios.post('/admin/products/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-      mediaURL = uploadRes.data.url
-      mediaType = messageForm.value.mediaType
+      
+      // Определяем тип файла
+      let fileType = 'document'
+      const fileName = file.raw.name.toLowerCase()
+      if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+        fileType = 'image'
+      } else if (fileName.match(/\.(mp4|avi|mov|mkv|webm)$/)) {
+        fileType = 'video'
+      } else if (fileName.match(/\.(gif)$/)) {
+        fileType = 'gif'
+      }
+      
+      mediaFiles.push({
+        url: uploadRes.data.url,
+        type: fileType,
+        caption: file.caption || '',
+        position: 0
+      })
     }
+    
+    // Отправляем broadcast сообщение
     await axios.post('/admin/broadcast', {
       text: messageForm.value.text,
-      media_url: mediaURL,
-      media_type: mediaType,
+      media_files: mediaFiles,
       target_type: messageForm.value.targetType,
       target_user_ids: messageForm.value.targetUserIDs
     })
+    
     success.value = 'Сообщение отправлено'
     messageForm.value = {
       text: '',
-      mediaFile: null,
-      mediaPreview: null,
-      mediaType: null,
+      mediaFiles: [],
       targetType: 'all',
       targetUserIDs: []
     }
@@ -393,6 +458,24 @@ onMounted(() => {
   text-align: center;
 }
 
+.media-file-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.file-preview-placeholder {
+  font-style: italic;
+  color: #999;
+  margin-bottom: 10px;
+}
+
 .preview-image, .preview-video {
   max-width: 200px;
   max-height: 120px;
@@ -402,8 +485,22 @@ onMounted(() => {
 }
 
 .file-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 8px;
   font-size: 12px;
   color: #666;
+}
+
+.remove-file-btn {
+  margin-left: 10px;
+}
+
+.file-caption {
+  width: 100%;
+  margin-top: 5px;
 }
 
 .target-item {
@@ -633,6 +730,11 @@ onMounted(() => {
     margin-top: 12px;
   }
   
+  .media-file-preview {
+    margin-bottom: 15px;
+    padding: 10px;
+  }
+  
   .preview-image,
   .preview-video {
     max-width: 100%;
@@ -640,9 +742,18 @@ onMounted(() => {
   }
   
   .file-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .remove-file-btn {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .file-caption {
     margin-top: 8px;
-    font-size: 14px;
-    color: #666;
   }
   
   .broadcast-table {
