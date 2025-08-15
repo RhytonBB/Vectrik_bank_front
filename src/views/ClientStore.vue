@@ -48,7 +48,7 @@
               @click="purchaseProduct(product)"
               :disabled="!canPurchase(product)"
               class="purchase-button"
-              :class="{ 'disabled': !canPurchase(product) }"
+              :class="{ 'disabled': !canPurchase(product), 'already-purchased': product.is_purchased }"
             >
               {{ getPurchaseButtonText(product) }}
             </button>
@@ -101,10 +101,11 @@ const fetchUserInfo = async () => {
 }
 
 const canPurchase = (product) => {
-  return product.stock > 0 && userInfo.value.balance >= product.price
+  return product.stock > 0 && userInfo.value.balance >= product.price && !product.is_purchased
 }
 
 const getPurchaseButtonText = (product) => {
+  if (product.is_purchased) return 'Вы уже приобрели товар'
   if (product.stock === 0) return 'Нет в наличии'
   if (userInfo.value.balance < product.price) return 'Недостаточно средств'
   return 'Заказать'
@@ -112,6 +113,12 @@ const getPurchaseButtonText = (product) => {
 
 const purchaseProduct = async (product) => {
   if (!canPurchase(product)) return
+  
+  // Дополнительная проверка на случай, если товар уже куплен
+  if (product.is_purchased) {
+    alert('Вы уже приобрели этот товар!')
+    return
+  }
   
   try {
     await axios.post('/client/purchase', {
@@ -323,6 +330,17 @@ body.theme-pink .purchase-button:hover:not(.disabled) {
   background: #ccc;
   color: #666;
   cursor: not-allowed;
+}
+
+.purchase-button.already-purchased {
+  background: #28a745;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.purchase-button.already-purchased:hover {
+  background: #28a745;
+  transform: none;
 }
 
 .empty-products {
