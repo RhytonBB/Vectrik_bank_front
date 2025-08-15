@@ -27,6 +27,14 @@
           >
             <el-button>Выбрать файлы</el-button>
           </el-upload>
+          <div class="media-info">
+            <p><strong>Ограничения:</strong></p>
+            <ul>
+              <li>Фото: до 10MB</li>
+              <li>Видео: до 50MB (большие видео отправляются как документы)</li>
+              <li>Документы: до 200MB</li>
+            </ul>
+          </div>
           <div v-if="messageForm.mediaFiles.length > 0" class="media-preview">
             <div v-for="(file, index) in messageForm.mediaFiles" :key="index" class="media-file-preview">
               <img v-if="file.type === 'image'" :src="file.preview" class="preview-image"/>
@@ -38,12 +46,6 @@
                   Удалить
                 </el-button>
               </div>
-              <el-input
-                v-model="file.caption"
-                placeholder="Подпись для файла (необязательно)"
-                size="small"
-                class="file-caption"
-              />
             </div>
           </div>
         </el-form-item>
@@ -297,9 +299,9 @@ const handleMediaChange = (file) => {
   const fileName = file.raw.name.toLowerCase()
   
   if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-    maxSize = 100 * 1024 * 1024 // 100MB для фото
+    maxSize = 10 * 1024 * 1024 // 10MB для фото
   } else if (fileName.match(/\.(mp4|avi|mov|mkv|webm)$/)) {
-    maxSize = 3 * 1024 * 1024 * 1024 // 3GB для видео
+    maxSize = 50 * 1024 * 1024 // 50MB для видео (как документ)
   } else {
     maxSize = 200 * 1024 * 1024 // 200MB для документов
   }
@@ -315,8 +317,7 @@ const handleMediaChange = (file) => {
   const newFile = {
     raw: file.raw,
     preview: URL.createObjectURL(file.raw),
-    type: file.raw.type.split('/')[0], // image, video, document
-    caption: ''
+    type: file.raw.type.split('/')[0] // image, video, document
   }
   messageForm.value.mediaFiles.push(newFile)
 }
@@ -371,7 +372,7 @@ const sendMessage = async () => {
       mediaFiles.push({
         url: uploadRes.data.url,
         type: fileType,
-        caption: file.caption || '',
+        caption: '',
         position: 0
       })
     }
@@ -453,6 +454,30 @@ onMounted(() => {
   margin-bottom: 12px;
 }
 
+.media-info {
+  margin-top: 15px;
+  padding: 10px 15px;
+  background-color: #e0f0e7;
+  border: 1px solid #c0e0c0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+}
+
+.media-info p {
+  margin: 0 0 8px 0;
+  font-weight: 600;
+}
+
+.media-info ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.media-info li {
+  margin-bottom: 4px;
+}
+
 .media-preview {
   margin-top: 12px;
   text-align: center;
@@ -496,11 +521,6 @@ onMounted(() => {
 
 .remove-file-btn {
   margin-left: 10px;
-}
-
-.file-caption {
-  width: 100%;
-  margin-top: 5px;
 }
 
 .target-item {
@@ -750,10 +770,6 @@ onMounted(() => {
   .remove-file-btn {
     margin-left: 0;
     width: 100%;
-  }
-  
-  .file-caption {
-    margin-top: 8px;
   }
   
   .broadcast-table {
