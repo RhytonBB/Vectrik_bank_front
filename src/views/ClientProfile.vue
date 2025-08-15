@@ -396,12 +396,12 @@ onMounted(() => {
 }
 
 .change-password-btn {
-  background: #67c23a;
+  background: #0d503c;
   color: #fff;
 }
 
 .change-password-btn:hover {
-  background: #5daf34;
+  background: #0d503c;
   transform: translateY(-1px);
 }
 
