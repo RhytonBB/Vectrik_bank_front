@@ -463,14 +463,14 @@ onMounted(() => {
   }
   
   .mobile-user-list {
-    gap: 4px;
+    gap: 2px;
   }
   
   .user-card {
     padding: 24px 20px !important;
     border-radius: 8px;
     min-height: auto !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 4px !important;
   }
   
   .user-info {
