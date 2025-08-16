@@ -17,23 +17,25 @@
           />
         </el-form-item>
         <el-form-item label="Медиа" class="media-item">
-          <el-upload
-            :auto-upload="false"
-            :show-file-list="true"
-            :on-change="handleMediaChange"
-            :on-remove="handleMediaRemove"
-            multiple
-            class="media-upload"
-          >
-            <el-button>Выбрать файлы</el-button>
-          </el-upload>
-          <div class="media-info">
-            <p><strong>Ограничения:</strong></p>
-            <ul>
-              <li>Фото: до 10MB</li>
-              <li>Видео: до 50MB (большие видео отправляются как документы)</li>
-              <li>Документы: до 200MB</li>
-            </ul>
+          <div class="media-content">
+            <el-upload
+              :auto-upload="false"
+              :show-file-list="true"
+              :on-change="handleMediaChange"
+              :on-remove="handleMediaRemove"
+              multiple
+              class="media-upload"
+            >
+              <el-button>Выбрать файлы</el-button>
+            </el-upload>
+            <div class="media-info">
+              <p><strong>Ограничения:</strong></p>
+              <ul>
+                <li>Фото: до 10MB</li>
+                <li>Видео: до 50MB (большие видео отправляются как документы)</li>
+                <li>Документы: до 200MB</li>
+              </ul>
+            </div>
           </div>
           <div v-if="messageForm.mediaFiles.length > 0" class="media-preview">
             <div v-for="(file, index) in messageForm.mediaFiles" :key="index" class="media-file-preview">
@@ -450,12 +452,18 @@ onMounted(() => {
   width: 100%;
 }
 
+.media-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .media-upload {
-  margin-bottom: 12px;
+  margin-bottom: 0;
 }
 
 .media-info {
-  margin-top: 20px;
+  margin-top: 0;
   padding: 10px 15px;
   background-color: #e0f0e7;
   border: 1px solid #c0e0c0;
@@ -675,6 +683,10 @@ onMounted(() => {
     margin-bottom: 24px;
   }
   
+  .media-item :deep(.el-form-item__label) {
+    text-align: left !important;
+  }
+  
   .target-item {
     margin-bottom: 24px;
   }
@@ -730,6 +742,10 @@ onMounted(() => {
   
   .users-select {
     width: 100%;
+  }
+  
+  .media-content {
+    gap: 12px;
   }
   
   .media-upload {
