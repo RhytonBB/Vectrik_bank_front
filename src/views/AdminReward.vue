@@ -463,14 +463,14 @@ onMounted(() => {
   }
   
   .mobile-user-list {
-    gap: 10px;
+    gap: 8px;
   }
   
   .user-card {
-    padding: 20px 16px !important;
+    padding: 24px 20px !important;
     border-radius: 8px;
     min-height: auto !important;
-    margin-bottom: 16px !important;
+    margin-bottom: 12px !important;
   }
   
   .user-info {
@@ -495,22 +495,22 @@ onMounted(() => {
   }
   
   .avatar-img {
-    width: 50px !important;
-    height: 50px !important;
+    width: 60px !important;
+    height: 60px !important;
     flex-shrink: 0 !important;
   }
   
   .avatar-placeholder {
-    width: 50px !important;
-    height: 50px !important;
-    font-size: 24px !important;
+    width: 60px !important;
+    height: 60px !important;
+    font-size: 28px !important;
     flex-shrink: 0 !important;
   }
   
   .user-details {
     flex: 1 !important;
     min-width: 0 !important;
-    max-width: calc(100% - 66px) !important;
+    max-width: calc(100% - 76px) !important;
   }
   
   .user-checkbox :deep(.el-checkbox__label) {
