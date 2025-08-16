@@ -463,7 +463,7 @@ onMounted(() => {
   }
   
   .mobile-user-list {
-    gap: 2px;
+    gap: 4px;
   }
   
   .user-card {
@@ -573,7 +573,7 @@ onMounted(() => {
   
   .user-card {
     padding: 16px 12px !important;
-    margin-bottom: 12px !important;
+    margin-bottom: 2px !important;
   }
   
   .user-info {
