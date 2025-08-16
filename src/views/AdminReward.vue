@@ -270,6 +270,7 @@ onMounted(() => {
   min-height: 140px;
   margin-bottom: 20px;
   position: relative;
+  box-sizing: border-box;
 }
 
 .user-card:not(:last-child) {
@@ -300,6 +301,7 @@ onMounted(() => {
   gap: 24px;
   width: 100%;
   min-height: 80px;
+  box-sizing: border-box;
 }
 
 .user-avatar {
@@ -314,6 +316,7 @@ onMounted(() => {
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--color-primary);
+  flex-shrink: 0;
 }
 
 .avatar-placeholder {
@@ -327,23 +330,33 @@ onMounted(() => {
   color: #999;
   font-size: 28px;
   border: 2px solid var(--color-primary);
+  flex-shrink: 0;
 }
 
 .user-details {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .user-name {
   font-weight: 600;
   font-size: 16px;
   color: var(--color-primary);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.3;
 }
 
 .user-telegram {
   font-size: 14px;
   color: #666;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .reward-details {
@@ -395,6 +408,24 @@ onMounted(() => {
     grid-template-columns: 1fr;
     gap: 12px;
   }
+  
+  .user-card {
+    padding: 24px 20px;
+    margin-bottom: 16px;
+  }
+  
+  .user-info {
+    gap: 20px;
+  }
+  
+  .user-name {
+    font-size: 15px;
+    max-width: 250px;
+  }
+  
+  .user-telegram {
+    font-size: 13px;
+  }
 }
 
 @media (max-width: 600px) {
@@ -436,27 +467,58 @@ onMounted(() => {
   }
   
   .user-card {
-    padding: 28px;
+    padding: 20px 16px !important;
     border-radius: 8px;
+    min-height: auto !important;
+    margin-bottom: 16px !important;
+  }
+  
+  .user-info {
+    gap: 16px !important;
+    min-height: auto !important;
+    flex-wrap: wrap !important;
   }
   
   .user-name {
-    font-size: 16px !important;
+    font-size: 15px !important;
+    line-height: 1.3 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    max-width: 200px !important;
   }
   
   .user-telegram {
-    font-size: 14px !important;
+    font-size: 13px !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
   }
   
   .avatar-img {
-    width: 80px !important;
-    height: 80px !important;
+    width: 50px !important;
+    height: 50px !important;
+    flex-shrink: 0 !important;
   }
   
   .avatar-placeholder {
-    width: 80px !important;
-    height: 80px !important;
-    font-size: 36px !important;
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 24px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .user-details {
+    flex: 1 !important;
+    min-width: 0 !important;
+    max-width: calc(100% - 66px) !important;
+  }
+  
+  .user-checkbox :deep(.el-checkbox__label) {
+    padding-left: 6px !important;
+  }
+  
+  .user-checkbox :deep(.el-checkbox__input) {
+    margin-right: 6px !important;
   }
   
   .reward-details {
@@ -500,6 +562,52 @@ onMounted(() => {
     min-height: 80px !important;
     max-height: 200px !important;
     width: 100% !important;
+  }
+}
+
+/* Дополнительные стили для очень маленьких экранов */
+@media (max-width: 480px) {
+  .reward-card {
+    padding: 12px 3vw !important;
+  }
+  
+  .user-card {
+    padding: 16px 12px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .user-info {
+    gap: 12px !important;
+  }
+  
+  .avatar-img, .avatar-placeholder {
+    width: 45px !important;
+    height: 45px !important;
+  }
+  
+  .avatar-placeholder {
+    font-size: 20px !important;
+  }
+  
+  .user-name {
+    font-size: 14px !important;
+    max-width: 180px !important;
+  }
+  
+  .user-telegram {
+    font-size: 12px !important;
+  }
+  
+  .user-details {
+    max-width: calc(100% - 57px) !important;
+  }
+  
+  .search-section {
+    padding: 14px;
+  }
+  
+  .reward-details, .comment-section {
+    padding: 16px;
   }
 }
 </style> 
