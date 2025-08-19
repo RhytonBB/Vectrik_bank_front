@@ -49,6 +49,40 @@
             <span class="info-label">Баланс:</span>
             <span class="info-value balance">{{ userInfo.balance }} Вектриков</span>
           </div>
+          <div class="info-item" v-if="userInfo.login_change_count !== undefined">
+            <span class="info-label">Смены логина:</span>
+            <span class="info-value">{{ userInfo.login_change_count }}/2</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Информация о требованиях -->
+      <div class="requirements-section">
+        <div class="requirements-card">
+          <h3 class="requirements-title">Требования к учетным данным</h3>
+          
+          <div class="requirement-group">
+            <h4 class="requirement-subtitle">Логин</h4>
+            <ul class="requirement-list">
+              <li>От 3 до 50 символов</li>
+              <li>Только буквы (a-z, A-Z), цифры (0-9), дефис (-) и подчеркивание (_)</li>
+              <li>Максимум 2 смены за все время</li>
+            </ul>
+          </div>
+          
+          <div class="requirement-group">
+            <h4 class="requirement-subtitle">Пароль</h4>
+            <ul class="requirement-list">
+              <li>От 6 до 100 символов</li>
+              <li>Любые символы, кроме опасных скриптов</li>
+              <li>Рекомендуется использовать буквы, цифры и символы</li>
+            </ul>
+          </div>
+          
+          <div class="security-note">
+            <el-icon><Lock /></el-icon>
+            <span>Все данные защищены современными методами шифрования</span>
+          </div>
         </div>
       </div>
 
@@ -64,6 +98,12 @@
 
       <!-- Модальное окно смены логина -->
       <el-dialog v-model="showChangeLoginModal" title="Смена логина" width="400px" center>
+        <div class="modal-requirements">
+          <p class="modal-requirements-text">
+            <strong>Требования к логину:</strong> от 3 до 50 символов, только буквы, цифры, дефис и подчеркивание. 
+            Максимум 2 смены за все время.
+          </p>
+        </div>
         <el-form @submit.prevent="changeLogin" :model="loginForm" :rules="loginRules" ref="loginFormRef">
           <el-form-item label="Текущий логин:" prop="oldLogin">
             <el-input v-model="loginForm.oldLogin" placeholder="Введите текущий логин" />
@@ -85,6 +125,11 @@
 
       <!-- Модальное окно смены пароля -->
       <el-dialog v-model="showChangePasswordModal" title="Смена пароля" width="400px" center>
+        <div class="modal-requirements">
+          <p class="modal-requirements-text">
+            <strong>Требования к паролю:</strong> от 6 до 100 символов. Рекомендуется использовать буквы, цифры и символы для повышения безопасности.
+          </p>
+        </div>
         <el-form @submit.prevent="changePassword" :model="passwordForm" :rules="passwordRules" ref="passwordFormRef">
           <el-form-item label="Текущий пароль:" prop="oldPassword">
             <el-input v-model="passwordForm.oldPassword" type="password" placeholder="Введите текущий пароль" />
@@ -119,7 +164,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import { User } from '@element-plus/icons-vue'
+import { User, Lock } from '@element-plus/icons-vue'
 import ClientLayout from '@/components/ClientLayout.vue'
 import { useTheme } from '@/composables/useTheme'
 
@@ -156,7 +201,12 @@ const loginRules = {
   ],
   newLogin: [
     { required: true, message: 'Введите новый логин', trigger: 'blur' },
-    { min: 3, message: 'Логин должен содержать минимум 3 символа', trigger: 'blur' }
+    { min: 3, max: 50, message: 'Логин должен содержать от 3 до 50 символов', trigger: 'blur' },
+    {
+      pattern: /^[a-zA-Z0-9_-]+$/,
+      message: 'Логин может содержать только буквы, цифры, дефис и подчеркивание',
+      trigger: 'blur'
+    }
   ],
   confirmLogin: [
     { required: true, message: 'Подтвердите новый логин', trigger: 'blur' },
@@ -179,7 +229,7 @@ const passwordRules = {
   ],
   newPassword: [
     { required: true, message: 'Введите новый пароль', trigger: 'blur' },
-    { min: 6, message: 'Пароль должен содержать минимум 6 символов', trigger: 'blur' }
+    { min: 6, max: 100, message: 'Пароль должен содержать от 6 до 100 символов', trigger: 'blur' }
   ],
   confirmPassword: [
     { required: true, message: 'Подтвердите новый пароль', trigger: 'blur' },
@@ -396,12 +446,12 @@ onMounted(() => {
 }
 
 .change-password-btn {
-  background: #0d503c;
+  background: #67c23a;
   color: #fff;
 }
 
 .change-password-btn:hover {
-  background: #0d503c;
+  background: #5daf34;
   transform: translateY(-1px);
 }
 
@@ -451,6 +501,101 @@ body.theme-pink .info-card {
   font-size: 16px;
 }
 
+.requirements-section {
+  margin-bottom: 24px;
+}
+
+.requirements-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e9ecef;
+}
+
+/* Розовая тема */
+body.theme-pink .requirements-card {
+  background: #fff0f5;
+  border: 1px solid #ffd6e7;
+}
+
+.requirements-title {
+  color: var(--color-primary);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  text-align: center;
+}
+
+.requirement-group {
+  margin-bottom: 16px;
+}
+
+.requirement-group:last-child {
+  margin-bottom: 0;
+}
+
+.requirement-subtitle {
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.requirement-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.requirement-list li {
+  color: #555;
+  font-size: 13px;
+  margin-bottom: 6px;
+  padding-left: 16px;
+  position: relative;
+  line-height: 1.4;
+}
+
+.requirement-list li:before {
+  content: "•";
+  color: var(--color-primary);
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
+.requirement-list li:last-child {
+  margin-bottom: 0;
+}
+
+.security-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #e8f5e8;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 16px;
+  border: 1px solid #d4edda;
+}
+
+/* Розовая тема */
+body.theme-pink .security-note {
+  background: #ffe6f7;
+  border: 1px solid #ffb3e6;
+}
+
+.security-note .el-icon {
+  color: var(--color-primary);
+  font-size: 16px;
+}
+
+.security-note span {
+  color: #333;
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .info-value.status {
   padding: 4px 8px;
   border-radius: 4px;
@@ -476,6 +621,31 @@ body.theme-pink .info-card {
 
 .modal-footer .el-button {
   min-width: 80px;
+}
+
+.modal-requirements {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #e9ecef;
+}
+
+/* Розовая тема */
+body.theme-pink .modal-requirements {
+  background: #fff0f5;
+  border: 1px solid #ffd6e7;
+}
+
+.modal-requirements-text {
+  color: #555;
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.modal-requirements-text strong {
+  color: var(--color-primary);
 }
 
 .logout-section {
@@ -560,6 +730,34 @@ body.theme-pink .info-card {
   
   .avatar-placeholder .el-icon {
     font-size: 40px !important;
+  }
+  
+  .requirements-card {
+    padding: 16px;
+  }
+  
+  .requirements-title {
+    font-size: 16px;
+  }
+  
+  .requirement-subtitle {
+    font-size: 13px;
+  }
+  
+  .requirement-list li {
+    font-size: 12px;
+    padding-left: 14px;
+  }
+  
+  .security-note {
+    padding: 10px;
+    flex-direction: column;
+    text-align: center;
+    gap: 6px;
+  }
+  
+  .security-note span {
+    font-size: 12px;
   }
 }
 </style> 
