@@ -23,7 +23,7 @@
         </button>
       </div>
 
-      <!-- Список товаров -->
+      <!-- Список обычных товаров -->
       <div v-if="products.length > 0" class="products-grid">
         <div v-for="product in products" :key="product.id" class="product-card">
           <!-- Изображение товара -->
@@ -50,23 +50,8 @@
               </div>
             </div>
             
-            <!-- Прогресс краудфандинга -->
-            <div v-if="product.type === 'crowdfunding'" class="crowdfunding-progress">
-              <div class="progress-bar">
-                <div 
-                  class="progress-fill" 
-                  :style="{ width: getCrowdfundingPercentage(product) + '%' }"
-                ></div>
-              </div>
-              <div class="progress-text">
-                <span>{{ product.crowdfunding_progress || 0 }} / {{ product.price }} Вектриков</span>
-                <span class="percentage">{{ getCrowdfundingPercentage(product) }}%</span>
-              </div>
-            </div>
-            
             <!-- Кнопка покупки -->
             <button 
-              v-if="product.type !== 'crowdfunding'"
               @click="purchaseProduct(product)"
               :disabled="!canPurchase(product)"
               class="purchase-button"
@@ -74,14 +59,53 @@
             >
               {{ getPurchaseButtonText(product) }}
             </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Список краудфандинг товаров -->
+      <div v-if="crowdfundingProducts.length > 0" class="products-grid">
+        <div v-for="product in crowdfundingProducts" :key="product.id" class="product-card crowdfunding-card">
+          <!-- Изображение товара -->
+          <div class="product-image-container">
+            <img v-if="product.media_url" :src="product.media_url" :alt="product.name" class="product-image">
+            <div v-else class="product-image-placeholder">
+              <span>Нет фото</span>
+            </div>
+          </div>
+          
+          <!-- Информация о товаре -->
+          <div class="product-info">
+            <h3 class="product-name">{{ product.name }}</h3>
+            <p class="product-description">{{ product.description }}</p>
+            
+            <div class="product-details">
+              <div class="price-info">
+                <span class="price-label">Целевая сумма:</span>
+                <span class="price-value">{{ product.target_amount }} Вектриков</span>
+              </div>
+            </div>
+            
+            <!-- Прогресс краудфандинга -->
+            <div class="crowdfunding-progress">
+              <div class="progress-bar">
+                <div 
+                  class="progress-fill" 
+                  :style="{ width: getCrowdfundingPercentage(product) + '%' }"
+                ></div>
+              </div>
+              <div class="progress-text">
+                <span>{{ product.crowdfunding_progress || 0 }} / {{ product.target_amount }} Вектриков</span>
+                <span class="percentage">{{ getCrowdfundingPercentage(product) }}%</span>
+              </div>
+            </div>
             
             <!-- Кнопка взноса в краудфандинг -->
             <button 
-              v-if="product.type === 'crowdfunding'"
               @click="openCrowdfundingModal(product)"
-              :disabled="product.is_purchased"
+              :disabled="product.has_contributed"
               class="purchase-button crowdfunding-button"
-              :class="{ 'disabled': product.is_purchased, 'already-purchased': product.is_purchased }"
+              :class="{ 'disabled': product.has_contributed, 'already-purchased': product.has_contributed }"
             >
               {{ getCrowdfundingButtonText(product) }}
             </button>
@@ -90,7 +114,7 @@
       </div>
 
       <!-- Сообщение об отсутствии товаров -->
-      <div v-else class="empty-products">
+      <div v-if="products.length === 0 && crowdfundingProducts.length === 0" class="empty-products">
         <div class="empty-icon">🛍️</div>
         <h3>В магазине пока нет товаров</h3>
         <p>Загляните позже, мы готовим для вас новые предложения!</p>
@@ -115,10 +139,10 @@
                   :style="{ width: getCrowdfundingPercentage(selectedProduct) + '%' }"
                 ></div>
               </div>
-              <div class="progress-text">
-                <span>{{ selectedProduct?.crowdfunding_progress || 0 }} / {{ selectedProduct?.price }} Вектриков</span>
-                <span class="percentage">{{ getCrowdfundingPercentage(selectedProduct) }}%</span>
-              </div>
+                          <div class="progress-text">
+              <span>{{ selectedProduct?.crowdfunding_progress || 0 }} / {{ selectedProduct?.target_amount }} Вектриков</span>
+              <span class="percentage">{{ getCrowdfundingPercentage(selectedProduct) }}%</span>
+            </div>
             </div>
           </div>
           <div class="contribution-form">
@@ -162,6 +186,7 @@ import { useTheme } from '@/composables/useTheme'
 
 const { currentTheme } = useTheme()
 const products = ref([])
+const crowdfundingProducts = ref([])
 const userInfo = ref({})
 const isRefreshing = ref(false)
 const showCrowdfundingModal = ref(false)
@@ -197,6 +222,22 @@ const fetchProducts = async () => {
   }
 }
 
+const fetchCrowdfundingProducts = async () => {
+  try {
+    const response = await axios.get('/client/crowdfunding')
+    crowdfundingProducts.value = response.data || []
+    
+    if (crowdfundingProducts.value.length === 0) {
+      console.log('Нет доступных краудфандинг товаров')
+    } else {
+      console.log(`Загружено ${crowdfundingProducts.value.length} краудфандинг товаров`)
+    }
+  } catch (error) {
+    console.error('Ошибка загрузки краудфандинг товаров:', error)
+    crowdfundingProducts.value = []
+  }
+}
+
 const fetchUserInfo = async () => {
   try {
     const response = await axios.get('/me')
@@ -220,14 +261,14 @@ const getPurchaseButtonText = (product) => {
 }
 
 const getCrowdfundingButtonText = (product) => {
-  if (product.is_purchased) return 'Сбор завершен!'
+  if (product.has_contributed) return 'Вы уже внесли взнос'
   return 'Внести взнос'
 }
 
 const getCrowdfundingPercentage = (product) => {
-  if (!product || !product.price) return 0
+  if (!product || !product.target_amount) return 0
   const progress = product.crowdfunding_progress || 0
-  return Math.min(Math.round((progress / product.price) * 100), 100)
+  return Math.min(Math.round((progress / product.target_amount) * 100), 100)
 }
 
 const canContribute = computed(() => {
@@ -269,6 +310,7 @@ const refreshStore = async () => {
   isRefreshing.value = true
   try {
     await fetchProducts()
+    await fetchCrowdfundingProducts()
     await fetchUserInfo()
     alert('Магазин успешно обновлен!')
   } catch (error) {
@@ -303,6 +345,7 @@ const contributeToCrowdfunding = async () => {
     // Обновляем информацию о пользователе и товарах
     await fetchUserInfo()
     await fetchProducts()
+    await fetchCrowdfundingProducts()
     
     closeCrowdfundingModal()
     alert('Взнос успешно внесен!')
@@ -318,11 +361,13 @@ const contributeToCrowdfunding = async () => {
 
 onMounted(() => {
   fetchProducts()
+  fetchCrowdfundingProducts()
   fetchUserInfo()
   
   // Запускаем автоматическое обновление каждые 5 секунд для быстрой реакции на изменения
   updateInterval = setInterval(() => {
     fetchProducts()
+    fetchCrowdfundingProducts()
     fetchUserInfo()
   }, 5000)
   
@@ -331,6 +376,7 @@ onMounted(() => {
     if (!document.hidden) {
       console.log('Страница магазина стала видимой, обновляем товары')
       fetchProducts()
+      fetchCrowdfundingProducts()
       fetchUserInfo()
     }
   }
@@ -339,6 +385,7 @@ onMounted(() => {
   const handleFocus = () => {
     console.log('Страница магазина получила фокус, обновляем товары')
     fetchProducts()
+    fetchCrowdfundingProducts()
     fetchUserInfo()
   }
   
@@ -653,6 +700,10 @@ body.theme-pink .purchase-button:hover:not(.disabled) {
   color: var(--color-primary);
 }
 
+.crowdfunding-card {
+  border: 2px solid #dc3545;
+}
+
 .crowdfunding-button {
   background: #dc3545;
 }
@@ -662,6 +713,10 @@ body.theme-pink .purchase-button:hover:not(.disabled) {
 }
 
 /* Розовая тема */
+body.theme-pink .crowdfunding-button {
+  background: #e6399b;
+}
+
 body.theme-pink .crowdfunding-button:hover:not(.disabled) {
   background: #d63384;
 }

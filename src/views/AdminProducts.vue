@@ -211,13 +211,14 @@ const fetchPurchases = async () => {
 const fetchCrowdfundingContributions = async () => {
   try {
     // Получаем все краудфандинг товары
-    const crowdfundingProducts = products.value.filter(p => p.type === 'crowdfunding')
+    const resp = await axios.get('/admin/crowdfunding')
+    const crowdfundingProducts = resp.data
     
     // Собираем все взносы для всех краудфандинг товаров
     let allContributions = []
     for (const product of crowdfundingProducts) {
-      const resp = await axios.get(`/admin/crowdfunding/${product.id}/contributions`)
-      allContributions = allContributions.concat(resp.data)
+      const contributionsResp = await axios.get(`/admin/crowdfunding/${product.id}/contributions`)
+      allContributions = allContributions.concat(contributionsResp.data)
     }
     
     crowdfundingContributions.value = allContributions
