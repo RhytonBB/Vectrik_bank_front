@@ -52,7 +52,7 @@
       </div>
     </div>
     
-    <el-tabs v-model="activeTab" class="custom-tabs">
+    <el-tabs v-model="activeTab" class="custom-tabs" stretch>
       <el-tab-pane label="📝 Профиль" name="profile">
         <div class="tab-content">
           <div class="form-section">
@@ -423,6 +423,30 @@ onMounted(() => {
 .custom-tabs :deep(.el-tabs__item:hover) {
   color: #17624A !important;
   background: transparent !important;
+}
+
+/* Делает табы видимыми и скроллируемыми на узких экранах */
+.custom-tabs :deep(.el-tabs__nav-wrap) {
+  overflow: auto;
+}
+.custom-tabs :deep(.el-tabs__nav-scroll) {
+  overflow: auto;
+}
+.custom-tabs :deep(.el-tabs__nav) {
+  display: flex;
+  gap: 8px;
+}
+.custom-tabs :deep(.el-tabs__item) {
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .custom-tabs :deep(.el-tabs__item) {
+    flex: 1 0 auto;
+    justify-content: center;
+    font-size: 14px;
+    padding: 0 8px;
+  }
 }
 
 .tab-content {
