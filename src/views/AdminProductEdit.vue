@@ -19,22 +19,31 @@
       
       <div class="form-section">
         <h3>Цена и тип</h3>
-        <el-form-item label="Цена" required>
+        <el-form-item :label="product.type === 'crowdfunding' ? 'Целевая сумма' : 'Цена'" required>
           <el-input-number v-model="product.price" :min="0" placeholder="0" class="price-input"/>
+          <div v-if="product.type === 'crowdfunding'" class="crowdfunding-hint">
+            <i class="el-icon-info"></i>
+            Для товара типа "Общий сбор" это целевая сумма, которую нужно собрать всем участникам
+          </div>
         </el-form-item>
         <el-form-item label="Тип" required>
           <el-select v-model="product.type" placeholder="Выберите тип" class="type-select">
             <el-option label="Обычный" value="regular"/>
             <el-option label="Мгновенный" value="drop"/>
             <el-option label="Коллективный" value="shared"/>
+            <el-option label="Общий сбор" value="crowdfunding"/>
           </el-select>
         </el-form-item>
       </div>
       
       <div class="form-section">
         <h3>Наличие и статус</h3>
-        <el-form-item label="Остаток" required>
+        <el-form-item :label="product.type === 'crowdfunding' ? 'Остаток (не важно)' : 'Остаток'" required>
           <el-input-number v-model="product.stock" :min="0" placeholder="0" class="stock-input"/>
+          <div v-if="product.type === 'crowdfunding'" class="crowdfunding-hint">
+            <i class="el-icon-info"></i>
+            Для товара типа "Общий сбор" остаток не влияет на функциональность
+          </div>
         </el-form-item>
         <el-form-item label="Активен">
           <el-switch v-model="product.is_active"/>
@@ -157,6 +166,20 @@ onMounted(fetchProduct)
   width: 100%;
 }
 
+.crowdfunding-hint {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #e3f2fd;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #1976d2;
+  border-left: 3px solid #2196f3;
+}
+
+.crowdfunding-hint i {
+  margin-right: 6px;
+}
+
 .media-upload {
   margin-bottom: 16px;
 }
@@ -260,6 +283,11 @@ onMounted(fetchProduct)
     height: 48px !important;
     font-size: 18px !important;
     border-radius: 10px !important;
+  }
+  
+  .crowdfunding-hint {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
   }
 }
 </style> 

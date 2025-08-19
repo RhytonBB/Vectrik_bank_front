@@ -50,14 +50,40 @@
               </div>
             </div>
             
+            <!-- Прогресс краудфандинга -->
+            <div v-if="product.type === 'crowdfunding'" class="crowdfunding-progress">
+              <div class="progress-bar">
+                <div 
+                  class="progress-fill" 
+                  :style="{ width: getCrowdfundingPercentage(product) + '%' }"
+                ></div>
+              </div>
+              <div class="progress-text">
+                <span>{{ product.crowdfunding_progress || 0 }} / {{ product.price }} Вектриков</span>
+                <span class="percentage">{{ getCrowdfundingPercentage(product) }}%</span>
+              </div>
+            </div>
+            
             <!-- Кнопка покупки -->
             <button 
+              v-if="product.type !== 'crowdfunding'"
               @click="purchaseProduct(product)"
               :disabled="!canPurchase(product)"
               class="purchase-button"
               :class="{ 'disabled': !canPurchase(product), 'already-purchased': product.is_purchased }"
             >
               {{ getPurchaseButtonText(product) }}
+            </button>
+            
+            <!-- Кнопка взноса в краудфандинг -->
+            <button 
+              v-if="product.type === 'crowdfunding'"
+              @click="openCrowdfundingModal(product)"
+              :disabled="product.is_purchased"
+              class="purchase-button crowdfunding-button"
+              :class="{ 'disabled': product.is_purchased, 'already-purchased': product.is_purchased }"
+            >
+              {{ getCrowdfundingButtonText(product) }}
             </button>
           </div>
         </div>
@@ -70,11 +96,66 @@
         <p>Загляните позже, мы готовим для вас новые предложения!</p>
       </div>
     </div>
+    
+    <!-- Модальное окно краудфандинга -->
+    <div v-if="showCrowdfundingModal" class="modal-overlay" @click="closeCrowdfundingModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Внести взнос в общий сбор</h3>
+          <button @click="closeCrowdfundingModal" class="close-button">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="product-info-modal">
+            <h4>{{ selectedProduct?.name }}</h4>
+            <p>{{ selectedProduct?.description }}</p>
+            <div class="progress-info">
+              <div class="progress-bar">
+                <div 
+                  class="progress-fill" 
+                  :style="{ width: getCrowdfundingPercentage(selectedProduct) + '%' }"
+                ></div>
+              </div>
+              <div class="progress-text">
+                <span>{{ selectedProduct?.crowdfunding_progress || 0 }} / {{ selectedProduct?.price }} Вектриков</span>
+                <span class="percentage">{{ getCrowdfundingPercentage(selectedProduct) }}%</span>
+              </div>
+            </div>
+          </div>
+          <div class="contribution-form">
+            <label for="contribution-amount">Сумма взноса (Вектриков):</label>
+            <input 
+              id="contribution-amount"
+              v-model="contributionAmount" 
+              type="number" 
+              min="1" 
+              :max="userInfo.balance"
+              placeholder="Введите сумму"
+              class="amount-input"
+            >
+            <div class="balance-info-modal">
+              <span>Ваш баланс: {{ userInfo.balance }} Вектриков</span>
+            </div>
+            <div class="contribution-buttons">
+              <button 
+                @click="contributeToCrowdfunding"
+                :disabled="!canContribute"
+                class="contribute-button"
+              >
+                Внести взнос
+              </button>
+              <button @click="closeCrowdfundingModal" class="cancel-button">
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </ClientLayout>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import axios from 'axios'
 import ClientLayout from '@/components/ClientLayout.vue'
 import { useTheme } from '@/composables/useTheme'
@@ -83,6 +164,9 @@ const { currentTheme } = useTheme()
 const products = ref([])
 const userInfo = ref({})
 const isRefreshing = ref(false)
+const showCrowdfundingModal = ref(false)
+const selectedProduct = ref(null)
+const contributionAmount = ref('')
 let updateInterval = null
 
 const getLogo = () => {
@@ -135,6 +219,22 @@ const getPurchaseButtonText = (product) => {
   return 'Заказать'
 }
 
+const getCrowdfundingButtonText = (product) => {
+  if (product.is_purchased) return 'Сбор завершен!'
+  return 'Внести взнос'
+}
+
+const getCrowdfundingPercentage = (product) => {
+  if (!product || !product.price) return 0
+  const progress = product.crowdfunding_progress || 0
+  return Math.min(Math.round((progress / product.price) * 100), 100)
+}
+
+const canContribute = computed(() => {
+  const amount = parseInt(contributionAmount.value)
+  return amount > 0 && amount <= userInfo.value.balance
+})
+
 const purchaseProduct = async (product) => {
   if (!canPurchase(product)) return
   
@@ -176,6 +276,43 @@ const refreshStore = async () => {
     alert('Произошла ошибка при обновлении магазина. Попробуйте позже.')
   } finally {
     isRefreshing.value = false
+  }
+}
+
+const openCrowdfundingModal = (product) => {
+  selectedProduct.value = product
+  contributionAmount.value = ''
+  showCrowdfundingModal.value = true
+}
+
+const closeCrowdfundingModal = () => {
+  showCrowdfundingModal.value = false
+  selectedProduct.value = null
+  contributionAmount.value = ''
+}
+
+const contributeToCrowdfunding = async () => {
+  if (!canContribute.value || !selectedProduct.value) return
+  
+  try {
+    await axios.post('/client/crowdfunding/contribute', {
+      product_id: selectedProduct.value.id,
+      amount: parseInt(contributionAmount.value)
+    })
+    
+    // Обновляем информацию о пользователе и товарах
+    await fetchUserInfo()
+    await fetchProducts()
+    
+    closeCrowdfundingModal()
+    alert('Взнос успешно внесен!')
+  } catch (error) {
+    console.error('Ошибка взноса:', error)
+    if (error.response?.data?.error) {
+      alert(error.response.data.error)
+    } else {
+      alert('Произошла ошибка при внесении взноса')
+    }
   }
 }
 
@@ -481,6 +618,223 @@ body.theme-pink .purchase-button:hover:not(.disabled) {
   font-size: 16px;
   line-height: 1.5;
   opacity: 0.8;
+}
+
+/* Стили для краудфандинга */
+.crowdfunding-progress {
+  margin-bottom: 16px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.percentage {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.crowdfunding-button {
+  background: #dc3545;
+}
+
+.crowdfunding-button:hover:not(.disabled) {
+  background: #c82333;
+}
+
+/* Розовая тема */
+body.theme-pink .crowdfunding-button:hover:not(.disabled) {
+  background: #d63384;
+}
+
+/* Модальное окно */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 20px 0 20px;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 16px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.3s ease;
+}
+
+.close-button:hover {
+  background: #f8f9fa;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.product-info-modal h4 {
+  margin: 0 0 8px 0;
+  color: var(--color-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.product-info-modal p {
+  margin: 0 0 16px 0;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.progress-info {
+  margin-bottom: 20px;
+}
+
+.contribution-form label {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.amount-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.amount-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(17, 87, 64, 0.1);
+}
+
+.balance-info-modal {
+  margin-bottom: 20px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #666;
+}
+
+.contribution-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.contribute-button {
+  flex: 1;
+  padding: 12px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.contribute-button:hover:not(:disabled) {
+  background: #0f4a3a;
+}
+
+.contribute-button:disabled {
+  background: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.cancel-button {
+  flex: 1;
+  padding: 12px;
+  background: #6c757d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+  background: #5a6268;
+}
+
+/* Розовая тема */
+body.theme-pink .contribute-button:hover:not(:disabled) {
+  background: #e6399b;
+}
+
+body.theme-pink .amount-input:focus {
+  border-color: #e6399b;
+  box-shadow: 0 0 0 2px rgba(230, 57, 155, 0.1);
 }
 
 @media (max-width: 480px) {

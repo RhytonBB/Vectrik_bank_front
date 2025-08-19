@@ -114,6 +114,52 @@
         </el-table-column>
       </el-table>
     </div>
+    
+    <!-- Таблица взносов в краудфандинг -->
+    <div class="crowdfunding-section">
+      <h3>💰 Взносы в общий сбор</h3>
+      <div v-if="isMobile" class="mobile-crowdfunding-list">
+        <div v-for="contribution in crowdfundingContributions" :key="contribution.id" class="contribution-card">
+          <div class="contribution-header">
+            <div class="contribution-user">{{ contribution.first_name }} {{ contribution.last_name }}</div>
+            <div class="contribution-id">ID: {{ contribution.id }}</div>
+          </div>
+          <div class="contribution-details">
+            <div class="contribution-row">
+              <span class="contribution-detail-label">Сумма:</span>
+              <span class="contribution-detail-value">{{ contribution.amount }} Вектриков</span>
+            </div>
+            <div class="contribution-row">
+              <span class="contribution-detail-label">Telegram:</span>
+              <span class="contribution-detail-value">@{{ contribution.telegram_username }}</span>
+            </div>
+            <div class="contribution-row">
+              <span class="contribution-detail-label">Дата:</span>
+              <span class="contribution-detail-value">{{ formatDate(contribution.created_at) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <el-table v-else :data="crowdfundingContributions" style="width: 100%" class="crowdfunding-table">
+        <el-table-column prop="first_name" label="Имя" width="120" />
+        <el-table-column prop="last_name" label="Фамилия" width="120" />
+        <el-table-column prop="telegram_username" label="Telegram" width="150">
+          <template #default="scope">
+            @{{ scope.row.telegram_username }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="amount" label="Сумма взноса" width="150">
+          <template #default="scope">
+            {{ scope.row.amount }} Вектриков
+          </template>
+        </el-table-column>
+        <el-table-column prop="created_at" label="Дата взноса" width="150">
+          <template #default="scope">
+            {{ formatDate(scope.row.created_at) }}
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
   </el-card>
 </template>
 
@@ -124,6 +170,7 @@ import axios from 'axios'
 
 const products = ref([])
 const purchases = ref([])
+const crowdfundingContributions = ref([])
 const router = useRouter()
 const isMobile = ref(false)
 
@@ -132,6 +179,7 @@ const getTypeColor = (type) => {
     case 'regular': return 'primary'
     case 'drop': return 'warning'
     case 'shared': return 'success'
+    case 'crowdfunding': return 'danger'
     default: return 'info'
   }
 }
@@ -141,6 +189,7 @@ const getTypeText = (type) => {
     case 'regular': return 'Обычный'
     case 'drop': return 'Мгновенный'
     case 'shared': return 'Коллективный'
+    case 'crowdfunding': return 'Общий сбор'
     default: return 'Неизвестно'
   }
 }
@@ -157,6 +206,25 @@ const fetchProducts = async () => {
 const fetchPurchases = async () => {
   const resp = await axios.get('/admin/purchases')
   purchases.value = resp.data
+}
+
+const fetchCrowdfundingContributions = async () => {
+  try {
+    // Получаем все краудфандинг товары
+    const crowdfundingProducts = products.value.filter(p => p.type === 'crowdfunding')
+    
+    // Собираем все взносы для всех краудфандинг товаров
+    let allContributions = []
+    for (const product of crowdfundingProducts) {
+      const resp = await axios.get(`/admin/crowdfunding/${product.id}/contributions`)
+      allContributions = allContributions.concat(resp.data)
+    }
+    
+    crowdfundingContributions.value = allContributions
+  } catch (error) {
+    console.error('Ошибка загрузки взносов в краудфандинг:', error)
+    crowdfundingContributions.value = []
+  }
 }
 
 const goToEdit = (row) => {
@@ -177,6 +245,7 @@ const deleteProduct = async (row) => {
 onMounted(() => {
   fetchProducts()
   fetchPurchases()
+  fetchCrowdfundingContributions()
   isMobile.value = window.innerWidth < 600
   window.addEventListener('resize', () => {
     isMobile.value = window.innerWidth < 600
@@ -374,6 +443,85 @@ onMounted(() => {
     gap: 16px;
   }
   
+  .crowdfunding-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #f0f0f0;
+  }
+  
+  .crowdfunding-section h3 {
+    margin: 0 0 20px 0;
+    color: var(--color-primary);
+    font-size: 20px;
+    font-weight: 600;
+  }
+  
+  .crowdfunding-table {
+    margin-top: 20px;
+  }
+  
+  .mobile-crowdfunding-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .contribution-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(17,87,64,0.06);
+    border: 1px solid #e0e0e0;
+  }
+  
+  .contribution-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .contribution-user {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--color-primary);
+  }
+  
+  .contribution-id {
+    font-size: 12px;
+    color: #666;
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  
+  .contribution-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .contribution-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+  }
+  
+  .contribution-detail-label {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+  }
+  
+  .contribution-detail-value {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+  }
+  
   .purchase-card {
     background: #ffffff;
     border-radius: 12px;
@@ -462,10 +610,46 @@ onMounted(() => {
       padding: 3px 0;
     }
     
-    .purchase-detail-label,
-    .purchase-detail-value {
-      font-size: 13px;
-    }
+      .purchase-detail-label,
+  .purchase-detail-value {
+    font-size: 13px;
   }
+  
+  .crowdfunding-section {
+    margin-top: 30px;
+    padding-top: 20px;
+  }
+  
+  .crowdfunding-section h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  
+  .contribution-card {
+    padding: 12px;
+  }
+  
+  .contribution-header {
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+  }
+  
+  .contribution-user {
+    font-size: 15px;
+  }
+  
+  .contribution-details {
+    gap: 6px;
+  }
+  
+  .contribution-row {
+    padding: 3px 0;
+  }
+  
+  .contribution-detail-label,
+  .contribution-detail-value {
+    font-size: 13px;
+  }
+}
 }
 </style> 
