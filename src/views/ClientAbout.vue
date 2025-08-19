@@ -14,23 +14,19 @@
         <h2 class="section-title">О нас</h2>
         <div class="info-card">
           <div class="contact-item">
-            <span class="contact-label">Секретарь:</span>
-            <span class="contact-value">xxx@xxx</span>
-          </div>
-          <div class="contact-item">
             <span class="contact-label">Техническая поддержка:</span>
-            <span class="contact-value">xxx@xxx или в чат с тех поддержкой</span>
+            <span class="contact-value">rhytonivan@yandex.ru или обращайтесь в беседу Школы кураторов 2025</span>
           </div>
           <div class="contact-item">
             <span class="contact-label">Обслуживание физических лиц:</span>
           </div>
           <div class="contact-item">
             <span class="contact-label">пн.-пт.:</span>
-            <span class="contact-value">08:30-19:30</span>
+            <span class="contact-value">08:30-22:30</span>
           </div>
           <div class="contact-item">
             <span class="contact-label">сб.:</span>
-            <span class="contact-value">09:30-15:00</span>
+            <span class="contact-value">09:30-22:00</span>
           </div>
         </div>
       </div>
@@ -41,10 +37,6 @@
         <div class="info-card">
           <div class="address-item">
             <span class="address-label">Главный офис:</span>
-            <span class="address-value">г. Москва, ул. Вавилова, д. 19 М. Ленинский проспект</span>
-          </div>
-          <div class="address-item">
-            <span class="address-label">Дополнительный офис:</span>
             <span class="address-value">г. Москва, Гороховский переулок, д. 4к7 М. Курская</span>
           </div>
         </div>

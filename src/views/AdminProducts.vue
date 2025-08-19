@@ -155,6 +155,17 @@
               <span class="purchase-detail-value">{{ formatDate(purchase.created_at) }}</span>
             </div>
           </div>
+          <div class="purchase-actions">
+            <el-button 
+              :type="purchase.is_fulfilled ? 'info' : 'success'" 
+              :disabled="purchase.is_fulfilled"
+              size="small"
+              @click="markPurchaseFulfilled(purchase)"
+              class="fulfill-btn"
+            >
+              {{ purchase.is_fulfilled ? 'Исполнено' : 'Исполнено' }}
+            </el-button>
+          </div>
         </div>
       </div>
       <el-table v-else :data="purchases" style="width: 100%" class="purchases-table">
@@ -169,6 +180,18 @@
         <el-table-column prop="created_at" label="Дата покупки" width="150">
           <template #default="scope">
             {{ formatDate(scope.row.created_at) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="Статус" width="120">
+          <template #default="scope">
+            <el-button 
+              :type="scope.row.is_fulfilled ? 'info' : 'success'" 
+              :disabled="scope.row.is_fulfilled"
+              size="small"
+              @click="markPurchaseFulfilled(scope.row)"
+            >
+              {{ scope.row.is_fulfilled ? 'Исполнено' : 'Исполнено' }}
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -318,6 +341,19 @@ const deleteCrowdfundingProduct = async (row) => {
   if (confirm('Удалить товар общего сбора?')) {
     await axios.delete(`/admin/crowdfunding/${row.id}`)
     fetchCrowdfundingProducts()
+  }
+}
+
+const markPurchaseFulfilled = async (purchase) => {
+  if (purchase.is_fulfilled) return
+  
+  try {
+    await axios.post(`/admin/purchases/${purchase.id}/fulfill`)
+    // Обновляем локальное состояние
+    purchase.is_fulfilled = true
+  } catch (error) {
+    console.error('Ошибка при отметке покупки:', error)
+    alert('Ошибка при отметке покупки')
   }
 }
 
@@ -685,6 +721,21 @@ onMounted(() => {
     font-weight: 500;
   }
   
+  .purchase-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+  }
+  
+  .fulfill-btn {
+    width: 100%;
+    height: 44px;
+    font-size: 16px;
+    border-radius: 8px !important;
+  }
+  
   @media (max-width: 600px) {
     .purchases-section {
       margin-top: 30px;
@@ -756,6 +807,16 @@ onMounted(() => {
   .contribution-detail-label,
   .contribution-detail-value {
     font-size: 13px;
+  }
+  
+  .purchase-actions {
+    margin-top: 12px;
+    padding-top: 8px;
+  }
+  
+  .fulfill-btn {
+    height: 40px;
+    font-size: 15px;
   }
   
   .crowdfunding-products-section {
