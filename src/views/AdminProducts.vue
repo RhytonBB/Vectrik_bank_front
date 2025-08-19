@@ -163,7 +163,7 @@
               @click="markPurchaseFulfilled(purchase)"
               class="fulfill-btn"
             >
-              {{ purchase.is_fulfilled ? 'Исполнено' : 'Исполнено' }}
+              {{ purchase.is_fulfilled ? 'Исполнено' : 'Исполнить' }}
             </el-button>
           </div>
         </div>
@@ -190,7 +190,7 @@
               size="small"
               @click="markPurchaseFulfilled(scope.row)"
             >
-              {{ scope.row.is_fulfilled ? 'Исполнено' : 'Исполнено' }}
+              {{ scope.row.is_fulfilled ? 'Исполнено' : 'Исполнить' }}
             </el-button>
           </template>
         </el-table-column>
