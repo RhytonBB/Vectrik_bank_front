@@ -44,6 +44,7 @@ const routes = [
   { path: '/admin/users/:id', component: AdminUserDetail },
   { path: '/admin/products', component: AdminProducts },
   { path: '/admin/products/edit/:id?', component: AdminProductEdit },
+  { path: '/admin/crowdfunding/edit/:id', component: AdminProductEdit },
   { path: '/admin/analytics', component: AdminAnalytics },
   { path: '/admin/banners', component: AdminBanners },
   { path: '/admin/theme', component: AdminTheme },

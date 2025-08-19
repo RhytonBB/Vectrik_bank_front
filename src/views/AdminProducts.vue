@@ -73,6 +73,65 @@
       </el-table-column>
     </el-table>
     
+    <!-- Таблица краудфандинг товаров -->
+    <div class="crowdfunding-products-section">
+      <h3>💰 Товары общего сбора</h3>
+      <div v-if="isMobile" class="mobile-crowdfunding-products-list">
+        <div v-for="product in crowdfundingProducts" :key="product.id" class="crowdfunding-product-card" @click="goToEditCrowdfunding(product)">
+          <div class="product-header">
+            <div class="product-name">{{ product.name }}</div>
+            <div class="product-id">ID: {{ product.id }}</div>
+          </div>
+          <div class="product-details">
+            <div class="product-row">
+              <span class="detail-label">Целевая сумма:</span>
+              <span class="product-price">{{ product.target_amount }} Вектриков</span>
+            </div>
+            <div class="product-row">
+              <span class="detail-label">Прогресс:</span>
+              <span class="product-progress">{{ getCrowdfundingProgress(product) }}%</span>
+            </div>
+          </div>
+          <div class="product-status">
+            <el-tag :type="product.is_active ? 'success' : 'danger'" size="small">
+              {{ product.is_active ? 'Активен' : 'Неактивен' }}
+            </el-tag>
+          </div>
+          <div class="product-actions">
+            <el-button type="danger" size="small" @click.stop="deleteCrowdfundingProduct(product)" class="delete-btn">
+              Удалить
+            </el-button>
+          </div>
+        </div>
+      </div>
+      <el-table v-else :data="crowdfundingProducts" style="width: 100%" @row-click="goToEditCrowdfunding" class="desktop-table">
+        <el-table-column prop="id" label="ID" width="60"/>
+        <el-table-column prop="name" label="Название"/>
+        <el-table-column prop="target_amount" label="Целевая сумма" width="150">
+          <template #default="scope">
+            {{ scope.row.target_amount }} Вектриков
+          </template>
+        </el-table-column>
+        <el-table-column label="Прогресс" width="120">
+          <template #default="scope">
+            {{ getCrowdfundingProgress(scope.row) }}%
+          </template>
+        </el-table-column>
+        <el-table-column prop="is_active" label="Активен" width="100">
+          <template #default="scope">
+            <el-tag :type="scope.row.is_active ? 'success' : 'danger'" size="small">
+              {{ scope.row.is_active ? 'Да' : 'Нет' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="" width="100">
+          <template #default="scope">
+            <el-button type="danger" size="small" @click.stop="deleteCrowdfundingProduct(scope.row)">Удалить</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    
     <!-- Таблица покупок пользователей -->
     <div class="purchases-section">
       <h3>📊 История покупок пользователей</h3>
@@ -169,6 +228,7 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 const products = ref([])
+const crowdfundingProducts = ref([])
 const purchases = ref([])
 const crowdfundingContributions = ref([])
 const router = useRouter()
@@ -203,6 +263,11 @@ const fetchProducts = async () => {
   products.value = resp.data
 }
 
+const fetchCrowdfundingProducts = async () => {
+  const resp = await axios.get('/admin/crowdfunding')
+  crowdfundingProducts.value = resp.data
+}
+
 const fetchPurchases = async () => {
   const resp = await axios.get('/admin/purchases')
   purchases.value = resp.data
@@ -218,7 +283,13 @@ const fetchCrowdfundingContributions = async () => {
     let allContributions = []
     for (const product of crowdfundingProducts) {
       const contributionsResp = await axios.get(`/admin/crowdfunding/${product.id}/contributions`)
-      allContributions = allContributions.concat(contributionsResp.data)
+      const contributions = contributionsResp.data.map(c => ({
+        ...c,
+        product_id: product.id,
+        product_name: product.name,
+        target_amount: product.target_amount
+      }))
+      allContributions = allContributions.concat(contributions)
     }
     
     crowdfundingContributions.value = allContributions
@@ -243,8 +314,30 @@ const deleteProduct = async (row) => {
   }
 }
 
+const deleteCrowdfundingProduct = async (row) => {
+  if (confirm('Удалить товар общего сбора?')) {
+    await axios.delete(`/admin/crowdfunding/${row.id}`)
+    fetchCrowdfundingProducts()
+  }
+}
+
+const goToEditCrowdfunding = (row) => {
+  router.push(`/admin/crowdfunding/edit/${row.id}`)
+}
+
+const getCrowdfundingProgress = (product) => {
+  // Находим соответствующий товар в списке взносов
+  const contributions = crowdfundingContributions.value.filter(c => c.product_id === product.id)
+  
+  if (contributions.length === 0) return 0
+  
+  const totalContributed = contributions.reduce((sum, c) => sum + c.amount, 0)
+  return Math.round((totalContributed / product.target_amount) * 100)
+}
+
 onMounted(() => {
   fetchProducts()
+  fetchCrowdfundingProducts()
   fetchPurchases()
   fetchCrowdfundingContributions()
   isMobile.value = window.innerWidth < 600
@@ -458,8 +551,21 @@ onMounted(() => {
   }
   
   .crowdfunding-table {
-    margin-top: 20px;
-  }
+  margin-top: 20px;
+}
+
+.crowdfunding-products-section {
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 2px solid #f0f0f0;
+}
+
+.crowdfunding-products-section h3 {
+  margin: 0 0 20px 0;
+  color: var(--color-primary);
+  font-size: 20px;
+  font-weight: 600;
+}
   
   .mobile-crowdfunding-list {
     display: flex;
@@ -650,6 +756,52 @@ onMounted(() => {
   .contribution-detail-label,
   .contribution-detail-value {
     font-size: 13px;
+  }
+  
+  .crowdfunding-products-section {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #f0f0f0;
+  }
+  
+  .crowdfunding-products-section h3 {
+    margin: 0 0 20px 0;
+    color: var(--color-primary);
+    font-size: 20px;
+    font-weight: 600;
+  }
+  
+  .mobile-crowdfunding-products-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .crowdfunding-product-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(17,87,64,0.08);
+    border: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-left: 4px solid #dc3545;
+  }
+  
+  .crowdfunding-product-card:hover {
+    box-shadow: 0 4px 20px rgba(17,87,64,0.12);
+    transform: translateY(-2px);
+  }
+  
+  .crowdfunding-product-card:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(17,87,64,0.15);
+  }
+  
+  .product-progress {
+    font-weight: 600;
+    font-size: 16px;
+    color: #dc3545;
   }
 }
 }

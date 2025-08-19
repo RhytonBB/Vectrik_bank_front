@@ -100,15 +100,15 @@
               </div>
             </div>
             
-            <!-- Кнопка взноса в краудфандинг -->
-            <button 
-              @click="openCrowdfundingModal(product)"
-              :disabled="product.has_contributed"
-              class="purchase-button crowdfunding-button"
-              :class="{ 'disabled': product.has_contributed, 'already-purchased': product.has_contributed }"
-            >
-              {{ getCrowdfundingButtonText(product) }}
-            </button>
+                         <!-- Кнопка взноса в краудфандинг -->
+             <button 
+               @click="openCrowdfundingModal(product)"
+               :disabled="product.has_contributed || product.is_completed"
+               class="purchase-button crowdfunding-button"
+               :class="{ 'disabled': product.has_contributed || product.is_completed, 'already-purchased': product.has_contributed || product.is_completed }"
+             >
+               {{ getCrowdfundingButtonText(product) }}
+             </button>
           </div>
         </div>
       </div>
@@ -226,12 +226,6 @@ const fetchCrowdfundingProducts = async () => {
   try {
     const response = await axios.get('/client/crowdfunding')
     crowdfundingProducts.value = response.data || []
-    
-    if (crowdfundingProducts.value.length === 0) {
-      console.log('Нет доступных краудфандинг товаров')
-    } else {
-      console.log(`Загружено ${crowdfundingProducts.value.length} краудфандинг товаров`)
-    }
   } catch (error) {
     console.error('Ошибка загрузки краудфандинг товаров:', error)
     crowdfundingProducts.value = []
@@ -261,6 +255,7 @@ const getPurchaseButtonText = (product) => {
 }
 
 const getCrowdfundingButtonText = (product) => {
+  if (product.is_completed) return 'Сбор завершен!'
   if (product.has_contributed) return 'Вы уже внесли взнос'
   return 'Внести взнос'
 }
