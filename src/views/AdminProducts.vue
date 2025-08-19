@@ -246,7 +246,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 
@@ -256,6 +256,7 @@ const purchases = ref([])
 const crowdfundingContributions = ref([])
 const router = useRouter()
 const isMobile = ref(false)
+let refreshInterval = null
 
 const getTypeColor = (type) => {
   switch (type) {
@@ -349,8 +350,7 @@ const markPurchaseFulfilled = async (purchase) => {
   
   try {
     await axios.post(`/admin/purchases/${purchase.id}/fulfill`)
-    // Обновляем локальное состояние
-    purchase.is_fulfilled = true
+    // Данные обновятся автоматически через автообновление
   } catch (error) {
     console.error('Ошибка при отметке покупки:', error)
     alert('Ошибка при отметке покупки')
@@ -371,15 +371,51 @@ const getCrowdfundingProgress = (product) => {
   return Math.round((totalContributed / product.target_amount) * 100)
 }
 
+// Функция для обновления всех данных
+const refreshAllData = async () => {
+  try {
+    await Promise.all([
+      fetchProducts(),
+      fetchCrowdfundingProducts(),
+      fetchPurchases(),
+      fetchCrowdfundingContributions()
+    ])
+  } catch (error) {
+    console.error('Ошибка при обновлении данных:', error)
+  }
+}
+
+// Запуск автообновления
+const startAutoRefresh = () => {
+  // Обновляем каждые 3 секунды
+  refreshInterval = setInterval(refreshAllData, 3000)
+}
+
+// Остановка автообновления
+const stopAutoRefresh = () => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+    refreshInterval = null
+  }
+}
+
 onMounted(() => {
-  fetchProducts()
-  fetchCrowdfundingProducts()
-  fetchPurchases()
-  fetchCrowdfundingContributions()
+  // Первоначальная загрузка данных
+  refreshAllData()
+  
+  // Запускаем автообновление
+  startAutoRefresh()
+  
+  // Настройка для мобильных устройств
   isMobile.value = window.innerWidth < 600
   window.addEventListener('resize', () => {
     isMobile.value = window.innerWidth < 600
   })
+})
+
+// Очищаем интервал при размонтировании компонента
+onUnmounted(() => {
+  stopAutoRefresh()
 })
 </script>
 
@@ -395,6 +431,8 @@ onMounted(() => {
   margin: 0;
   color: var(--color-primary);
 }
+
+
 
 .add-button {
   height: 40px;
