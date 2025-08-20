@@ -5,27 +5,27 @@
     </div>
     
     <nav class="client-navigation">
-      <router-link to="/client" class="nav-item" active-class="active">
+      <router-link to="/api/client" class="nav-item" active-class="active">
         <img :src="getNavIcon('bank')" alt="Главная" class="nav-icon">
         <span class="nav-text">Главная</span>
       </router-link>
       
-      <router-link to="/client/store" class="nav-item" active-class="active">
+      <router-link to="/api/client/store" class="nav-item" active-class="active">
         <img :src="getNavIcon('store')" alt="Магазин" class="nav-icon">
         <span class="nav-text">Магазин</span>
       </router-link>
       
-      <router-link to="/client/news" class="nav-item" active-class="active">
+      <router-link to="/api/client/news" class="nav-item" active-class="active">
         <img :src="getNavIcon('news')" alt="Новости" class="nav-icon">
         <span class="nav-text">Новости</span>
       </router-link>
       
-      <router-link to="/client/about" class="nav-item" active-class="active">
+      <router-link to="/api/client/about" class="nav-item" active-class="active">
         <img :src="getNavIcon('about')" alt="О нас" class="nav-icon">
         <span class="nav-text">О нас</span>
       </router-link>
       
-      <router-link to="/client/profile" class="nav-item" active-class="active">
+      <router-link to="/api/client/profile" class="nav-item" active-class="active">
         <img :src="getNavIcon('user')" alt="Профиль" class="nav-icon">
         <span class="nav-text">Профиль</span>
       </router-link>
@@ -34,12 +34,9 @@
 </template>
 
 <script setup>
-import { useTheme } from '@/composables/useTheme'
-
-const { currentTheme } = useTheme()
-
 const getNavIcon = (iconName) => {
-  if (currentTheme.value === 'pink') {
+  // Проверяем, есть ли класс theme-pink на body
+  if (document.body.classList.contains('theme-pink')) {
     return `/pink_${iconName}.png`
   }
   return `/${iconName}.png`
