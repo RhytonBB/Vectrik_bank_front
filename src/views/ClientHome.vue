@@ -309,6 +309,8 @@ onUnmounted(() => {
   overflow: hidden;
   border-radius: 12px;
   background: #000;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .banner-container {
@@ -326,8 +328,10 @@ onUnmounted(() => {
   width: 100%;
   height: 120px;
   object-fit: cover;
+  object-position: center;
   display: block;
   vertical-align: top;
+  max-width: 600px;
 }
 
 .banner-content {
@@ -642,7 +646,10 @@ body.theme-pink .purchase-card {
   }
   
   .banner-image {
-    height: 100px;
+    height: 120px !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    max-width: 600px !important;
   }
   
   .nav-btn {
