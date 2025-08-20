@@ -308,11 +308,13 @@ onUnmounted(() => {
   position: relative;
   overflow: hidden;
   border-radius: 12px;
+  background: #000;
 }
 
 .banner-container {
   display: flex;
   transition: transform 0.5s ease;
+  width: 100%;
 }
 
 .banner {
@@ -324,6 +326,8 @@ onUnmounted(() => {
   width: 100%;
   height: 120px;
   object-fit: cover;
+  display: block;
+  vertical-align: top;
 }
 
 .banner-content {
