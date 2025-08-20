@@ -45,6 +45,7 @@
               <div class="user-details">
                 <div class="user-name">{{ u.first_name }} {{ u.last_name }}</div>
                 <div class="user-telegram">@{{ u.telegram_username }}</div>
+                <div v-if="u.is_admin" class="admin-badge">👑 Админ</div>
               </div>
             </div>
           </el-checkbox>
@@ -68,6 +69,7 @@
             <div class="user-details">
               <div class="user-name">{{ u.first_name }} {{ u.last_name }}</div>
               <div class="user-telegram">@{{ u.telegram_username }}</div>
+              <div v-if="u.is_admin" class="admin-badge">👑 Админ</div>
             </div>
           </div>
         </el-checkbox>
@@ -137,7 +139,17 @@ const fetchUsers = async () => {
     const resp = await axios.get('/api/admin/reward/users', {
       params: { scope: activeTab.value, q: query.value }
     })
-    users.value = resp.data
+    
+    // Сортируем пользователей: сначала обычные, потом админы
+    if (activeTab.value === 'all') {
+      users.value = resp.data.sort((a, b) => {
+        if (a.is_admin && !b.is_admin) return 1
+        if (!a.is_admin && b.is_admin) return -1
+        return 0
+      })
+    } else {
+      users.value = resp.data
+    }
   } catch (e) {
     error.value = 'Ошибка поиска пользователей'
   }
@@ -359,6 +371,18 @@ onMounted(() => {
   overflow-wrap: break-word;
 }
 
+.admin-badge {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-block;
+  margin-top: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 .reward-details {
   background: #f8f9fa;
   border-radius: 12px;
@@ -562,6 +586,12 @@ onMounted(() => {
     min-height: 80px !important;
     max-height: 200px !important;
     width: 100% !important;
+  }
+
+  .admin-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+    margin-top: 3px;
   }
 }
 
