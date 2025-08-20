@@ -203,7 +203,7 @@ return '/logo.svg'
 
 const fetchProducts = async () => {
   try {
-    const response = await axios.get('/client/products')
+    const response = await axios.get('/api/client/products')
     products.value = response.data || []
     
     // Если товаров нет, показываем соответствующее сообщение
@@ -224,7 +224,7 @@ const fetchProducts = async () => {
 
 const fetchCrowdfundingProducts = async () => {
   try {
-    const response = await axios.get('/client/crowdfunding')
+    const response = await axios.get('/api/client/crowdfunding')
     crowdfundingProducts.value = response.data || []
   } catch (error) {
     console.error('Ошибка загрузки краудфандинг товаров:', error)
@@ -234,7 +234,7 @@ const fetchCrowdfundingProducts = async () => {
 
 const fetchUserInfo = async () => {
   try {
-    const response = await axios.get('/me')
+    const response = await axios.get('/api/me')
     userInfo.value = response.data || {}
   } catch (error) {
     console.error('Ошибка загрузки информации о пользователе:', error)
@@ -280,7 +280,7 @@ const purchaseProduct = async (product) => {
   }
   
   try {
-    await axios.post('/client/purchase', {
+    await axios.post('/api/client/purchase', {
       product_id: product.id,
       quantity: 1
     })
@@ -331,7 +331,7 @@ const contributeToCrowdfunding = async () => {
   if (!canContribute.value || !selectedProduct.value) return
   
   try {
-    await axios.post('/client/crowdfunding/contribute', {
+    await axios.post('/api/client/crowdfunding/contribute', {
       product_id: selectedProduct.value.id,
       amount: parseInt(contributionAmount.value)
     })

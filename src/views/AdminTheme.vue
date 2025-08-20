@@ -79,12 +79,12 @@ const selectTheme = (themeValue) => {
 }
 
 const fetchTheme = async () => {
-  const resp = await axios.get('/admin/theme')
+  const resp = await axios.get('/api/admin/theme')
   theme.value = resp.data.theme
 }
 
 const changeTheme = async () => {
-  await axios.post('/admin/theme', { theme: theme.value })
+  await axios.post('/api/admin/theme', { theme: theme.value })
   message.value = 'Тема успешно изменена!'
 }
 

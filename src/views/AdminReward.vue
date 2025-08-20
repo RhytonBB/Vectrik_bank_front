@@ -134,7 +134,7 @@ const reasons = [
 
 const fetchUsers = async () => {
   try {
-    const resp = await axios.get('/admin/reward/users', {
+    const resp = await axios.get('/api/admin/reward/users', {
       params: { scope: activeTab.value, q: query.value }
     })
     users.value = resp.data
@@ -150,7 +150,7 @@ const onReasonChange = (val) => {
 }
 const sendReward = async () => {
   try {
-    await axios.post('/admin/reward', {
+    await axios.post('/api/admin/reward', {
       user_ids: selectedUsers.value,
       amount: amount.value,
       reason: reason.value,
@@ -463,14 +463,14 @@ onMounted(() => {
   }
   
   .mobile-user-list {
-    gap: 4px;
+    gap: 10px;
   }
   
   .user-card {
-    padding: 24px 20px !important;
+    padding: 20px 16px !important;
     border-radius: 8px;
     min-height: auto !important;
-    margin-bottom: 4px !important;
+    margin-bottom: 16px !important;
   }
   
   .user-info {
@@ -495,22 +495,22 @@ onMounted(() => {
   }
   
   .avatar-img {
-    width: 60px !important;
-    height: 60px !important;
+    width: 50px !important;
+    height: 50px !important;
     flex-shrink: 0 !important;
   }
   
   .avatar-placeholder {
-    width: 60px !important;
-    height: 60px !important;
-    font-size: 28px !important;
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 24px !important;
     flex-shrink: 0 !important;
   }
   
   .user-details {
     flex: 1 !important;
     min-width: 0 !important;
-    max-width: calc(100% - 76px) !important;
+    max-width: calc(100% - 66px) !important;
   }
   
   .user-checkbox :deep(.el-checkbox__label) {
@@ -573,7 +573,7 @@ onMounted(() => {
   
   .user-card {
     padding: 16px 12px !important;
-    margin-bottom: 2px !important;
+    margin-bottom: 12px !important;
   }
   
   .user-info {

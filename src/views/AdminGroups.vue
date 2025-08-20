@@ -114,13 +114,13 @@ const isMobile = ref(false)
 const deletingGroupId = ref(null)
 
 const fetchGroups = async () => {
-  const resp = await axios.get('/admin/groups')
+  const resp = await axios.get('/api/admin/groups')
   const data = Array.isArray(resp.data) ? resp.data : []
   groups.value = data.map(g => ({ ...g, admins: g.admins || [] }))
 }
 const fetchAdmins = async () => {
   // Получаем всех пользователей и фильтруем по is_admin
-  const resp = await axios.get('/admin/users')
+  const resp = await axios.get('/api/admin/users')
   admins.value = resp.data.filter(u => u.is_admin)
 }
 const createGroup = async () => {
@@ -129,7 +129,7 @@ const createGroup = async () => {
     return
   }
   try {
-    await axios.post('/admin/groups', {
+    await axios.post('/api/admin/groups', {
       name: groupName.value,
       admin_ids: selectedAdmins.value
     })
@@ -147,7 +147,7 @@ const deleteGroup = async (group) => {
   if (confirm('Удалить группу?')) {
     deletingGroupId.value = group.id
     try {
-      await axios.delete(`/admin/groups/${group.id}`)
+      await axios.delete(`/api/admin/groups/${group.id}`)
       fetchGroups()
     } catch (e) {
       if (e.response?.data?.error) {

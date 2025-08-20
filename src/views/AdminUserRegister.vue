@@ -130,7 +130,7 @@ const uploadRef = ref()
 const groups = ref([])
 
 const fetchGroups = async () => {
-  const resp = await axios.get('/admin/groups')
+  const resp = await axios.get('/api/admin/groups')
   groups.value = resp.data
 }
 
@@ -145,7 +145,7 @@ const handleTabChange = () => {
 
 const registerUser = async () => {
   try {
-    await axios.post('/admin/users', {
+    await axios.post('/api/admin/users', {
       first_name: firstName.value,
       last_name: lastName.value,
       tg_username: tgUsername.value,
@@ -190,7 +190,7 @@ const handleFileChange = async (file) => {
     const formData = new FormData()
     formData.append('file', file.raw)
     
-    const response = await axios.post('/admin/users/bulk/preview', formData, {
+    const response = await axios.post('/api/admin/users/bulk/preview', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     
@@ -211,7 +211,7 @@ const registerBulkUsers = async () => {
   
   bulkLoading.value = true
   try {
-    const response = await axios.post('/admin/users/bulk', {
+    const response = await axios.post('/api/admin/users/bulk', {
       users: previewData.value
     })
     

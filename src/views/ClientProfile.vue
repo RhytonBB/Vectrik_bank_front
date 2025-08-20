@@ -255,7 +255,7 @@ return '/logo.svg'
 
 const fetchUserInfo = async () => {
   try {
-    const response = await axios.get('/me')
+    const response = await axios.get('/api/me')
     userInfo.value = response.data
   } catch (error) {
     console.error('Ошибка загрузки информации о пользователе:', error)
@@ -267,7 +267,7 @@ const changeLogin = async () => {
   await loginFormRef.value.validate((valid) => {
     if (valid) {
       isLoading.value = true
-      axios.post('/client/change-login', {
+      axios.post('/api/client/change-login', {
         old_login: loginForm.value.oldLogin,
         new_login: loginForm.value.newLogin
       })
@@ -294,7 +294,7 @@ const changePassword = async () => {
   await passwordFormRef.value.validate((valid) => {
     if (valid) {
       isLoading.value = true
-      axios.post('/client/change-password', {
+      axios.post('/api/client/change-password', {
         old_password: passwordForm.value.oldPassword,
         new_password: passwordForm.value.newPassword,
         confirm_password: passwordForm.value.confirmPassword
@@ -317,7 +317,7 @@ const changePassword = async () => {
 
 const logout = async () => {
   try {
-    await axios.post('/logout')
+    await axios.post('/api/logout')
     localStorage.removeItem('token')
     // НЕ сбрасываем preloaderShown - флаг должен сохраняться до новой авторизации
     router.push('/')

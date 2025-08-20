@@ -257,7 +257,7 @@ const totalRatings = computed(() =>
 const fetchNews = async () => {
   loading.value = true
   try {
-    const response = await axios.get('/admin/news', { withCredentials: true })
+    const response = await axios.get('/api/admin/news', { withCredentials: true })
     news.value = response.data
   } catch (error) {
     ElMessage.error('Ошибка загрузки новостей')
@@ -286,7 +286,7 @@ const handleImageSelect = async (file) => {
     formData.append('file', file.raw)
     
     // Загружаем файл на сервер
-    const response = await axios.post('/admin/products/upload', formData, {
+    const response = await axios.post('/api/admin/products/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -350,10 +350,10 @@ const saveNews = async () => {
     }
     
     if (editingNews.value) {
-      await axios.put(`/admin/news/${editingNews.value.id}`, data, { withCredentials: true })
+      await axios.put(`/api/admin/news/${editingNews.value.id}`, data, { withCredentials: true })
       ElMessage.success('Новость обновлена')
     } else {
-      await axios.post('/admin/news', data, { withCredentials: true })
+      await axios.post('/api/admin/news', data, { withCredentials: true })
       ElMessage.success('Новость создана')
     }
     
@@ -393,7 +393,7 @@ const deleteNews = async (id) => {
       }
     )
     
-    await axios.delete(`/admin/news/${id}`, { withCredentials: true })
+    await axios.delete(`/api/admin/news/${id}`, { withCredentials: true })
     ElMessage.success('Новость удалена')
     await fetchNews()
   } catch (error) {

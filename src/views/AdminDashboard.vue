@@ -31,7 +31,7 @@ const activeMenu = ref('')
 
 const fetchBalance = async () => {
   try {
-    const resp = await axios.get('/admin/balance', { withCredentials: true })
+    const resp = await axios.get('/api/admin/balance', { withCredentials: true })
     balance.value = resp.data.balance
   } catch (err) {
     balance.value = 'Ошибка'

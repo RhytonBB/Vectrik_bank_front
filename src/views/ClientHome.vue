@@ -134,7 +134,7 @@ let autoSlideInterval = null
 
 const fetchBanners = async () => {
   try {
-    const response = await axios.get('/client/banners')
+    const response = await axios.get('/api/client/banners')
     banners.value = response.data
   } catch (error) {
     console.error('Ошибка загрузки баннеров:', error)
@@ -143,7 +143,7 @@ const fetchBanners = async () => {
 
 const fetchUserInfo = async () => {
   try {
-    const response = await axios.get('/me')
+    const response = await axios.get('/api/me')
     userInfo.value = response.data
   } catch (error) {
     console.error('Ошибка загрузки информации о пользователе:', error)
@@ -152,7 +152,7 @@ const fetchUserInfo = async () => {
 
 const fetchPurchases = async () => {
   try {
-    const response = await axios.get('/client/purchases')
+    const response = await axios.get('/api/client/purchases')
     purchases.value = response.data
   } catch (error) {
     console.error('Ошибка загрузки покупок:', error)
@@ -161,7 +161,7 @@ const fetchPurchases = async () => {
 
 const fetchTransactions = async () => {
   try {
-    const response = await axios.get('/client/transactions')
+    const response = await axios.get('/api/client/transactions')
     transactions.value = response.data
   } catch (error) {
     console.error('Ошибка загрузки транзакций:', error)

@@ -52,7 +52,7 @@
       </div>
     </div>
     
-    <el-tabs v-model="activeTab" class="custom-tabs" stretch>
+    <el-tabs v-model="activeTab" class="custom-tabs">
       <el-tab-pane label="📝 Профиль" name="profile">
         <div class="tab-content">
           <div class="form-section">
@@ -201,12 +201,12 @@ const balanceForm = ref({
 })
 
 const fetchGroups = async () => {
-  const resp = await axios.get('/admin/groups')
+  const resp = await axios.get('/api/admin/groups')
   groups.value = resp.data
 }
 
 const fetchUser = async () => {
-  const resp = await axios.get(`/admin/users/${route.params.id}`)
+  const resp = await axios.get(`/api/admin/users/${route.params.id}`)
   user.value = resp.data
   editForm.value.first_name = user.value.first_name
   editForm.value.last_name = user.value.last_name
@@ -218,7 +218,7 @@ const fetchUser = async () => {
 
 const saveProfile = async () => {
   try {
-    await axios.put(`/admin/users/${user.value.id}`, {
+    await axios.put(`/api/admin/users/${user.value.id}`, {
       first_name: editForm.value.first_name,
       last_name: editForm.value.last_name,
       telegram_username: editForm.value.telegram_username,
@@ -240,7 +240,7 @@ const adjustBalance = async () => {
     return
   }
   try {
-    await axios.post('/admin/users/adjust_balance', {
+    await axios.post('/api/admin/users/adjust_balance', {
       user_id: user.value.id,
       amount: balanceForm.value.amount,
       context: balanceForm.value.context
@@ -256,20 +256,20 @@ const adjustBalance = async () => {
 }
 
 const toggleActive = async () => {
-  await axios.post(`/admin/users/${user.value.id}/activate`, { is_active: user.value.is_active })
+  await axios.post(`/api/admin/users/${user.value.id}/activate`, { is_active: user.value.is_active })
 }
 
 const toggleAdmin = async () => {
-  await axios.post(`/admin/users/${user.value.id}/admin`, { is_admin: user.value.is_admin })
+  await axios.post(`/api/admin/users/${user.value.id}/admin`, { is_admin: user.value.is_admin })
 }
 
 const banUser = async () => {
-  await axios.post(`/admin/users/${user.value.id}/ban`)
+  await axios.post(`/api/admin/users/${user.value.id}/ban`)
   fetchUser()
 }
 
 const unbanUser = async () => {
-  await axios.post(`/admin/users/${user.value.id}/unban`)
+  await axios.post(`/api/admin/users/${user.value.id}/unban`)
   fetchUser()
 }
 
@@ -284,7 +284,7 @@ const confirmDelete = async () => {
         type: 'warning',
       }
     )
-    await axios.delete(`/admin/users/${user.value.id}`)
+    await axios.delete(`/api/admin/users/${user.value.id}`)
     message.value = 'Пользователь удалён'
     setTimeout(() => router.push('/admin/users'), 1200)
   } catch (e) {
@@ -320,7 +320,7 @@ const uploadAvatar = async () => {
     formData.append('avatar', selectedFile.value)
     formData.append('user_id', user.value.id.toString())
 
-    const response = await axios.post('/admin/users/avatar/upload', formData, {
+    const response = await axios.post('/api/admin/users/avatar/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -423,30 +423,6 @@ onMounted(() => {
 .custom-tabs :deep(.el-tabs__item:hover) {
   color: #17624A !important;
   background: transparent !important;
-}
-
-/* Делает табы видимыми и скроллируемыми на узких экранах */
-.custom-tabs :deep(.el-tabs__nav-wrap) {
-  overflow: auto;
-}
-.custom-tabs :deep(.el-tabs__nav-scroll) {
-  overflow: auto;
-}
-.custom-tabs :deep(.el-tabs__nav) {
-  display: flex;
-  gap: 8px;
-}
-.custom-tabs :deep(.el-tabs__item) {
-  white-space: nowrap;
-}
-
-@media (max-width: 600px) {
-  .custom-tabs :deep(.el-tabs__item) {
-    flex: 1 0 auto;
-    justify-content: center;
-    font-size: 14px;
-    padding: 0 8px;
-  }
 }
 
 .tab-content {

@@ -263,13 +263,13 @@ const fetchProduct = async () => {
   if (isEdit.value) {
     try {
       // Пробуем загрузить как обычный товар
-      const resp = await axios.get(`/admin/products/${route.params.id}`)
+      const resp = await axios.get(`/api/admin/products/${route.params.id}`)
       Object.assign(product.value, resp.data)
       editingRegularProduct.value = true
     } catch (e) {
       // Если не найден, пробуем как краудфандинг товар
       try {
-        const resp = await axios.get(`/admin/crowdfunding/${route.params.id}`)
+        const resp = await axios.get(`/api/admin/crowdfunding/${route.params.id}`)
         Object.assign(crowdfundingProduct.value, resp.data)
         editingRegularProduct.value = false
       } catch (e2) {
@@ -287,9 +287,9 @@ const saveProduct = async () => {
   }
   try {
     if (isEdit.value) {
-      await axios.put(`/admin/products/${route.params.id}`, product.value)
+      await axios.put(`/api/admin/products/${route.params.id}`, product.value)
     } else {
-      await axios.post('/admin/products', product.value)
+      await axios.post('/api/admin/products', product.value)
     }
     router.push('/admin/products')
   } catch (e) {
@@ -304,9 +304,9 @@ const saveCrowdfundingProduct = async () => {
   }
   try {
     if (isEdit.value) {
-      await axios.put(`/admin/crowdfunding/${route.params.id}`, crowdfundingProduct.value)
+      await axios.put(`/api/admin/crowdfunding/${route.params.id}`, crowdfundingProduct.value)
     } else {
-      await axios.post('/admin/crowdfunding', crowdfundingProduct.value)
+      await axios.post('/api/admin/crowdfunding', crowdfundingProduct.value)
     }
     router.push('/admin/products')
   } catch (e) {
@@ -324,14 +324,14 @@ const handleCrowdfundingUploadSuccess = (res) => {
 
 const deleteProduct = async () => {
   if (confirm('Удалить товар?')) {
-    await axios.delete(`/admin/products/${route.params.id}`)
+    await axios.delete(`/api/admin/products/${route.params.id}`)
     router.push('/admin/products')
   }
 }
 
 const deleteCrowdfundingProduct = async () => {
   if (confirm('Удалить товар?')) {
-    await axios.delete(`/admin/crowdfunding/${route.params.id}`)
+    await axios.delete(`/api/admin/crowdfunding/${route.params.id}`)
     router.push('/admin/products')
   }
 }

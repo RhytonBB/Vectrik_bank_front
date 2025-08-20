@@ -283,30 +283,30 @@ const formatDate = (dateString) => {
 }
 
 const fetchProducts = async () => {
-  const resp = await axios.get('/admin/products')
+  const resp = await axios.get('/api/admin/products')
   products.value = resp.data
 }
 
 const fetchCrowdfundingProducts = async () => {
-  const resp = await axios.get('/admin/crowdfunding')
+  const resp = await axios.get('/api/admin/crowdfunding')
   crowdfundingProducts.value = resp.data
 }
 
 const fetchPurchases = async () => {
-  const resp = await axios.get('/admin/purchases')
+  const resp = await axios.get('/api/admin/purchases')
   purchases.value = resp.data
 }
 
 const fetchCrowdfundingContributions = async () => {
   try {
     // Получаем все краудфандинг товары
-    const resp = await axios.get('/admin/crowdfunding')
+    const resp = await axios.get('/api/admin/crowdfunding')
     const crowdfundingProducts = resp.data
     
     // Собираем все взносы для всех краудфандинг товаров
     let allContributions = []
     for (const product of crowdfundingProducts) {
-      const contributionsResp = await axios.get(`/admin/crowdfunding/${product.id}/contributions`)
+      const contributionsResp = await axios.get(`/api/admin/crowdfunding/${product.id}/contributions`)
       const contributions = contributionsResp.data.map(c => ({
         ...c,
         product_id: product.id,
@@ -333,14 +333,14 @@ const goToAdd = () => {
 
 const deleteProduct = async (row) => {
   if (confirm('Удалить товар?')) {
-    await axios.delete(`/admin/products/${row.id}`)
+    await axios.delete(`/api/admin/products/${row.id}`)
     fetchProducts()
   }
 }
 
 const deleteCrowdfundingProduct = async (row) => {
   if (confirm('Удалить товар общего сбора?')) {
-    await axios.delete(`/admin/crowdfunding/${row.id}`)
+    await axios.delete(`/api/admin/crowdfunding/${row.id}`)
     fetchCrowdfundingProducts()
   }
 }
@@ -349,7 +349,7 @@ const markPurchaseFulfilled = async (purchase) => {
   if (purchase.is_fulfilled) return
   
   try {
-    await axios.post(`/admin/purchases/${purchase.id}/fulfill`)
+    await axios.post(`/api/admin/purchases/${purchase.id}/fulfill`)
     // Данные обновятся автоматически через автообновление
   } catch (error) {
     console.error('Ошибка при отметке покупки:', error)
