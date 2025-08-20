@@ -170,7 +170,6 @@ const selectedNews = ref(null)
 const lightboxImage = ref('')
 const userRating = ref(null)
 let updateInterval = null
-let lastUpdateTime = null
 let lastNewsHash = null
 
 const featuredNews = computed(() => 
