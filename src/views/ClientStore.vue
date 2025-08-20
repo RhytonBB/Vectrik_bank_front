@@ -351,12 +351,12 @@ onMounted(async () => {
   fetchCrowdfundingProducts()
   fetchUserInfo()
   
-  // Запускаем автоматическое обновление каждые 60 секунд для оптимизации
+  // Запускаем автоматическое обновление каждые 15 секунд
   updateInterval = setInterval(() => {
     fetchProducts()
     fetchCrowdfundingProducts()
     fetchUserInfo()
-  }, 60000)
+  }, 15000)
   
   // Добавляем обработчик видимости страницы для обновления при возвращении пользователя
   const handleVisibilityChange = () => {

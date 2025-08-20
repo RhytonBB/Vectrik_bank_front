@@ -10,7 +10,12 @@
           Последнее обновление: {{ formatLastUpdate() }}
         </div>
       </div>
-      <el-button type="primary" @click="goToAdd" class="add-button">➕ Добавить товар</el-button>
+      <div class="header-actions">
+        <el-button type="info" @click="refreshAllData" :loading="isRefreshing" class="refresh-button">
+          🔄 Обновить
+        </el-button>
+        <el-button type="primary" @click="goToAdd" class="add-button">➕ Добавить товар</el-button>
+      </div>
     </div>
     <div v-if="isMobile" class="mobile-product-list">
       <div v-for="product in products" :key="product.id" class="product-card" @click="goToEdit(product)">
@@ -265,6 +270,10 @@ let refreshInterval = null
 let lastUpdateTime = ref(Date.now())
 const isPageVisible = ref(true)
 const isRefreshing = ref(false)
+let lastProductsHash = null
+let lastCrowdfundingHash = null
+let lastPurchasesHash = null
+let lastContributionsHash = null
 
 const getTypeColor = (type) => {
   switch (type) {
@@ -308,17 +317,41 @@ const formatLastUpdate = () => {
 
 const fetchProducts = async () => {
   const resp = await axios.get('/api/admin/products')
-  products.value = resp.data
+  const newProducts = resp.data
+  
+  // Проверяем, изменились ли данные
+  const newHash = JSON.stringify(newProducts.map(p => ({ id: p.id, name: p.name, price: p.price, stock: p.stock, is_active: p.is_active })))
+  if (newHash !== lastProductsHash) {
+    products.value = newProducts
+    lastProductsHash = newHash
+    console.log('📦 Товары обновлены')
+  }
 }
 
 const fetchCrowdfundingProducts = async () => {
   const resp = await axios.get('/api/admin/crowdfunding')
-  crowdfundingProducts.value = resp.data
+  const newCrowdfunding = resp.data
+  
+  // Проверяем, изменились ли данные
+  const newHash = JSON.stringify(newCrowdfunding.map(p => ({ id: p.id, name: p.name, target_amount: p.target_amount, is_active: p.is_active })))
+  if (newHash !== lastCrowdfundingHash) {
+    crowdfundingProducts.value = newCrowdfunding
+    lastCrowdfundingHash = newHash
+    console.log('💰 Краудфандинг товары обновлены')
+  }
 }
 
 const fetchPurchases = async () => {
   const resp = await axios.get('/api/admin/purchases')
-  purchases.value = resp.data
+  const newPurchases = resp.data
+  
+  // Проверяем, изменились ли данные
+  const newHash = JSON.stringify(newPurchases.map(p => ({ id: p.id, is_fulfilled: p.is_fulfilled, created_at: p.created_at })))
+  if (newHash !== lastPurchasesHash) {
+    purchases.value = newPurchases
+    lastPurchasesHash = newHash
+    console.log('🛒 Покупки обновлены')
+  }
 }
 
 const fetchCrowdfundingContributions = async () => {
@@ -340,7 +373,13 @@ const fetchCrowdfundingContributions = async () => {
       allContributions = allContributions.concat(contributions)
     }
     
-    crowdfundingContributions.value = allContributions
+    // Проверяем, изменились ли данные
+    const newHash = JSON.stringify(allContributions.map(c => ({ id: c.id, amount: c.amount, created_at: c.created_at })))
+    if (newHash !== lastContributionsHash) {
+      crowdfundingContributions.value = allContributions
+      lastContributionsHash = newHash
+      console.log('💸 Взносы обновлены')
+    }
   } catch (error) {
     console.error('Ошибка загрузки взносов в краудфандинг:', error)
     crowdfundingContributions.value = []
@@ -444,14 +483,14 @@ const refreshAllData = async () => {
 
 // Умная система автообновления
 const startSmartAutoRefresh = () => {
-  // Обновляем статические данные каждые 2 минуты
-  setInterval(refreshStaticData, 120000)
+  // Обновляем статические данные каждые 10 минут
+  setInterval(refreshStaticData, 600000)
   
-  // Обновляем динамические данные каждые 45 секунд
-  setInterval(refreshDynamicData, 45000)
+  // Обновляем динамические данные каждые 3 минуты
+  setInterval(refreshDynamicData, 180000)
   
-  // Полное обновление каждые 5 минут
-  setInterval(refreshAllData, 300000)
+  // Полное обновление каждые 15 минут
+  setInterval(refreshAllData, 900000)
   
   console.log('🚀 Умное автообновление запущено')
 }
@@ -468,8 +507,13 @@ const stopAutoRefresh = () => {
 const handleVisibilityChange = () => {
   isPageVisible.value = !document.hidden
   if (isPageVisible.value) {
-    // Когда страница становится видимой, обновляем данные
-    refreshAllData()
+    // Когда страница становится видимой, обновляем только динамические данные
+    // и только если прошло больше 5 минут с последнего обновления
+    const timeSinceLastUpdate = Date.now() - lastUpdateTime.value
+    if (timeSinceLastUpdate > 300000) { // 5 минут
+      refreshDynamicData()
+      lastUpdateTime.value = Date.now()
+    }
   }
 }
 
@@ -524,6 +568,11 @@ onUnmounted(() => {
   display: flex;
   gap: 12px;
   align-items: center;
+}
+
+.refresh-button {
+  height: 40px;
+  font-weight: 600;
 }
 
 
@@ -587,6 +636,13 @@ onUnmounted(() => {
   .header-actions {
     flex-direction: column !important;
     gap: 12px !important;
+  }
+  
+  .refresh-button {
+    width: 100% !important;
+    height: 48px !important;
+    font-size: 18px !important;
+    border-radius: 10px !important;
   }
   
   .add-button {
