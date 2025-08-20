@@ -17,7 +17,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
@@ -31,15 +31,30 @@ const form = ref({
 });
 const loading = ref(false);
 
+// Получаем CSRF токен при загрузке страницы
+onMounted(async () => {
+  try {
+    await axios.get('/api/csrf-token');
+  } catch (error) {
+    console.error('Ошибка получения CSRF токена:', error);
+  }
+});
+
 async function onLogin() {
   if (!form.value.username || !form.value.password) {
     ElMessage.error('Заполните все поля!');
     return;
   }
   loading.value = true;
+  
   try {
+    // Получаем новый CSRF токен перед логином
+    console.log('Получаем новый CSRF токен...');
+    await axios.get('/api/csrf-token');
+    console.log('CSRF токен получен');
+    
     const response = await axios.post(
-      '/login',
+      '/api/login',
       {
         login: form.value.username,
         password: form.value.password
@@ -53,7 +68,7 @@ async function onLogin() {
       localStorage.setItem('token', response.data.token);
       // Получаем роль пользователя
       try {
-        const meResp = await axios.get('/me', { withCredentials: true });
+        const meResp = await axios.get('/api/me', { withCredentials: true });
         if (meResp.data.is_admin) {
           router.push('/admin/dashboard');
         } else {
