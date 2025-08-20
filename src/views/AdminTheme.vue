@@ -54,8 +54,9 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import { useTheme } from '@/composables/useTheme'
 
+const { applyTheme, setTheme } = useTheme()
 const theme = ref('green')
 const message = ref('')
 
@@ -79,13 +80,17 @@ const selectTheme = (themeValue) => {
 }
 
 const fetchTheme = async () => {
-  const resp = await axios.get('/api/admin/theme')
-  theme.value = resp.data.theme
+  const currentTheme = await applyTheme()
+  theme.value = currentTheme
 }
 
 const changeTheme = async () => {
-  await axios.post('/api/admin/theme', { theme: theme.value })
-  message.value = 'Тема успешно изменена!'
+  const success = await setTheme(theme.value)
+  if (success) {
+    message.value = 'Тема успешно изменена!'
+  } else {
+    message.value = 'Ошибка при изменении темы'
+  }
 }
 
 onMounted(fetchTheme)

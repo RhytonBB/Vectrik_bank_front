@@ -53,6 +53,13 @@ console.error = (...args) => {
   originalError.apply(console, args);
 };
 
+// Импортируем composable для темы
+import { useTheme } from './composables/useTheme.js'
+
+// Применяем тему при загрузке
+const { applyTheme } = useTheme()
+applyTheme()
+
 const app = createApp(App);
 app.use(router);
 app.use(ElementPlus);
