@@ -184,7 +184,6 @@ const fetchUsers = async () => {
     error.value = 'Ошибка поиска пользователей'
   }
 }
-const searchUsers = fetchUsers
 watch(activeTab, fetchUsers)
 
 const onSearchInput = () => {
