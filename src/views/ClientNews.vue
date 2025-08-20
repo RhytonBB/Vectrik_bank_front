@@ -27,11 +27,7 @@
           <div class="no-news-icon">📰</div>
           <h3>Пока нет новостей</h3>
           <p>Следите за обновлениями, скоро здесь появятся интересные новости!</p>
-          <div class="no-news-actions">
-            <button @click="refreshNews" class="refresh-btn">
-              <span>🔄</span> Обновить
-            </button>
-          </div>
+
         </div>
       </div>
 
@@ -174,6 +170,8 @@ const selectedNews = ref(null)
 const lightboxImage = ref('')
 const userRating = ref(null)
 let updateInterval = null
+let lastUpdateTime = null
+let lastNewsHash = null
 
 const featuredNews = computed(() => 
   news.value.filter(item => item.is_featured)
@@ -195,13 +193,19 @@ const fetchNews = async () => {
   try {
     loading.value = true
     const response = await axios.get('/api/news')
-    news.value = response.data || []
+    const newNews = response.data || []
+    
+    // Проверяем, изменились ли данные
+    const newHash = JSON.stringify(newNews.map(n => ({ id: n.id, title: n.title, is_featured: n.is_featured, published_at: n.published_at })))
+    if (newHash !== lastNewsHash) {
+      news.value = newNews
+      lastNewsHash = newHash
+      console.log(`Загружено ${news.value.length} новостей`)
+    }
     
     // Если новостей нет, показываем соответствующее сообщение
     if (news.value.length === 0) {
       console.log('Нет опубликованных новостей')
-    } else {
-      console.log(`Загружено ${news.value.length} новостей`)
     }
   } catch (error) {
     console.error('Failed to fetch news:', error)
@@ -223,6 +227,13 @@ const viewNews = async (item) => {
   try {
     const response = await axios.get(`/api/news/${item.id}/rating`, { withCredentials: true })
     userRating.value = response.data.rating
+    
+    // Обновляем счетчики новости актуальными данными
+    if (response.data.news) {
+      selectedNews.value.thumbs_up = response.data.news.thumbs_up
+      selectedNews.value.thumbs_down = response.data.news.thumbs_down
+      selectedNews.value.fire_count = response.data.news.fire_count
+    }
   } catch (error) {
     userRating.value = null
   }
@@ -235,11 +246,19 @@ const rateNews = async (newsId, rating) => {
       { withCredentials: true }
     )
     
-    // Обновляем данные новости
+    // Обновляем данные новости в диалоге
     if (selectedNews.value && selectedNews.value.id === newsId) {
       selectedNews.value.thumbs_up = response.data.news.thumbs_up
       selectedNews.value.thumbs_down = response.data.news.thumbs_down
       selectedNews.value.fire_count = response.data.news.fire_count
+    }
+    
+    // Обновляем данные новости в списке
+    const newsIndex = news.value.findIndex(item => item.id === newsId)
+    if (newsIndex !== -1) {
+      news.value[newsIndex].thumbs_up = response.data.news.thumbs_up
+      news.value[newsIndex].thumbs_down = response.data.news.thumbs_down
+      news.value[newsIndex].fire_count = response.data.news.fire_count
     }
     
     // Обновляем рейтинг пользователя
@@ -290,10 +309,7 @@ const formatDate = (dateString) => {
   })
 }
 
-const refreshNews = () => {
-  loading.value = true
-  fetchNews()
-}
+
 
 onMounted(async () => {
   // Применяем тему
@@ -301,10 +317,10 @@ onMounted(async () => {
   
   fetchNews()
   
-  // Запускаем автоматическое обновление каждые 5 секунд для быстрой реакции на изменения
+  // Запускаем автоматическое обновление каждые 60 секунд для оптимизации
   updateInterval = setInterval(() => {
     fetchNews()
-  }, 5000)
+  }, 60000)
   
   // Добавляем обработчик видимости страницы для обновления при возвращении пользователя
   const handleVisibilityChange = () => {
@@ -452,42 +468,7 @@ body.theme-pink .news-header {
   max-width: 400px;
 }
 
-.no-news-actions {
-  display: flex;
-  gap: 15px;
-  margin-top: 10px;
-}
 
-.refresh-btn {
-  background-color: var(--color-primary);
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.refresh-btn:hover {
-  background-color: #0f4a3a;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.refresh-btn span {
-  font-size: 18px;
-}
-
-/* Розовая тема */
-body.theme-pink .refresh-btn:hover {
-  background-color: #e6399b;
-}
 
 .news-container {
   max-width: 1200px;

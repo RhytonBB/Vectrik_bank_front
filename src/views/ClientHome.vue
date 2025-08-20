@@ -131,6 +131,7 @@ const purchases = ref([])
 const transactions = ref([])
 const currentBannerIndex = ref(0)
 let autoSlideInterval = null
+let manualSlideTimeout = null
 
 const fetchBanners = async () => {
   try {
@@ -186,6 +187,15 @@ const nextBanner = () => {
   } else {
     currentBannerIndex.value = 0
   }
+  // Останавливаем автослайд при ручном переключении
+  stopAutoSlide()
+  // Возобновляем через 3 секунды
+  if (manualSlideTimeout) {
+    clearTimeout(manualSlideTimeout)
+  }
+  manualSlideTimeout = setTimeout(() => {
+    startAutoSlide()
+  }, 3000)
 }
 
 const prevBanner = () => {
@@ -194,10 +204,28 @@ const prevBanner = () => {
   } else {
     currentBannerIndex.value = banners.value.length - 1
   }
+  // Останавливаем автослайд при ручном переключении
+  stopAutoSlide()
+  // Возобновляем через 3 секунды
+  if (manualSlideTimeout) {
+    clearTimeout(manualSlideTimeout)
+  }
+  manualSlideTimeout = setTimeout(() => {
+    startAutoSlide()
+  }, 3000)
 }
 
 const goToBanner = (index) => {
   currentBannerIndex.value = index
+  // Останавливаем автослайд при ручном переключении
+  stopAutoSlide()
+  // Возобновляем через 3 секунды
+  if (manualSlideTimeout) {
+    clearTimeout(manualSlideTimeout)
+  }
+  manualSlideTimeout = setTimeout(() => {
+    startAutoSlide()
+  }, 3000)
 }
 
 const startAutoSlide = () => {
@@ -236,6 +264,9 @@ onMounted(async () => {
 
 onUnmounted(() => {
   stopAutoSlide()
+  if (manualSlideTimeout) {
+    clearTimeout(manualSlideTimeout)
+  }
 })
 </script>
 
@@ -277,7 +308,6 @@ onUnmounted(() => {
   position: relative;
   overflow: hidden;
   border-radius: 12px;
-  background: #e8f5e8;
 }
 
 .banner-container {

@@ -4,7 +4,12 @@
       <i class="el-icon-arrow-left" style="margin-right: 6px;"></i>Назад
     </el-button>
     <div class="header">
-      <h2>🛍️ Управление лотами и товарами</h2>
+      <div class="header-left">
+        <h2>🛍️ Управление лотами и товарами</h2>
+        <div class="last-update">
+          Последнее обновление: {{ formatLastUpdate() }}
+        </div>
+      </div>
       <el-button type="primary" @click="goToAdd" class="add-button">➕ Добавить товар</el-button>
     </div>
     <div v-if="isMobile" class="mobile-product-list">
@@ -257,6 +262,9 @@ const crowdfundingContributions = ref([])
 const router = useRouter()
 const isMobile = ref(false)
 let refreshInterval = null
+let lastUpdateTime = ref(Date.now())
+const isPageVisible = ref(true)
+const isRefreshing = ref(false)
 
 const getTypeColor = (type) => {
   switch (type) {
@@ -280,6 +288,22 @@ const getTypeText = (type) => {
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('ru-RU')
+}
+
+const formatLastUpdate = () => {
+  const now = Date.now()
+  const diff = now - lastUpdateTime.value
+  const seconds = Math.floor(diff / 1000)
+  
+  if (seconds < 60) {
+    return `${seconds} сек назад`
+  } else if (seconds < 3600) {
+    const minutes = Math.floor(seconds / 60)
+    return `${minutes} мин назад`
+  } else {
+    const hours = Math.floor(seconds / 3600)
+    return `${hours} ч назад`
+  }
 }
 
 const fetchProducts = async () => {
@@ -371,8 +395,37 @@ const getCrowdfundingProgress = (product) => {
   return Math.round((totalContributed / product.target_amount) * 100)
 }
 
+// Функция для обновления статических данных (реже)
+const refreshStaticData = async () => {
+  try {
+    await Promise.all([
+      fetchProducts(),
+      fetchCrowdfundingProducts()
+    ])
+    console.log('📊 Статические данные обновлены')
+  } catch (error) {
+    console.error('Ошибка при обновлении статических данных:', error)
+  }
+}
+
+// Функция для обновления динамических данных (чаще)
+const refreshDynamicData = async () => {
+  try {
+    await Promise.all([
+      fetchPurchases(),
+      fetchCrowdfundingContributions()
+    ])
+    console.log('🔄 Динамические данные обновлены')
+  } catch (error) {
+    console.error('Ошибка при обновлении динамических данных:', error)
+  }
+}
+
 // Функция для обновления всех данных
 const refreshAllData = async () => {
+  if (isRefreshing.value) return // Предотвращаем множественные запросы
+  
+  isRefreshing.value = true
   try {
     await Promise.all([
       fetchProducts(),
@@ -380,15 +433,27 @@ const refreshAllData = async () => {
       fetchPurchases(),
       fetchCrowdfundingContributions()
     ])
+    lastUpdateTime.value = Date.now()
+    console.log('✅ Все данные обновлены')
   } catch (error) {
     console.error('Ошибка при обновлении данных:', error)
+  } finally {
+    isRefreshing.value = false
   }
 }
 
-// Запуск автообновления
-const startAutoRefresh = () => {
-  // Обновляем каждые 3 секунды
-  refreshInterval = setInterval(refreshAllData, 3000)
+// Умная система автообновления
+const startSmartAutoRefresh = () => {
+  // Обновляем статические данные каждые 2 минуты
+  setInterval(refreshStaticData, 120000)
+  
+  // Обновляем динамические данные каждые 45 секунд
+  setInterval(refreshDynamicData, 45000)
+  
+  // Полное обновление каждые 5 минут
+  setInterval(refreshAllData, 300000)
+  
+  console.log('🚀 Умное автообновление запущено')
 }
 
 // Остановка автообновления
@@ -399,23 +464,36 @@ const stopAutoRefresh = () => {
   }
 }
 
+// Обработчик видимости страницы
+const handleVisibilityChange = () => {
+  isPageVisible.value = !document.hidden
+  if (isPageVisible.value) {
+    // Когда страница становится видимой, обновляем данные
+    refreshAllData()
+  }
+}
+
 onMounted(() => {
   // Первоначальная загрузка данных
   refreshAllData()
   
-  // Запускаем автообновление
-  startAutoRefresh()
+  // Запускаем умное автообновление
+  startSmartAutoRefresh()
   
   // Настройка для мобильных устройств
   isMobile.value = window.innerWidth < 600
   window.addEventListener('resize', () => {
     isMobile.value = window.innerWidth < 600
   })
+  
+  // Слушаем изменения видимости страницы
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 
-// Очищаем интервал при размонтировании компонента
+// Очищаем интервалы при размонтировании компонента
 onUnmounted(() => {
   stopAutoRefresh()
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 </script>
 
@@ -423,13 +501,29 @@ onUnmounted(() => {
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 24px;
 }
 
+.header-left {
+  flex: 1;
+}
+
 .header h2 {
-  margin: 0;
+  margin: 0 0 8px 0;
   color: var(--color-primary);
+}
+
+.last-update {
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 
 
@@ -476,9 +570,23 @@ onUnmounted(() => {
     margin-bottom: 20px !important;
   }
   
+  .header-left {
+    text-align: center !important;
+  }
+  
   .header h2 {
     font-size: 1.4rem !important;
     text-align: center !important;
+  }
+  
+  .last-update {
+    text-align: center !important;
+    margin-top: 8px !important;
+  }
+  
+  .header-actions {
+    flex-direction: column !important;
+    gap: 12px !important;
   }
   
   .add-button {

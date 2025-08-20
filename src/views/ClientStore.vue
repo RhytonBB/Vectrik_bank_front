@@ -16,11 +16,6 @@
       <!-- Заголовок магазина -->
       <div class="store-header">
         <h2 class="store-title">Магазин</h2>
-        <button @click="refreshStore" class="refresh-store-btn" :disabled="isRefreshing">
-          <span v-if="!isRefreshing">🔄</span>
-          <span v-else class="loading-spinner-small"></span>
-          {{ isRefreshing ? 'Обновление...' : 'Обновить' }}
-        </button>
       </div>
 
       <!-- Список обычных товаров -->
@@ -188,11 +183,12 @@ const { applyTheme } = useTheme()
 const products = ref([])
 const crowdfundingProducts = ref([])
 const userInfo = ref({})
-const isRefreshing = ref(false)
 const showCrowdfundingModal = ref(false)
 const selectedProduct = ref(null)
 const contributionAmount = ref('')
 let updateInterval = null
+let lastProductsHash = null
+let lastCrowdfundingHash = null
 
 const getLogo = () => {
   // Проверяем, есть ли класс theme-pink на body
@@ -205,20 +201,18 @@ const getLogo = () => {
 const fetchProducts = async () => {
   try {
     const response = await axios.get('/api/client/products')
-    products.value = response.data || []
+    const newProducts = response.data || []
     
-    // Если товаров нет, показываем соответствующее сообщение
-    if (products.value.length === 0) {
-      console.log('Нет доступных товаров в магазине')
-    } else {
+    // Проверяем, изменились ли данные
+    const newHash = JSON.stringify(newProducts.map(p => ({ id: p.id, stock: p.stock, price: p.price })))
+    if (newHash !== lastProductsHash) {
+      products.value = newProducts
+      lastProductsHash = newHash
       console.log(`Загружено ${products.value.length} товаров`)
     }
   } catch (error) {
     console.error('Ошибка загрузки товаров:', error)
-    // В случае ошибки устанавливаем пустой массив
     products.value = []
-    
-    // Показываем сообщение об ошибке пользователю
     alert('Ошибка загрузки товаров. Попробуйте обновить страницу.')
   }
 }
@@ -226,7 +220,14 @@ const fetchProducts = async () => {
 const fetchCrowdfundingProducts = async () => {
   try {
     const response = await axios.get('/api/client/crowdfunding')
-    crowdfundingProducts.value = response.data || []
+    const newCrowdfunding = response.data || []
+    
+    // Проверяем, изменились ли данные
+    const newHash = JSON.stringify(newCrowdfunding.map(p => ({ id: p.id, crowdfunding_progress: p.crowdfunding_progress })))
+    if (newHash !== lastCrowdfundingHash) {
+      crowdfundingProducts.value = newCrowdfunding
+      lastCrowdfundingHash = newHash
+    }
   } catch (error) {
     console.error('Ошибка загрузки краудфандинг товаров:', error)
     crowdfundingProducts.value = []
@@ -286,11 +287,12 @@ const purchaseProduct = async (product) => {
       quantity: 1
     })
     
-    // Обновляем информацию о пользователе и товарах
+    // Обновляем информацию о пользователе и товарах после покупки
     await fetchUserInfo()
     await fetchProducts()
+    await fetchCrowdfundingProducts()
     
-    alert('Покупка успешно совершена!')
+    alert('Покупка успешно совершена! В скором времени ваш заказ будет исполнен!')
   } catch (error) {
     console.error('Ошибка покупки:', error)
     if (error.response?.data?.error) {
@@ -301,20 +303,7 @@ const purchaseProduct = async (product) => {
   }
 }
 
-const refreshStore = async () => {
-  isRefreshing.value = true
-  try {
-    await fetchProducts()
-    await fetchCrowdfundingProducts()
-    await fetchUserInfo()
-    alert('Магазин успешно обновлен!')
-  } catch (error) {
-    console.error('Ошибка обновления магазина:', error)
-    alert('Произошла ошибка при обновлении магазина. Попробуйте позже.')
-  } finally {
-    isRefreshing.value = false
-  }
-}
+
 
 const openCrowdfundingModal = (product) => {
   selectedProduct.value = product
@@ -337,7 +326,7 @@ const contributeToCrowdfunding = async () => {
       amount: parseInt(contributionAmount.value)
     })
     
-    // Обновляем информацию о пользователе и товарах
+    // Обновляем информацию о пользователе и товарах после взноса
     await fetchUserInfo()
     await fetchProducts()
     await fetchCrowdfundingProducts()
@@ -362,12 +351,12 @@ onMounted(async () => {
   fetchCrowdfundingProducts()
   fetchUserInfo()
   
-  // Запускаем автоматическое обновление каждые 5 секунд для быстрой реакции на изменения
+  // Запускаем автоматическое обновление каждые 60 секунд для оптимизации
   updateInterval = setInterval(() => {
     fetchProducts()
     fetchCrowdfundingProducts()
     fetchUserInfo()
-  }, 5000)
+  }, 60000)
   
   // Добавляем обработчик видимости страницы для обновления при возвращении пользователя
   const handleVisibilityChange = () => {
@@ -471,44 +460,7 @@ onUnmounted(() => {
   margin: 0;
 }
 
-.refresh-store-btn {
-  background: #e9ecef;
-  color: #333;
-  padding: 8px 12px;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-}
 
-.refresh-store-btn:hover:not(:disabled) {
-  background: #dee2e6;
-}
-
-.refresh-store-btn:disabled {
-  background: #ccc;
-  color: #666;
-  cursor: not-allowed;
-}
-
-.loading-spinner-small {
-  width: 16px;
-  height: 16px;
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid #333;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
 
 .products-grid {
   display: grid;
