@@ -577,14 +577,23 @@ body.theme-pink .purchase-button:hover:not(.disabled) {
 }
 
 .purchase-button.already-purchased {
-  background: #28a745;
+  background: #B4D8BA;
   color: #fff;
   cursor: not-allowed;
 }
 
 .purchase-button.already-purchased:hover {
-  background: #28a745;
+  background: #B4D8BA;
   transform: none;
+}
+
+/* Розовая тема */
+body.theme-pink .purchase-button.already-purchased {
+  background: #e6399b;
+}
+
+body.theme-pink .purchase-button.already-purchased:hover {
+  background: #e6399b;
 }
 
 .empty-products {
