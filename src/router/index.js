@@ -66,11 +66,46 @@ const router = createRouter({
   routes,
 });
 
+// Функция для получения cookie
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+// Функция для проверки CSRF токена
+function isCSRFTokenExpired() {
+  const token = getCookie('csrf_token');
+  if (!token) {
+    console.log('🔒 CSRF токен отсутствует в роутере');
+    return true;
+  }
+  return false;
+}
+
+// Функция для автоматического выхода
+function performLogout() {
+  console.log('🔒 Выполняем автоматический выход из роутера');
+  localStorage.removeItem('token');
+  // Очищаем все cookies
+  document.cookie.split(";").forEach(function(c) { 
+    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+  });
+}
+
 // Глобальный guard для разграничения интерфейсов
 router.beforeEach(async (to, from, next) => {
-  console.log('Router guard:', { to: to.path, from: from.path });
+  console.log('🚦 Router guard:', { to: to.path, from: from.path });
   
   if (to.path === '/') return next();
+  
+  // Проверяем CSRF токен перед запросом к API
+  if (isCSRFTokenExpired()) {
+    console.log('🔒 CSRF токен истек в роутере, перенаправляем на вход');
+    performLogout();
+    return next('/');
+  }
   
   // Проверяем авторизацию
   try {
