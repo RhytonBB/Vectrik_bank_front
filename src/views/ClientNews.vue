@@ -164,7 +164,7 @@ import ClientLayout from '@/components/ClientLayout.vue'
 import { useTheme } from '@/composables/useTheme'
 import axios from 'axios'
 
-const { currentTheme } = useTheme()
+const { applyTheme } = useTheme()
 
 const news = ref([])
 const loading = ref(true)
@@ -184,10 +184,11 @@ const regularNews = computed(() =>
 )
 
 const getLogo = () => {
-  if (currentTheme.value === 'pink') {
-      return '/logo-pink.svg'
-}
-return '/logo.svg'
+  // Проверяем, есть ли класс theme-pink на body
+  if (document.body.classList.contains('theme-pink')) {
+    return '/logo-pink.svg'
+  }
+  return '/logo.svg'
 }
 
 const fetchNews = async () => {
@@ -294,7 +295,10 @@ const refreshNews = () => {
   fetchNews()
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Применяем тему
+  await applyTheme()
+  
   fetchNews()
   
   // Запускаем автоматическое обновление каждые 5 секунд для быстрой реакции на изменения

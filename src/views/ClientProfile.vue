@@ -169,7 +169,7 @@ import ClientLayout from '@/components/ClientLayout.vue'
 import { useTheme } from '@/composables/useTheme'
 
 const router = useRouter()
-const { currentTheme } = useTheme()
+const { applyTheme } = useTheme()
 const userInfo = ref({})
 
 // Модальные окна
@@ -247,10 +247,11 @@ const passwordRules = {
 }
 
 const getLogo = () => {
-  if (currentTheme.value === 'pink') {
-      return '/logo-pink.svg'
-}
-return '/logo.svg'
+  // Проверяем, есть ли класс theme-pink на body
+  if (document.body.classList.contains('theme-pink')) {
+    return '/logo-pink.svg'
+  }
+  return '/logo.svg'
 }
 
 const fetchUserInfo = async () => {
@@ -330,7 +331,10 @@ const logout = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Применяем тему
+  await applyTheme()
+  
   fetchUserInfo()
 })
 </script>

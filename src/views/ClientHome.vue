@@ -123,7 +123,7 @@ import axios from 'axios'
 import ClientLayout from '@/components/ClientLayout.vue'
 import { useTheme } from '@/composables/useTheme'
 
-const { currentTheme } = useTheme()
+const { applyTheme } = useTheme()
 
 const banners = ref([])
 const userInfo = ref({})
@@ -216,13 +216,17 @@ const stopAutoSlide = () => {
 }
 
 const getLogo = () => {
-  if (currentTheme.value === 'pink') {
+  // Проверяем, есть ли класс theme-pink на body
+  if (document.body.classList.contains('theme-pink')) {
     return '/logo-pink.svg'
   }
   return '/logo.svg'
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Применяем тему
+  await applyTheme()
+  
   fetchBanners()
   fetchUserInfo()
   fetchPurchases()

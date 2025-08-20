@@ -184,7 +184,7 @@ import axios from 'axios'
 import ClientLayout from '@/components/ClientLayout.vue'
 import { useTheme } from '@/composables/useTheme'
 
-const { currentTheme } = useTheme()
+const { applyTheme } = useTheme()
 const products = ref([])
 const crowdfundingProducts = ref([])
 const userInfo = ref({})
@@ -195,10 +195,11 @@ const contributionAmount = ref('')
 let updateInterval = null
 
 const getLogo = () => {
-  if (currentTheme.value === 'pink') {
-      return '/logo-pink.svg'
-}
-return '/logo.svg'
+  // Проверяем, есть ли класс theme-pink на body
+  if (document.body.classList.contains('theme-pink')) {
+    return '/logo-pink.svg'
+  }
+  return '/logo.svg'
 }
 
 const fetchProducts = async () => {
@@ -353,7 +354,10 @@ const contributeToCrowdfunding = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Применяем тему
+  await applyTheme()
+  
   fetchProducts()
   fetchCrowdfundingProducts()
   fetchUserInfo()
