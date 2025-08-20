@@ -276,6 +276,8 @@ const changeLogin = async () => {
           showChangeLoginModal.value = false
           // Очищаем форму
           loginForm.value = { oldLogin: '', newLogin: '', confirmLogin: '' }
+          // Обновляем информацию пользователя
+          fetchUserInfo()
         })
         .catch(error => {
           ElMessage.error(error.response?.data?.message || 'Ошибка изменения логина')
@@ -441,17 +443,17 @@ onMounted(() => {
 }
 
 .change-login-btn:hover {
-  background: #0d503c;
+  background: ##115740;
   transform: translateY(-1px);
 }
 
 .change-password-btn {
-  background: #67c23a;
+  background: #115740;
   color: #fff;
 }
 
 .change-password-btn:hover {
-  background: #5daf34;
+  background: #115740;
   transform: translateY(-1px);
 }
 
