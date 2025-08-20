@@ -5,28 +5,28 @@
     </div>
     
     <nav class="client-navigation">
-      <router-link to="/api/client" class="nav-item" active-class="active">
-        <img :src="getNavIcon('/api/bank')" alt="Главная" class="nav-icon">
+      <router-link to="/client" class="nav-item" active-class="active">
+        <img :src="getNavIcon('bank')" alt="Главная" class="nav-icon">
         <span class="nav-text">Главная</span>
       </router-link>
       
-      <router-link to="/api/client/store" class="nav-item" active-class="active">
-        <img :src="getNavIcon('/api/store')" alt="Магазин" class="nav-icon">
+      <router-link to="/client/store" class="nav-item" active-class="active">
+        <img :src="getNavIcon('store')" alt="Магазин" class="nav-icon">
         <span class="nav-text">Магазин</span>
       </router-link>
       
-      <router-link to="/api/client/news" class="nav-item" active-class="active">
-        <img :src="getNavIcon('/api/news')" alt="Новости" class="nav-icon">
+      <router-link to="/client/news" class="nav-item" active-class="active">
+        <img :src="getNavIcon('news')" alt="Новости" class="nav-icon">
         <span class="nav-text">Новости</span>
       </router-link>
       
-      <router-link to="/api/client/about" class="nav-item" active-class="active">
-        <img :src="getNavIcon('/api/about')" alt="О нас" class="nav-icon">
+      <router-link to="/client/about" class="nav-item" active-class="active">
+        <img :src="getNavIcon('about')" alt="О нас" class="nav-icon">
         <span class="nav-text">О нас</span>
       </router-link>
       
-      <router-link to="/api/client/profile" class="nav-item" active-class="active">
-        <img :src="getNavIcon('/api/user')" alt="Профиль" class="nav-icon">
+      <router-link to="/client/profile" class="nav-item" active-class="active">
+        <img :src="getNavIcon('user')" alt="Профиль" class="nav-icon">
         <span class="nav-text">Профиль</span>
       </router-link>
     </nav>
