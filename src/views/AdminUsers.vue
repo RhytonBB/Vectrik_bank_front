@@ -927,4 +927,5 @@ onMounted(() => {
     font-size: 11px !important;
     padding: 3px 6px !important;
   }
+}
 </style> 
