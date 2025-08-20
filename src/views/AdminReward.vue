@@ -15,14 +15,42 @@
     </div>
     
     <div class="search-section">
-      <el-form :inline="!isMobile" @submit.prevent="searchUsers" class="search-form">
-        <el-form-item label="Поиск пользователей:" class="search-item">
-          <el-input v-model="query" placeholder="Имя, фамилия или логин" class="search-input" />
-        </el-form-item>
-        <el-form-item class="search-button-item">
-          <el-button type="primary" native-type="submit" class="search-btn">Искать</el-button>
-        </el-form-item>
-      </el-form>
+      <div class="search-container">
+        <el-input 
+          v-model="query" 
+          placeholder="🔍 Поиск пользователей..." 
+          class="search-input"
+          clearable
+          @input="onSearchInput"
+          @focus="showSearchResults = true"
+          @blur="setTimeout(() => showSearchResults = false, 200)"
+        />
+        <div v-if="showSearchResults && query && searchResults.length > 0" class="search-dropdown">
+          <div 
+            v-for="user in searchResults" 
+            :key="user.id" 
+            class="search-result-item"
+            @click="selectSearchResult(user)"
+          >
+            <div class="search-user-avatar">
+              <img 
+                v-if="user.avatar_url"
+                :src="user.avatar_url" 
+                :alt="`${user.first_name} ${user.last_name}`"
+                class="search-avatar-img"
+              />
+              <div v-else class="search-avatar-placeholder">
+                <i class="el-icon-user"></i>
+              </div>
+            </div>
+            <div class="search-user-info">
+              <div class="search-user-name">{{ user.first_name }} {{ user.last_name }}</div>
+              <div class="search-user-telegram">@{{ user.telegram_username }}</div>
+              <div class="search-user-group" v-if="user.group">{{ user.group.name }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     
     <div class="reward-form-section">
@@ -120,6 +148,8 @@ const context = ref('')
 const message = ref('')
 const error = ref('')
 const isMobile = ref(false)
+const searchResults = ref([])
+const showSearchResults = ref(false)
 
 const reasons = [
   { label: '+5 за активность в группе Вектора', value: '+5 за активность в группе Вектора', amount: 5 },
@@ -156,6 +186,31 @@ const fetchUsers = async () => {
 }
 const searchUsers = fetchUsers
 watch(activeTab, fetchUsers)
+
+const onSearchInput = () => {
+  if (query.value.trim() === '') {
+    searchResults.value = [];
+    return;
+  }
+  
+  const searchQuery = query.value.toLowerCase().trim();
+  searchResults.value = users.value.filter(user => 
+    user.first_name.toLowerCase().includes(searchQuery) ||
+    user.last_name.toLowerCase().includes(searchQuery) ||
+    user.telegram_username.toLowerCase().includes(searchQuery) ||
+    (user.group && user.group.name.toLowerCase().includes(searchQuery))
+  ).slice(0, 8); // Ограничиваем до 8 результатов
+};
+
+const selectSearchResult = (user) => {
+  query.value = '';
+  searchResults.value = [];
+  showSearchResults.value = false;
+  // Автоматически выбираем пользователя
+  if (!selectedUsers.value.includes(user.id)) {
+    selectedUsers.value.push(user.id);
+  }
+};
 const onReasonChange = (val) => {
   const found = reasons.find(r => r.value === val)
   if (found) amount.value = found.amount
@@ -228,19 +283,94 @@ onMounted(() => {
   border: 1px solid #e0e0e0;
 }
 
-.search-form {
-  display: flex;
-  gap: 16px;
-  align-items: flex-end;
+.search-container {
+  position: relative;
 }
 
 .search-input {
   width: 100%;
 }
 
-.search-btn {
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  margin-top: 8px;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.search-result-item:hover {
+  background-color: #f0f0f0;
+}
+
+.search-user-avatar {
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.search-avatar-img {
+  width: 40px;
   height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--color-primary);
+}
+
+.search-avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+  color: #999;
+  font-size: 20px;
+  border: 2px solid var(--color-primary);
+}
+
+.search-user-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.search-user-name {
   font-weight: 600;
+  font-size: 14px;
+  color: var(--color-primary);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.3;
+}
+
+.search-user-telegram {
+  font-size: 12px;
+  color: #666;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.search-user-group {
+  font-size: 12px;
+  color: #555;
+  margin-top: 4px;
 }
 
 .reward-form-section {
@@ -636,6 +766,33 @@ onMounted(() => {
     padding: 14px;
   }
   
+  .search-input {
+    font-size: 16px !important;
+    height: 44px !important;
+  }
+  
+  .search-dropdown {
+    max-height: 250px !important;
+    margin-top: 4px !important;
+  }
+  
+  .search-result-item {
+    padding: 16px 20px !important;
+  }
+  
+  .search-avatar-img, .search-avatar-placeholder {
+    width: 45px !important;
+    height: 45px !important;
+  }
+  
+  .search-user-name {
+    font-size: 16px !important;
+  }
+  
+  .search-user-telegram, .search-user-group {
+    font-size: 14px !important;
+  }
+
   .reward-details, .comment-section {
     padding: 16px;
   }
