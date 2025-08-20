@@ -308,7 +308,7 @@ onUnmounted(() => {
   position: relative;
   overflow: hidden;
   border-radius: 12px;
-  background: #000;
+  background: var(--color-primary);
   width: 100%;
   max-width: 400px;
   margin: 0 auto;
@@ -332,7 +332,7 @@ onUnmounted(() => {
   object-position: center;
   display: block;
   vertical-align: top;
-  background: #000;
+  background: var(--color-primary);
 }
 
 .banner-content {
@@ -650,7 +650,7 @@ body.theme-pink .purchase-card {
     height: 120px !important;
     object-fit: contain !important;
     object-position: center !important;
-    background: #000 !important;
+    background: var(--color-primary) !important;
   }
   
   .nav-btn {
