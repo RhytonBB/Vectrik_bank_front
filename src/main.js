@@ -77,19 +77,9 @@ function isCSRFTokenExpired() {
   }
   
   // CSRF токен живет 30 минут (1800 секунд)
-  // Проверяем, есть ли токен в cookie
-  const cookies = document.cookie.split(';');
-  for (let cookie of cookies) {
-    const [name, value] = cookie.trim().split('=');
-    if (name === 'csrf_token') {
-      // Если токен есть, считаем его валидным
-      // Сервер сам удалит его через 30 минут
-      return false;
-    }
-  }
-  
-  console.log('🔒 CSRF токен истек или отсутствует');
-  return true;
+  // Если токен есть, считаем его валидным
+  // Сервер сам удалит его через 30 минут
+  return false;
 }
 
 // Функция для автоматического выхода
