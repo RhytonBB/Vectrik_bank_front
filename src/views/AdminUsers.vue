@@ -781,7 +781,6 @@ onMounted(() => {
 .group-table :deep(.el-table__row:hover) {
   background-color: #e0f0e7 !important;
 }
-}
 
 @media (max-width: 600px) {
   .el-card {
