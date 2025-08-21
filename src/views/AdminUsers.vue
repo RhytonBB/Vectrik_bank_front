@@ -39,7 +39,7 @@
                 </div>
               </div>
               <div class="search-user-info">
-                <div class="search-user-name">{{ user.last_name }} {{ user.first_name }}</div>
+                <div class="search-user-name">{{ user.first_name }} {{ user.last_name }}</div>
                 <div class="search-user-telegram">@{{ user.telegram_username }}</div>
                 <div class="search-user-group" v-if="user.group">{{ user.group.name }}</div>
               </div>
@@ -386,6 +386,11 @@ onMounted(() => {
 }
 
 .search-section {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
   position: relative;
   width: 100%;
   max-width: 300px;
@@ -441,7 +446,7 @@ onMounted(() => {
 }
 
 .search-result-item:hover {
-  background-color: #f0f9eb; /* Light green background on hover */
+  background-color: #f0f0f0;
 }
 
 .search-user-avatar {
@@ -461,35 +466,42 @@ onMounted(() => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #e0e0e0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666;
+  background: #f0f0f0;
+  color: #999;
+  font-size: 20px;
+  border: 2px solid var(--color-primary);
 }
 
 .search-user-info {
   flex: 1;
-  display: flex;
-  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .search-user-name {
-  font-weight: 700;
-  font-size: 16px;
+  font-weight: 600;
+  font-size: 14px;
   color: var(--color-primary);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.3;
 }
 
 .search-user-telegram {
-  font-size: 14px;
+  font-size: 12px;
   color: #666;
-  margin-top: 2px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .search-user-group {
-  font-size: 14px;
-  color: #666;
-  margin-top: 2px;
+  font-size: 12px;
+  color: #555;
+  margin-top: 4px;
 }
 
 .filter-section {
@@ -815,6 +827,8 @@ onMounted(() => {
     max-width: none !important;
     width: 100% !important;
     margin-bottom: 16px !important;
+    padding: 16px !important;
+    border-radius: 10px !important;
   }
   
   .search-input {
@@ -926,6 +940,40 @@ onMounted(() => {
   .user-status .el-tag {
     font-size: 11px !important;
     padding: 3px 6px !important;
+  }
+}
+
+/* Дополнительные стили для очень маленьких экранов */
+@media (max-width: 480px) {
+  .search-section {
+    padding: 14px !important;
+  }
+  
+  .search-input {
+    font-size: 16px !important;
+    height: 44px !important;
+  }
+  
+  .search-dropdown {
+    max-height: 250px !important;
+    margin-top: 4px !important;
+  }
+  
+  .search-result-item {
+    padding: 16px 20px !important;
+  }
+  
+  .search-avatar-img, .search-avatar-placeholder {
+    width: 45px !important;
+    height: 45px !important;
+  }
+  
+  .search-user-name {
+    font-size: 16px !important;
+  }
+  
+  .search-user-telegram, .search-user-group {
+    font-size: 14px !important;
   }
 }
 </style> 
