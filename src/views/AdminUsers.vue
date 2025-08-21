@@ -413,13 +413,13 @@ onMounted(() => {
 
 .search-input :deep(.el-input__inner) {
   border-radius: 10px;
-  border: 2px solid var(--color-primary);
+  border: 2px solid #e0e0e0;
   font-weight: 600;
 }
 
 .search-input :deep(.el-input__inner:focus) {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(23, 98, 74, 0.2);
+  border-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
 }
 
 .search-dropdown {
@@ -459,7 +459,7 @@ onMounted(() => {
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--color-primary);
+  border: 2px solid #e0e0e0;
 }
 
 .search-avatar-placeholder {
@@ -472,7 +472,7 @@ onMounted(() => {
   background: #f0f0f0;
   color: #999;
   font-size: 20px;
-  border: 2px solid var(--color-primary);
+  border: 2px solid #e0e0e0;
 }
 
 .search-user-info {
