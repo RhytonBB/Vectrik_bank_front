@@ -17,7 +17,33 @@
           class="search-input"
           clearable
           @input="onSearchInput"
+          @focus="showSearchResults = true"
+          @blur="setTimeout(() => showSearchResults = false, 200)"
         />
+        <div v-if="showSearchResults && searchQuery && searchResults.length > 0" class="search-dropdown">
+          <div 
+            v-for="item in searchResults" 
+            :key="item.id" 
+            class="search-result-item"
+            @click="selectSearchResult(item)"
+          >
+            <div class="search-user-avatar">
+              <img 
+                v-if="item.avatar_url"
+                :src="item.avatar_url" 
+                :alt="`${item.first_name} ${item.last_name}`"
+                class="search-avatar-img"
+              />
+              <div v-else class="search-avatar-placeholder">
+                <i class="el-icon-user"></i>
+              </div>
+            </div>
+            <div class="search-user-info">
+              <div class="search-user-name">{{ item.first_name }} {{ item.last_name }}</div>
+              <div class="search-user-telegram">@{{ item.telegram_username }}</div>
+            </div>
+          </div>
+        </div>
         <el-select v-model="reasonFilter" placeholder="Фильтр по основанию" class="reason-filter" clearable>
           <el-option label="Все основания" value="" />
           <el-option v-for="reason in uniqueReasons" :key="reason" :label="reason" :value="reason" />
@@ -183,6 +209,9 @@ import axios from 'axios'
 
 const transactions = ref([])
 const searchQuery = ref('')
+const showSearchResults = ref(false)
+const searchResults = ref([])
+
 const reasonFilter = ref('')
 const transactionTypeFilter = ref('admin-only') // По умолчанию только админы
 const adminFilter = ref('')
@@ -265,6 +294,37 @@ const uniqueUsers = computed(() => new Set(filteredTransactions.value.map(t => t
 
 const onSearchInput = () => {
   currentPage.value = 1
+  const query = searchQuery.value.trim().toLowerCase()
+  if (!query) {
+    searchResults.value = []
+    return
+  }
+  // Предлагаем пользователей из всех транзакций (уникально)
+  const userMap = new Map()
+  transactions.value.forEach(t => {
+    const u = t.user
+    if (!u) return
+    const match = (
+      u.first_name?.toLowerCase().includes(query) ||
+      u.last_name?.toLowerCase().includes(query) ||
+      u.telegram_username?.toLowerCase().includes(query)
+    )
+    if (match && !userMap.has(u.id)) {
+      userMap.set(u.id, {
+        id: u.id,
+        first_name: u.first_name,
+        last_name: u.last_name,
+        telegram_username: u.telegram_username,
+        avatar_url: u.avatar_url || null,
+      })
+    }
+  })
+  searchResults.value = Array.from(userMap.values()).slice(0, 8)
+}
+
+const selectSearchResult = (user) => {
+  searchQuery.value = `${user.first_name} ${user.last_name}`
+  showSearchResults.value = false
 }
 
 const onDateChange = () => {
@@ -339,13 +399,34 @@ onMounted(() => {
   font-size: 1.1rem;
 }
 
-.filters-section {
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 24px;
+.filters-section { position: relative; }
+.search-dropdown {
+  position: absolute;
+  top: 76px;
+  left: 24px;
+  right: 24px;
+  max-height: 300px;
+  overflow-y: auto;
+  background: #fff;
   border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
 }
+.search-result-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.search-result-item:hover { background-color: #f0f0f0; }
+.search-user-avatar { flex-shrink: 0; margin-right: 12px; }
+.search-avatar-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid #e0e0e0; }
+.search-avatar-placeholder { width: 36px; height: 36px; border-radius: 50%; background: #f0f0f0; color: #999; display:flex; align-items:center; justify-content:center; }
+.search-user-info { min-width: 0; overflow: hidden; }
+.search-user-name { font-weight: 600; font-size: 14px; color: var(--color-primary); }
+.search-user-telegram { font-size: 12px; color: #666; }
 
 .filter-row {
   display: flex;
@@ -614,16 +695,25 @@ onMounted(() => {
   .filters-section {
     padding: 16px !important;
     border-radius: 10px !important;
+    overflow: hidden;
   }
   
   .filter-row {
     flex-direction: column !important;
     gap: 12px !important;
+    width: 100% !important;
   }
   
   .search-input, .reason-filter, .transaction-type-filter, .admin-filter, .date-filter {
     width: 100% !important;
     min-width: 0 !important;
+  }
+
+  .reset-btn {
+    width: 100% !important;
+    max-width: 260px !important;
+    margin: 0 auto !important;
+    display: block !important;
   }
   
   .stats-section {

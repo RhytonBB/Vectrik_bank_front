@@ -129,7 +129,7 @@
       </div>
       
       <div class="comment-section">
-        <h3>Комментарий (необязательно)</h3>
+        <h3>Комментарий (ОБЯЗАТЕЛЬНО!)</h3>
         <el-form-item class="context-item">
           <el-input v-model="context" type="textarea" :rows="isMobile ? 4 : 6" placeholder="Дополнительная информация..." class="context-input" />
         </el-form-item>
