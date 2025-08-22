@@ -59,17 +59,6 @@
         </el-select>
       </div>
       <div class="filter-row">
-        <el-date-picker
-          v-model="dateRange"
-          type="daterange"
-          range-separator="—"
-          start-placeholder="Дата начала"
-          end-placeholder="Дата окончания"
-          format="dd.MM.yyyy"
-          value-format="yyyy-MM-dd"
-          class="date-filter"
-          @change="onDateChange"
-        />
         <el-button type="primary" @click="resetFilters" class="reset-btn">Сбросить фильтры</el-button>
       </div>
     </div>
@@ -211,11 +200,12 @@ const transactions = ref([])
 const searchQuery = ref('')
 const showSearchResults = ref(false)
 const searchResults = ref([])
+const selectedUserId = ref(null)
 
 const reasonFilter = ref('')
 const transactionTypeFilter = ref('admin-only') // По умолчанию только админы
 const adminFilter = ref('')
-const dateRange = ref([])
+// дата-фильтр удалён
 const currentPage = ref(1)
 const pageSize = ref(50)
 const isMobile = ref(false)
@@ -249,20 +239,34 @@ const uniqueAdmins = computed(() => {
 
 const filteredTransactions = computed(() => {
   let result = [...transactions.value]
-  
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    result = result.filter(t => 
-      t.user.first_name.toLowerCase().includes(query) ||
-      t.user.last_name.toLowerCase().includes(query) ||
-      t.user.telegram_username.toLowerCase().includes(query)
-    )
+
+  // Фильтр по выбранному пользователю из подсказок
+  if (selectedUserId.value) {
+    result = result.filter(t => t.user && t.user.id === selectedUserId.value)
+  } else if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase().trim()
+    const terms = query.split(/\s+/).filter(Boolean)
+    result = result.filter(t => {
+      const fn = (t.user?.first_name || '').toLowerCase()
+      const ln = (t.user?.last_name || '').toLowerCase()
+      const tg = (t.user?.telegram_username || '').toLowerCase()
+      const full1 = `${t.user?.first_name || ''} ${t.user?.last_name || ''}`.toLowerCase().trim()
+      const full2 = `${t.user?.last_name || ''} ${t.user?.first_name || ''}`.toLowerCase().trim()
+
+      // Совпадение по одному полю
+      if (fn.includes(query) || ln.includes(query) || tg.includes(query) || full1.includes(query) || full2.includes(query)) return true
+      // Совпадение по всем термам в full name
+      if (terms.length > 1) {
+        return terms.every(ti => full1.includes(ti) || full2.includes(ti))
+      }
+      return false
+    })
   }
-  
+
   if (reasonFilter.value) {
     result = result.filter(t => t.reason === reasonFilter.value)
   }
-  
+
   // Фильтр по типу транзакций
   if (transactionTypeFilter.value === 'admin-only') {
     result = result.filter(t => t.admin && t.admin.id !== null)
@@ -273,18 +277,7 @@ const filteredTransactions = computed(() => {
   if (adminFilter.value) {
     result = result.filter(t => t.admin && t.admin.id === adminFilter.value)
   }
-  
-  if (dateRange.value && dateRange.value.length === 2) {
-    const startDate = new Date(dateRange.value[0])
-    const endDate = new Date(dateRange.value[1])
-    endDate.setHours(23, 59, 59, 999)
-    
-    result = result.filter(t => {
-      const transactionDate = new Date(t.created_at)
-      return transactionDate >= startDate && transactionDate <= endDate
-    })
-  }
-  
+
   return result
 })
 
@@ -294,6 +287,7 @@ const uniqueUsers = computed(() => new Set(filteredTransactions.value.map(t => t
 
 const onSearchInput = () => {
   currentPage.value = 1
+  selectedUserId.value = null
   const query = searchQuery.value.trim().toLowerCase()
   if (!query) {
     searchResults.value = []
@@ -307,7 +301,9 @@ const onSearchInput = () => {
     const match = (
       u.first_name?.toLowerCase().includes(query) ||
       u.last_name?.toLowerCase().includes(query) ||
-      u.telegram_username?.toLowerCase().includes(query)
+      u.telegram_username?.toLowerCase().includes(query) ||
+      `${u.first_name} ${u.last_name}`.toLowerCase().includes(query) ||
+      `${u.last_name} ${u.first_name}`.toLowerCase().includes(query)
     )
     if (match && !userMap.has(u.id)) {
       userMap.set(u.id, {
@@ -323,20 +319,20 @@ const onSearchInput = () => {
 }
 
 const selectSearchResult = (user) => {
+  selectedUserId.value = user.id
   searchQuery.value = `${user.first_name} ${user.last_name}`
   showSearchResults.value = false
 }
 
-const onDateChange = () => {
-  currentPage.value = 1
-}
+// обработчик изменения даты удалён
 
 const resetFilters = () => {
   searchQuery.value = ''
+  selectedUserId.value = null
   reasonFilter.value = ''
   transactionTypeFilter.value = 'admin-only' // Возвращаем к фильтру только админы
   adminFilter.value = ''
-  dateRange.value = []
+  // сброс диапазона дат не требуется
   currentPage.value = 1
 }
 
@@ -440,7 +436,7 @@ onMounted(() => {
   margin-bottom: 0;
 }
 
-.search-input, .reason-filter, .transaction-type-filter, .admin-filter, .date-filter {
+.search-input, .reason-filter, .transaction-type-filter, .admin-filter {
   min-width: 200px;
   flex: 1;
 }
@@ -704,7 +700,7 @@ onMounted(() => {
     width: 100% !important;
   }
   
-  .search-input, .reason-filter, .transaction-type-filter, .admin-filter, .date-filter {
+  .search-input, .reason-filter, .transaction-type-filter, .admin-filter {
     width: 100% !important;
     min-width: 0 !important;
   }
