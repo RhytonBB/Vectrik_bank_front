@@ -7,6 +7,7 @@
     <p class="balance">Ваш баланс: <b>{{ balance }}</b> Вектриков</p>
     <el-menu class="dashboard-menu" :default-active="activeMenu" router>
       <el-menu-item index="/admin/reward">💸 Начисление Вектриков</el-menu-item>
+      <el-menu-item index="/admin/transactions">📊 Все начисления</el-menu-item>
       <el-menu-item index="/admin/users">👥 Модерация пользователей</el-menu-item>
       <el-menu-item index="/admin/broadcast">📢 Рассылка через Telegram-бота</el-menu-item>
       <el-menu-item index="/admin/products">🛍️ Управление лотами и товарами</el-menu-item>

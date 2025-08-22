@@ -107,9 +107,16 @@
       <div class="reward-details">
         <h3>Детали начисления</h3>
         <el-form-item label="Основание:" class="reason-item">
-          <el-select v-model="reason" placeholder="Основание для начисления" required @change="onReasonChange" class="reason-select">
+          <el-select v-model="reasonType" placeholder="Тип основания" required @change="onReasonTypeChange" class="reason-type-select">
+            <el-option label="Предустановленные основания" value="preset" />
+            <el-option label="Ручной ввод" value="manual" />
+          </el-select>
+          
+          <el-select v-if="reasonType === 'preset'" v-model="reason" placeholder="Основание для начисления" required @change="onReasonChange" class="reason-select">
             <el-option v-for="r in reasons" :key="r.value" :label="r.label" :value="r.value" />
           </el-select>
+          
+          <el-input v-if="reasonType === 'manual'" v-model="customReason" placeholder="Введите основание для начисления" required class="custom-reason-input" />
         </el-form-item>
         <el-form-item label="Сумма:" class="amount-item">
           <el-input-number v-model="amount" :min="1" required class="amount-input" />
@@ -143,7 +150,9 @@ const query = ref('')
 const users = ref([])
 const selectedUsers = ref([])
 const amount = ref(0)
+const reasonType = ref('preset')
 const reason = ref('')
+const customReason = ref('')
 const context = ref('')
 const message = ref('')
 const error = ref('')
@@ -214,16 +223,40 @@ const onReasonChange = (val) => {
   const found = reasons.find(r => r.value === val)
   if (found) amount.value = found.amount
 }
+
+const onReasonTypeChange = (val) => {
+  if (val === 'preset') {
+    reason.value = ''
+    customReason.value = ''
+  } else {
+    reason.value = ''
+    amount.value = 0
+  }
+}
 const sendReward = async () => {
   try {
+    const finalReason = reasonType.value === 'preset' ? reason.value : customReason.value
+    
+    if (!finalReason) {
+      error.value = 'Выберите или введите основание для начисления'
+      return
+    }
+    
     await axios.post('/api/admin/reward', {
       user_ids: selectedUsers.value,
       amount: amount.value,
-      reason: reason.value,
+      reason: finalReason,
       context: context.value
     })
     message.value = 'Начисление успешно!'
     error.value = ''
+    
+    // Сброс формы
+    selectedUsers.value = []
+    amount.value = 0
+    reason.value = ''
+    customReason.value = ''
+    context.value = ''
   } catch (e) {
     error.value = 'Ошибка начисления'
   }
@@ -519,8 +552,13 @@ onMounted(() => {
   border: 1px solid #e0e0e0;
 }
 
-.reason-select, .amount-input, .context-input {
+.reason-type-select, .reason-select, .custom-reason-input, .amount-input, .context-input {
   width: 100%;
+  margin-bottom: 16px;
+}
+
+.reason-type-select {
+  margin-bottom: 12px;
 }
 
   .context-input :deep(.el-textarea__inner) {
@@ -692,6 +730,10 @@ onMounted(() => {
   .el-input, .el-button, .el-select, .el-input-number, .el-textarea {
     width: 100% !important;
     font-size: 16px !important;
+  }
+  
+  .reason-type-select, .reason-select, .custom-reason-input {
+    margin-bottom: 12px !important;
   }
   
   .reward-btn {

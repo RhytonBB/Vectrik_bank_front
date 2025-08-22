@@ -8,6 +8,7 @@ import AdminAnalytics from '../views/AdminAnalytics.vue'
 import AdminBanners from '../views/AdminBanners.vue'
 import AdminDashboard from '../views/AdminDashboard.vue'
 import AdminReward from '../views/AdminReward.vue'
+import AdminTransactions from '../views/AdminTransactions.vue'
 import AdminBroadcast from '../views/AdminBroadcast.vue'
 import AdminUserRegister from '../views/AdminUserRegister.vue'
 import AdminNews from '../views/AdminNews.vue'
@@ -38,6 +39,7 @@ const routes = [
   { path: '/', component: UserLogin },
   { path: '/admin/dashboard', component: AdminDashboard },
   { path: '/admin/reward', component: AdminReward },
+  { path: '/admin/transactions', component: AdminTransactions },
   { path: '/admin/broadcast', component: AdminBroadcast },
   { path: '/admin/users/register', component: AdminUserRegister },
   { path: '/admin/users', component: AdminUsers },
