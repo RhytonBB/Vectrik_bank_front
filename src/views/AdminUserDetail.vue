@@ -132,6 +132,20 @@
               <el-form-item label="Сумма (+/-)" class="form-item">
                 <el-input-number v-model="balanceForm.amount" :min="-1000000" :max="1000000" class="balance-input" />
               </el-form-item>
+              
+              <el-form-item label="Основание:" class="reason-item">
+                <el-select v-model="balanceForm.reasonType" placeholder="Тип основания" required @change="onBalanceReasonTypeChange" class="reason-type-select">
+                  <el-option label="Предустановленные основания" value="preset" />
+                  <el-option label="Ручной ввод" value="manual" />
+                </el-select>
+                
+                <el-select v-if="balanceForm.reasonType === 'preset'" v-model="balanceForm.reason" placeholder="Основание для корректировки" required @change="onBalanceReasonChange" class="reason-select">
+                  <el-option v-for="r in balanceReasons" :key="r.value" :label="r.label" :value="r.value" />
+                </el-select>
+                
+                <el-input v-if="balanceForm.reasonType === 'manual'" v-model="balanceForm.customReason" placeholder="Введите основание для корректировки" required class="custom-reason-input" />
+              </el-form-item>
+              
               <el-form-item label="Комментарий" class="form-item">
                 <el-input v-model="balanceForm.context" type="textarea" :rows="3" class="form-input" />
               </el-form-item>
@@ -197,8 +211,18 @@ const editForm = ref({
 })
 const balanceForm = ref({
   amount: 0,
-  context: ''
+  context: '',
+  reasonType: 'preset', // 'preset' or 'manual'
+  reason: null, // For preset reasons
+  customReason: '' // For manual reasons
 })
+
+const balanceReasons = ref([
+  { label: 'Награда', value: 'reward' },
+  { label: 'Штраф', value: 'penalty' },
+  { label: 'Возврат', value: 'refund' },
+  { label: 'Другое', value: 'other' }
+])
 
 const fetchGroups = async () => {
   const resp = await axios.get('/api/admin/groups')
@@ -239,19 +263,55 @@ const adjustBalance = async () => {
     error.value = 'Введите сумму корректировки'
     return
   }
+  
+  let finalReason = ''
+  if (balanceForm.value.reasonType === 'preset') {
+    if (!balanceForm.value.reason) {
+      error.value = 'Выберите основание для корректировки'
+      return
+    }
+    finalReason = balanceForm.value.reason
+  } else {
+    if (!balanceForm.value.customReason.trim()) {
+      error.value = 'Введите основание для корректировки'
+      return
+    }
+    finalReason = balanceForm.value.customReason.trim()
+  }
+  
   try {
     await axios.post('/api/admin/users/adjust_balance', {
       user_id: user.value.id,
       amount: balanceForm.value.amount,
-      context: balanceForm.value.context
+      context: balanceForm.value.context,
+      reason: finalReason
     })
     message.value = 'Баланс скорректирован'
     error.value = ''
     balanceForm.value.amount = 0
     balanceForm.value.context = ''
+    balanceForm.value.reasonType = 'preset'
+    balanceForm.value.reason = null
+    balanceForm.value.customReason = ''
     fetchUser()
   } catch (e) {
     error.value = 'Ошибка корректировки баланса'
+  }
+}
+
+const onBalanceReasonTypeChange = (value) => {
+  if (value === 'preset') {
+    balanceForm.value.reason = null
+    balanceForm.value.customReason = ''
+  } else {
+    balanceForm.value.reason = null
+    balanceForm.value.customReason = ''
+  }
+}
+
+const onBalanceReasonChange = (value) => {
+  if (value === 'other') {
+    balanceForm.value.customReason = ''
   }
 }
 
@@ -720,6 +780,39 @@ onMounted(() => {
     font-size: 16px !important;
     margin-top: 16px !important;
     border-radius: 8px !important;
+  }
+}
+
+.reason-item {
+  margin-bottom: 16px;
+}
+
+.reason-type-select, .reason-select, .custom-reason-input {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.reason-type-select {
+  margin-bottom: 12px;
+}
+
+.reason-select {
+  margin-bottom: 12px;
+}
+
+.custom-reason-input {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 600px) {
+  .reason-item {
+    margin-bottom: 16px !important;
+  }
+  
+  .reason-type-select, .reason-select, .custom-reason-input {
+    width: 100% !important;
+    margin-bottom: 12px !important;
+    font-size: 16px !important;
   }
 }
 
