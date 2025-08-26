@@ -119,11 +119,11 @@
           <el-input v-if="reasonType === 'manual'" v-model="customReason" placeholder="Введите основание для начисления" required class="custom-reason-input" />
         </el-form-item>
         <el-form-item label="Сумма:" class="amount-item">
-          <el-input-number v-model="amount" :min="1" required class="amount-input" />
+          <el-input-number v-model="amount" :min="-1000000" :max="1000000" required class="amount-input" />
         </el-form-item>
         <el-form-item class="reward-button-item">
           <el-button type="primary" native-type="submit" @click="sendReward" class="reward-btn">
-            Начислить Вектрики
+            {{ amount >= 0 ? 'Начислить' : 'Списать' }} Вектрики
           </el-button>
         </el-form-item>
       </div>
@@ -170,7 +170,12 @@ const reasons = [
   { label: '+35 за что-то внезапное, креативное и хорошее', value: '+35 за что-то внезапное, креативное и хорошее', amount: 35 },
   { label: '+40 за преодоление себя', value: '+40 за преодоление себя', amount: 40 },
   { label: '+50 за высокий результат на экзамене', value: '+50 за высокий результат на экзамене', amount: 50 },
-  { label: '+245 за прохождение вузовской Школы кураторов', value: '+245 за прохождение вузовской Школы кураторов', amount: 245 }
+  { label: '+245 за прохождение вузовской Школы кураторов', value: '+245 за прохождение вузовской Школы кураторов', amount: 245 },
+  { label: '-5 за нарушение правил группы', value: '-5 за нарушение правил группы', amount: -5 },
+  { label: '-10 за неактивность', value: '-10 за неактивность', amount: -10 },
+  { label: '-15 за нарушение дисциплины', value: '-15 за нарушение дисциплины', amount: -15 },
+  { label: '-20 за серьезное нарушение', value: '-20 за серьезное нарушение', amount: -20 },
+  { label: '-50 за грубое нарушение', value: '-50 за грубое нарушение', amount: -50 }
 ]
 
 const fetchUsers = async () => {
